@@ -1,0 +1,7 @@
+.ipynb_checkpoints/
+*.ipynb
+parameters.json
+
+all_mofe.py
+
+matlab/
