@@ -29,7 +29,7 @@ def Corr_fMRI_to_Elec(lg, img_dir):
         feat_path = next((FEAT_PATH / f'sub-{ieeg.subject}').rglob('*.feat'))
 
         result = _main_to_elec(ieeg_file, feat_path, FREESURFER_PATH, DERIVATIVES_PATH,
-                               arange(1, 10), True)
+                               arange(0.25, 4, 0.25), True)
         print(result)
 
         result_val = img_dir / f'corr_{ieeg_file.stem}.csv'
