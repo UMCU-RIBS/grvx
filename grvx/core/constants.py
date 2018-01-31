@@ -36,7 +36,9 @@ ALL_FUNC = OrderedDict([
     ('-r', 'Read_As_Bids'),
     ('-s', 'Run_FreeSurfer'),
     ('-f', 'Run_fMRI_feat'),
+    ('-t', 'Compare_Feat'),
     ('-p', 'Project_Elec_On_Surf'),
+    ('-g', 'Compare_ECoG'),
     ('-c', 'Corr_ECoG_fMRI'),
     ('-e', 'Corr_fMRI_to_Elec'),
     ])
@@ -45,3 +47,5 @@ ALL_FUNC = OrderedDict([
 # DERIVATIVES -----------------------------------------------------------------#
 FEAT_PATH = DERIVATIVES_PATH / 'feat'
 FREESURFER_PATH = DERIVATIVES_PATH / 'freesurfer'
+OUTPUT_PATH = DERIVATIVES_PATH / 'grvx'
+OUTPUT_PATH.mkdir(parents=True, exist_ok=True)

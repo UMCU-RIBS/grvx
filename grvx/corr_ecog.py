@@ -1,4 +1,4 @@
-from boavus.ieeg.corr_fmri import _main, _main_to_elec
+from boavus.main import boavus
 from bidso import iEEG
 from numpy import arange
 from .core.constants import (PARAMETERS,

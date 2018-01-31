@@ -3,12 +3,10 @@ from pathlib import Path
 from sys import path
 from functools import partial
 
-from boavus.ieeg.wonambi import Dataset
 from wonambi.attr import Channels, Freesurfer
 
 from numpy import ndindex, zeros, NaN, mean, sum, corrcoef, diff, array, min, fill_diagonal, nanmin, median, exp, stack, isnan, where, arange, zeros
 from numpy.linalg import norm
-from boavus.fmri.percent import percent_fmri
 from nibabel import load, Nifti1Image
 from nibabel.affines import apply_affine
 from numpy.linalg import inv
