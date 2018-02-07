@@ -1,7 +1,8 @@
 from boavus.main import boavus
 from .core.constants import (FREESURFER_PATH,
-                             SCRIPTS_PATH,
                              DATA_PATH,
+                             Parameters_Json,
+                             PARAMETERS,
                              OUTPUT_PATH,
                              )
 
@@ -12,8 +13,7 @@ from .core.log import with_log
 @with_log
 def Corr_fMRI_to_Elec(lg, img_dir):
 
-    PARAMETERS_JSON = SCRIPTS_PATH / 'parameters' / 'parameters_corrfmri.json'
-
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['corrfmri'])
     boavus([
         'ieeg',
         'corrfmri',
@@ -24,7 +24,8 @@ def Corr_fMRI_to_Elec(lg, img_dir):
         '--bids_dir',
         str(DATA_PATH),
         '--parameters',
-        str(PARAMETERS_JSON),
+        PARAMETERS_JSON.name,
         '--log',
         'debug',
         ])
+    PARAMETERS_JSON.delete()

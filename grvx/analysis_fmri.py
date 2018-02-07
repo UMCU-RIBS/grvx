@@ -4,7 +4,8 @@ from .core.constants import (FEAT_PATH,
                              FREESURFER_PATH,
                              DATA_PATH,
                              OUTPUT_PATH,
-                             SCRIPTS_PATH,
+                             PARAMETERS,
+                             Parameters_Json,
                              )
 from .core.log import with_log
 
@@ -44,7 +45,7 @@ def Run_fMRI_feat(lg, img_dir):
 @with_log
 def Compare_Feat(lg, img_dir):
 
-    PARAMETERS_JSON = SCRIPTS_PATH / 'parameters' / 'parameters_compare.json'
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare'])
 
     boavus([
         'fmri',
@@ -54,7 +55,9 @@ def Compare_Feat(lg, img_dir):
         '--output_dir',
         str(OUTPUT_PATH),
         '--parameters',
-        str(PARAMETERS_JSON),
+        PARAMETERS_JSON.name,
         '--log',
         'debug',
         ])
+
+    PARAMETERS_JSON.delete()

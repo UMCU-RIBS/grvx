@@ -2,11 +2,10 @@ from boavus.main import boavus
 
 from .core.constants import (DATA_PATH,
                              OUTPUT_PATH,
-                             SCRIPTS_PATH,
+                             Parameters_Json,
+                             PARAMETERS,
                              )
 from .core.log import with_log
-
-PARAMETERS_JSON = SCRIPTS_PATH / 'parameters' / 'parameters_compare.json'
 
 
 @with_log
@@ -32,13 +31,15 @@ def Compare_ECoG(lg, img_dir):
         'debug',
         ])
 
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare'])
     boavus([
         'ieeg',
         'compare',
         '--output_dir',
         str(OUTPUT_PATH),
         '--parameters',
-        str(PARAMETERS_JSON),
+        PARAMETERS_JSON.name,
         '--log',
         'debug',
         ])
+    PARAMETERS_JSON.delete()
