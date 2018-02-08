@@ -22,14 +22,18 @@ def Compare_ECoG(lg, img_dir):
         'debug',
         ])
 
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['psd'])
     boavus([
         'ieeg',
         'psd',
         '--output_dir',
         str(OUTPUT_PATH),
+        '--parameters',
+        PARAMETERS_JSON.name,
         '--log',
         'debug',
         ])
+    PARAMETERS_JSON.delete()
 
     PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare'])
     boavus([

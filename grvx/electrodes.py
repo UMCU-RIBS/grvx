@@ -1,8 +1,8 @@
 from boavus.main import boavus
 
 from .core.constants import (FREESURFER_PATH,
-                             ANALYSIS_PATH,
                              DATA_PATH,
+                             ANALYSIS_PATH,
                              PARAMETERS,
                              Parameters_Json,
                              )
@@ -10,47 +10,38 @@ from .core.log import with_log
 
 
 @with_log
-def Run_FreeSurfer(lg, img_dir):
-    FREESURFER_PATH.mkdir(exist_ok=True)
+def Project_Elec_On_Surf(lg, img_dir):
 
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['electrodes'])
     boavus([
-        'freesurfer',
-        'reconall',
+        'ieeg',
+        'project_electrodes',
         '--bids_dir',
         str(DATA_PATH),
         '--freesurfer_dir',
         str(FREESURFER_PATH),
-        '--log',
-        'debug',
-        ])
-
-
-@with_log
-def Run_fMRI_feat(lg, img_dir):
-    boavus([
-        'fsl',
-        'feat',
-        '--bids_dir',
-        str(DATA_PATH),
         '--analysis_dir',
         str(ANALYSIS_PATH),
         '--log',
         'debug',
-        ])
-
-
-@with_log
-def Compare_Feat(lg, img_dir):
-
-    PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare'])
-    boavus([
-        'fmri',
-        'compare',
-        '--analysis_dir',
-        str(ANALYSIS_PATH),
         '--parameters',
         PARAMETERS_JSON.name,
+        ])
+    PARAMETERS_JSON.delete()
+
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['electrodes'])
+    boavus([
+        'ieeg',
+        'project_electrodes',
+        '--bids_dir',
+        str(DATA_PATH),
+        '--freesurfer_dir',
+        str(FREESURFER_PATH),
+        '--analysis_dir',
+        str(ANALYSIS_PATH),
         '--log',
         'debug',
+        '--parameters',
+        PARAMETERS_JSON.name,
         ])
     PARAMETERS_JSON.delete()
