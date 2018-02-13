@@ -1,7 +1,7 @@
 from boavus.main import boavus
 
 from .core.constants import (DATA_PATH,
-                             OUTPUT_PATH,
+                             ANALYSIS_PATH,
                              Parameters_Json,
                              PARAMETERS,
                              )
@@ -16,8 +16,8 @@ def Compare_ECoG(lg, img_dir):
         'preprocessing',
         '--bids_dir',
         str(DATA_PATH),
-        '--output_dir',
-        str(OUTPUT_PATH),
+        '--analysis_dir',
+        str(ANALYSIS_PATH),
         '--log',
         'debug',
         ])
@@ -26,8 +26,8 @@ def Compare_ECoG(lg, img_dir):
     boavus([
         'ieeg',
         'psd',
-        '--output_dir',
-        str(OUTPUT_PATH),
+        '--analysis_dir',
+        str(ANALYSIS_PATH),
         '--parameters',
         PARAMETERS_JSON.name,
         '--log',
@@ -39,8 +39,8 @@ def Compare_ECoG(lg, img_dir):
     boavus([
         'ieeg',
         'compare',
-        '--output_dir',
-        str(OUTPUT_PATH),
+        '--analysis_dir',
+        str(ANALYSIS_PATH),
         '--parameters',
         PARAMETERS_JSON.name,
         '--log',

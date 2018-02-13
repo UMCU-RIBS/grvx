@@ -51,6 +51,7 @@ ALL_FUNC = OrderedDict([
     ('-f', 'Run_fMRI_feat'),
     ('-t', 'Compare_Feat'),
     ('-p', 'Project_Elec_On_Surf'),
+    ('-a', 'Assign_Regions_To_Elec'),
     ('-g', 'Compare_ECoG'),
     ('-e', 'Corr_fMRI_to_Elec'),
     ])
