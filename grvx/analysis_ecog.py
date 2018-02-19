@@ -11,6 +11,7 @@ from .core.log import with_log
 @with_log
 def Compare_ECoG(lg, img_dir):
 
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['preprocessing'])
     boavus([
         'ieeg',
         'preprocessing',
@@ -18,9 +19,12 @@ def Compare_ECoG(lg, img_dir):
         str(DATA_PATH),
         '--analysis_dir',
         str(ANALYSIS_PATH),
+        '--parameters',
+        PARAMETERS_JSON.name,
         '--log',
         'debug',
         ])
+    PARAMETERS_JSON.delete()
 
     PARAMETERS_JSON = Parameters_Json(PARAMETERS['psd'])
     boavus([

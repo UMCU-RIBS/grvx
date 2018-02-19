@@ -4,6 +4,7 @@ from .core.constants import (FREESURFER_PATH,
                              Parameters_Json,
                              PARAMETERS,
                              OUTPUT_PATH,
+                             ANALYSIS_PATH,
                              )
 
 
@@ -19,6 +20,8 @@ def Corr_fMRI_to_Elec(lg, img_dir):
         'corrfmri',
         '--output_dir',
         str(OUTPUT_PATH),
+        '--analysis_dir',
+        str(ANALYSIS_PATH),
         '--freesurfer_dir',
         str(FREESURFER_PATH),
         '--bids_dir',

@@ -48,10 +48,10 @@ DERIVATIVES_PATH.mkdir(parents=True, exist_ok=True)
 ALL_FUNC = OrderedDict([
     ('-r', 'Read_As_Bids'),
     ('-s', 'Run_FreeSurfer'),
-    ('-f', 'Run_fMRI_feat'),
-    ('-t', 'Compare_Feat'),
     ('-p', 'Project_Elec_On_Surf'),
     ('-a', 'Assign_Regions_To_Elec'),
+    ('-f', 'Run_fMRI_feat'),
+    ('-t', 'Compare_Feat'),
     ('-g', 'Compare_ECoG'),
     ('-e', 'Corr_fMRI_to_Elec'),
     ])

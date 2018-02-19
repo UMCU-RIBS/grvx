@@ -54,3 +54,20 @@ def Compare_Feat(lg, img_dir):
         'debug',
         ])
     PARAMETERS_JSON.delete()
+
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['atelectrodes'])
+    boavus([
+        'fmri',
+        'at_electrodes',
+        '--bids_dir',
+        str(DATA_PATH),
+        '--freesurfer_dir',
+        str(FREESURFER_PATH),
+        '--analysis_dir',
+        str(ANALYSIS_PATH),
+        '--parameters',
+        PARAMETERS_JSON.name,
+        '--log',
+        'debug',
+        ])
+    PARAMETERS_JSON.delete()
