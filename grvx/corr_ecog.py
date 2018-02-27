@@ -1,6 +1,5 @@
 from boavus.main import boavus
-from .core.constants import (FREESURFER_PATH,
-                             DATA_PATH,
+from .core.constants import (DATA_PATH,
                              Parameters_Json,
                              PARAMETERS,
                              OUTPUT_PATH,
@@ -22,8 +21,6 @@ def Corr_fMRI_to_Elec(lg, img_dir):
         str(OUTPUT_PATH),
         '--analysis_dir',
         str(ANALYSIS_PATH),
-        '--freesurfer_dir',
-        str(FREESURFER_PATH),
         '--bids_dir',
         str(DATA_PATH),
         '--parameters',
