@@ -20,7 +20,6 @@ df = [
     {'subj': 'erp', 'ECoG': 'erp1827', 'fMRI': 'erp1930'},
     {'subj': 'gord', 'ECoG': 'gord536', 'fMRI': 'gord518'},
     {'subj': 'groo', 'ECoG': 'groo47', 'fMRI': 'groo45'},
-    {'subj': 'heek', 'ECoG': 'heek_20180217-143702-003_TaskXML', 'fMRI': 'heek_V7711_fMRI_MotorHand-Circle_14_1_TaskXML'},
     {'subj': 'itens', 'ECoG': 'itens_Itens_08032017_Motor_L_fingertappingS001R02_TaskXML', 'fMRI': '814a028cd01fbdb3949626f6b2e85018'},
     {'subj': 'maas', 'ECoG': 'maas480', 'fMRI': 'maas470'},
     {'subj': 'ommen', 'ECoG': 'ommen_20170114-110422-013_TaskXML', 'fMRI': 'ffa534bac2f46a876d04dd5129bb8f5a'},
