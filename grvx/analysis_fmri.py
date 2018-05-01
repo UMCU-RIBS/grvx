@@ -42,7 +42,7 @@ def Run_fMRI_feat(lg, img_dir):
 @with_log
 def Compare_Feat(lg, img_dir):
 
-    PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare'])
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare_fmri'])
     boavus([
         'fmri',
         'compare',

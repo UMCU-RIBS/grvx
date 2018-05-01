@@ -39,7 +39,7 @@ def Compare_ECoG(lg, img_dir):
         ])
     PARAMETERS_JSON.delete()
 
-    PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare'])
+    PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare_ecog'])
     boavus([
         'ieeg',
         'compare',

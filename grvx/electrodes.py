@@ -37,6 +37,8 @@ def Project_Elec_On_Surf(lg, img_dir):
         str(DATA_PATH),
         '--freesurfer_dir',
         str(FREESURFER_PATH),
+        '--analysis_dir',
+        str(ANALYSIS_PATH),
         '--output_dir',
         str(OUTPUT_PATH),
         '--log',
