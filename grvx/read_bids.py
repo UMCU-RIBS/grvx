@@ -2,7 +2,7 @@ from shutil import rmtree
 
 from pandas import DataFrame
 
-from xelo2bids.bids_tree import create_bids, DF_TASKS
+from xelo2bids.bids_tree import create_bids
 from xelo2bids import bids_mri
 
 from .core.constants import DATA_PATH
@@ -46,7 +46,4 @@ def Read_As_Bids(lg, img_dir):
     except:
         pass
 
-    ALL_SUBJ = set(commontasks.subj)
-    stems = DF_TASKS.loc[(DF_TASKS['SubjectCode'].isin(ALL_SUBJ)) & (DF_TASKS['TaskName'] == 't1_anatomy_scan'), 'stem']
-
-    create_bids(DATA_PATH, list(stems) + list(commontasks.ECoG) + list(commontasks.fMRI))
+    create_bids(DATA_PATH, list(commontasks.ECoG) + list(commontasks.fMRI))
