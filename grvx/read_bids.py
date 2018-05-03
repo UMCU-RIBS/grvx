@@ -2,8 +2,7 @@ from shutil import rmtree
 
 from pandas import DataFrame
 
-from xelo2bids.bids_tree import create_bids
-from xelo2bids import bids_mri
+from xelo2bids import bids_mri, xelo2bids
 
 from .core.constants import DATA_PATH
 from .core.log import with_log
@@ -38,12 +37,14 @@ commontasks = DataFrame(df)
 def Read_As_Bids(lg, img_dir):
     try:
         rmtree(DATA_PATH)
-    except:
+    except Exception:
         pass
 
-    try:
-        DATA_PATH.mkdir()
-    except:
-        pass
-
-    create_bids(DATA_PATH, list(commontasks.ECoG) + list(commontasks.fMRI))
+    xelo2bids([
+        '--log', 'debug',
+        'create',
+        str(DATA_PATH),
+        '--keys',
+        ] +
+        list(commontasks.ECoG) + list(commontasks.fMRI)
+        )
