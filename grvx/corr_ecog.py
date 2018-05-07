@@ -1,4 +1,4 @@
-from boavus.main import boavus
+from boavus import boavus
 from .core.constants import (DATA_PATH,
                              Parameters_Json,
                              PARAMETERS,

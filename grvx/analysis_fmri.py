@@ -1,4 +1,4 @@
-from boavus.main import boavus
+from boavus import boavus
 
 from .core.constants import (FREESURFER_PATH,
                              ANALYSIS_PATH,
