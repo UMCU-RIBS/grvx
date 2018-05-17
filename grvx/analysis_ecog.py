@@ -1,8 +1,10 @@
-from boavus import boavus
+from boavus.ieeg import (preprocessing,
+                         psd,
+                         compare,
+                         )
 
 from .core.constants import (DATA_PATH,
                              ANALYSIS_PATH,
-                             Parameters_Json,
                              PARAMETERS,
                              )
 from .core.log import with_log
@@ -11,43 +13,18 @@ from .core.log import with_log
 @with_log
 def Compare_ECoG(lg, img_dir):
 
-    PARAMETERS_JSON = Parameters_Json(PARAMETERS['preprocessing'])
-    boavus([
-        'ieeg',
-        'preprocessing',
-        '--bids_dir',
-        str(DATA_PATH),
-        '--analysis_dir',
-        str(ANALYSIS_PATH),
-        '--parameters',
-        PARAMETERS_JSON.name,
-        '--log',
-        'debug',
-        ])
-    PARAMETERS_JSON.delete()
+    preprocessing.main(
+        bids_dir=DATA_PATH,
+        analysis_dir=ANALYSIS_PATH,
+        **PARAMETERS['preprocessing'],
+        )
 
-    PARAMETERS_JSON = Parameters_Json(PARAMETERS['psd'])
-    boavus([
-        'ieeg',
-        'psd',
-        '--analysis_dir',
-        str(ANALYSIS_PATH),
-        '--parameters',
-        PARAMETERS_JSON.name,
-        '--log',
-        'debug',
-        ])
-    PARAMETERS_JSON.delete()
+    psd.main(
+        analysis_dir=ANALYSIS_PATH,
+        **PARAMETERS['psd'],
+        )
 
-    PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare_ecog'])
-    boavus([
-        'ieeg',
-        'compare',
-        '--analysis_dir',
-        str(ANALYSIS_PATH),
-        '--parameters',
-        PARAMETERS_JSON.name,
-        '--log',
-        'debug',
-        ])
-    PARAMETERS_JSON.delete()
+    compare.main(
+        analysis_dir=ANALYSIS_PATH,
+        **PARAMETERS['ecog_compare'],
+        )

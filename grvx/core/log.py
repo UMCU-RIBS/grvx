@@ -128,20 +128,20 @@ def with_log(function):
             pass
         images_dir.mkdir(parents=True, exist_ok=True)
 
-        lg = getLogger(PROJECT)
+        lg = getLogger('boavus')
         lg.setLevel(DEBUG)
 
-        formatter = Formatter('%(message)s  ')
+        FORMAT = '{asctime:<10}{module:<20}(l.{lineno: 6d}): {message}'
+        DATE_FORMAT = '%H:%M:%S'
+        formatter = Formatter(fmt=FORMAT, datefmt=DATE_FORMAT, style='{')
 
         lg.handlers = []
 
         fh = FileHandler(str(log_file))
-        fh.setLevel(DEBUG)
         fh.setFormatter(formatter)
         lg.addHandler(fh)
 
         ch = StreamHandler()
-        ch.setLevel(INFO)
         ch.setFormatter(formatter)
         lg.addHandler(ch)
 
