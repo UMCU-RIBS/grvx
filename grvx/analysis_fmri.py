@@ -1,73 +1,45 @@
-from boavus import boavus
-
+from boavus.freesurfer import reconall
+from boavus.fsl import feat
+from boavus.fmri import (compare,
+                         at_electrodes,
+                         )
 from .core.constants import (FREESURFER_PATH,
                              ANALYSIS_PATH,
                              DATA_PATH,
                              PARAMETERS,
-                             Parameters_Json,
                              )
 from .core.log import with_log
 
 
 @with_log
 def Run_FreeSurfer(lg, img_dir):
-    FREESURFER_PATH.mkdir(exist_ok=True)
 
-    boavus([
-        'freesurfer',
-        'reconall',
-        '--bids_dir',
-        str(DATA_PATH),
-        '--freesurfer_dir',
-        str(FREESURFER_PATH),
-        '--log',
-        'debug',
-        ])
+    reconall.main(
+        bids_dir=DATA_PATH,
+        freesurfer_dir=FREESURFER_PATH,
+        )
 
 
 @with_log
 def Run_fMRI_feat(lg, img_dir):
-    boavus([
-        'fsl',
-        'feat',
-        '--bids_dir',
-        str(DATA_PATH),
-        '--analysis_dir',
-        str(ANALYSIS_PATH),
-        '--log',
-        'debug',
-        ])
+
+    feat.main(
+        bids_dir=DATA_PATH,
+        analysis_dir=ANALYSIS_PATH,
+        )
 
 
 @with_log
 def Compare_Feat(lg, img_dir):
 
-    PARAMETERS_JSON = Parameters_Json(PARAMETERS['compare_fmri'])
-    boavus([
-        'fmri',
-        'compare',
-        '--analysis_dir',
-        str(ANALYSIS_PATH),
-        '--parameters',
-        PARAMETERS_JSON.name,
-        '--log',
-        'debug',
-        ])
-    PARAMETERS_JSON.delete()
+    compare.main(
+        analysis_dir=ANALYSIS_PATH,
+        **PARAMETERS['fmri_compare'],
+        )
 
-    PARAMETERS_JSON = Parameters_Json(PARAMETERS['atelectrodes'])
-    boavus([
-        'fmri',
-        'at_electrodes',
-        '--bids_dir',
-        str(DATA_PATH),
-        '--freesurfer_dir',
-        str(FREESURFER_PATH),
-        '--analysis_dir',
-        str(ANALYSIS_PATH),
-        '--parameters',
-        PARAMETERS_JSON.name,
-        '--log',
-        'debug',
-        ])
-    PARAMETERS_JSON.delete()
+    at_electrodes.main(
+        bids_dir=DATA_PATH,
+        freesurfer_dir=FREESURFER_PATH,
+        analysis_dir=ANALYSIS_PATH,
+        **PARAMETERS['at_electrodes'],
+        )
