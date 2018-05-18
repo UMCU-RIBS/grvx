@@ -1,8 +1,6 @@
 from collections import OrderedDict
 from json import dump, load
-from os import remove
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 
 PROJECT = 'grvx'
 
@@ -25,17 +23,6 @@ with PARAMETERS_PATH.open('r') as f:
 def write_parameters(parameters):
     with PARAMETERS_PATH.open('w') as f:
         dump(parameters, f, ensure_ascii=False, indent=' ')
-
-
-class Parameters_Json:
-    def __init__(self, parameters):
-        with NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmpfile:
-            dump(parameters, tmpfile)
-
-        self.name = tmpfile.name
-
-    def delete(self):
-        remove(self.name)
 
 
 IMAGES_PATH.mkdir(parents=True, exist_ok=True)
