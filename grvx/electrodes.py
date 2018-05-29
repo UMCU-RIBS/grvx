@@ -1,10 +1,9 @@
-from boavus.ieeg import (project_electrodes,
-                         assign_regions,
-                         )
+from boavus.electrodes import (project_to_surf,
+                               assign_regions,
+                               )
 from .core.constants import (FREESURFER_PATH,
                              DATA_PATH,
                              ANALYSIS_PATH,
-                             OUTPUT_PATH,
                              )
 from .core.log import with_log
 
@@ -12,7 +11,7 @@ from .core.log import with_log
 @with_log
 def Project_Elec_On_Surf(lg, img_dir):
 
-    project_electrodes.main(
+    project_to_surf.main(
         bids_dir=DATA_PATH,
         freesurfer_dir=FREESURFER_PATH,
         analysis_dir=ANALYSIS_PATH,
