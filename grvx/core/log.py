@@ -43,7 +43,7 @@ def run_pandoc(export='pdf'):
     output_file = str(LOGOUTPUT_PATH / output_name)
 
     # Convert with pandoc
-    cmd = ['pandoc', '-s', '-S', '--toc']
+    cmd = ['pandoc', '-s', '-f', 'markdown+smart', '--toc']
     if export == 'pdf':
         cmd.extend(['-V', 'documentclass=report'])
         cmd.extend(['-V', 'geometry:margin=1cm'])

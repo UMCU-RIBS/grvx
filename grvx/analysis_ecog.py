@@ -1,6 +1,7 @@
 from boavus.ieeg import (preprocessing,
                          psd,
                          compare,
+                         read,
                          )
 
 from .core.constants import (DATA_PATH,
@@ -13,8 +14,13 @@ from .core.log import with_log
 @with_log
 def Compare_ECoG(lg, img_dir):
 
-    preprocessing.main(
+    read.main(
         bids_dir=DATA_PATH,
+        analysis_dir=ANALYSIS_PATH,
+        **PARAMETERS['ecog_read'],
+        )
+
+    preprocessing.main(
         analysis_dir=ANALYSIS_PATH,
         **PARAMETERS['preprocessing'],
         )
