@@ -15,7 +15,7 @@ def Project_Elec_On_Surf(lg, img_dir):
         bids_dir=DATA_PATH,
         freesurfer_dir=FREESURFER_PATH,
         analysis_dir=ANALYSIS_PATH,
-        acquisition='ctmr',
+        acquisition='*al',
         )
 
 
@@ -25,5 +25,5 @@ def Assign_Regions_To_Elec(lg, img_dir):
     assign_regions.main(
         bids_dir=DATA_PATH,
         freesurfer_dir=FREESURFER_PATH,
-        acquisition='*projected',
+        acquisition='*ctmr',
         )
