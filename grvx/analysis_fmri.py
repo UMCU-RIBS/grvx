@@ -1,4 +1,3 @@
-from boavus.freesurfer import reconall
 from boavus.fsl import feat
 from boavus.fmri import (compare,
                          at_electrodes,
@@ -9,15 +8,6 @@ from .core.constants import (FREESURFER_PATH,
                              PARAMETERS,
                              )
 from .core.log import with_log
-
-
-@with_log
-def Run_FreeSurfer(lg, img_dir):
-
-    reconall.main(
-        bids_dir=DATA_PATH,
-        freesurfer_dir=FREESURFER_PATH,
-        )
 
 
 @with_log

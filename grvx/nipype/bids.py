@@ -8,10 +8,10 @@ SUBJECTS = list(set(SUBJECTS) - {'spoo', 'zuil'})
 
 
 def get_bids(bids_dir, subject):
-    from pathlib import Path
     from bidso.find import find_in_bids
 
     return (
+        'sub-' + subject,
         str(find_in_bids(bids_dir, subject=subject, modality='T1w', extension='.nii.gz')),
         str(find_in_bids(bids_dir, subject=subject, modality='bold', extension='.nii.gz')),
         str(find_in_bids(bids_dir, subject=subject, modality='ieeg', extension='.eeg')),
@@ -25,6 +25,7 @@ BIDS = Function(
         'subject',
     ],
     output_names=[
+        'subject',
         'anat',
         'func',
         'ieeg',

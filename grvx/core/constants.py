@@ -34,7 +34,6 @@ DERIVATIVES_PATH.mkdir(parents=True, exist_ok=True)
 # FUNCTION NAMES -------------------------------------------------------------#
 ALL_FUNC = OrderedDict([
     ('-r', 'Read_As_Bids'),
-    ('-s', 'Run_FreeSurfer'),
     ('-p', 'Project_Elec_On_Surf'),
     ('-a', 'Assign_Regions_To_Elec'),
     ('-f', 'Run_fMRI_feat'),
@@ -51,3 +50,5 @@ ANALYSIS_PATH = DERIVATIVES_PATH / 'analysis'
 ANALYSIS_PATH.mkdir(parents=True, exist_ok=True)
 OUTPUT_PATH = DERIVATIVES_PATH / 'grvx'
 OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
+NIPYPE_PATH = DERIVATIVES_PATH / 'nipype'
+NIPYPE_PATH.mkdir(parents=True, exist_ok=True)
