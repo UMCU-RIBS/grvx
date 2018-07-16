@@ -12,7 +12,6 @@ from .bids import bids, SUBJECTS
 from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, ANALYSIS_PATH
 
 
-
 def create_grvx_workflow():
     node_reconall.inputs.subjects_dir = str(FREESURFER_PATH)
     bids.iterables = ('subject', SUBJECTS)
@@ -36,10 +35,10 @@ def create_grvx_workflow():
     # w.connect(bids, 'subject', node_reconall, 'subject_id')
     # w.connect(bids, 'anat', node_reconall, 'T1_files')
 
-    # w.connect(bids, 'func', node_featdesign, 'func')
-    # w.connect(bids, 'anat', node_featdesign, 'anat')
+    w.connect(bids, 'func', node_featdesign, 'func')
+    w.connect(bids, 'anat', node_featdesign, 'anat')
 
-    # w.connect(node_featdesign, 'fsf_file', node_feat, 'fsf_file')
+    w.connect(node_featdesign, 'fsf_file', node_feat, 'fsf_file')
 
     w.connect(bids, 'ieeg', node_ieeg_read, 'ieeg')
     w.connect(bids, 'elec', node_ieeg_read, 'electrodes')
