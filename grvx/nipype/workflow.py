@@ -66,6 +66,7 @@ def create_grvx_workflow():
     w.connect(node_feat, 'feat_dir', node_fmri_compare, 'feat_path')
 
     w.connect(node_fmri_compare, 'out_file', node_fmri_atelec, 'measure_nii')
+    w.connect(bids, 'elec', node_fmri_atelec, 'electrodes')
 
     w.connect(bids, 'ieeg', node_ieeg_read, 'ieeg')
     w.connect(bids, 'elec', node_ieeg_read, 'electrodes')
@@ -74,7 +75,7 @@ def create_grvx_workflow():
     w.connect(node_ieeg_frequency, 'ieeg', node_ieeg_compare, 'in_files')
 
     w.connect(node_ieeg_compare, 'tsv_compare', node_corr, 'ecog_file')
-    w.connect(node_fmri_atelec, 'out_file', node_corr, 'fmri_file')
+    w.connect(node_fmri_atelec, 'fmri_vals', node_corr, 'fmri_file')
 
     w.write_graph(graph2use='flat')
 
