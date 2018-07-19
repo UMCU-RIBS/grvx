@@ -1,7 +1,7 @@
-from nipype import Workflow, Node, MapNode
+from nipype import Workflow, Node, MapNode, config, logging
 from nipype.interfaces.fsl import FEAT
+from nipype.interfaces.freesurfer import ReconAll
 
-from boavus.freesurfer.reconall import node_reconall
 from boavus.nipype import (function_ieeg_read,
                            function_ieeg_preprocess,
                            function_ieeg_frequency,
@@ -16,9 +16,26 @@ from .bids import bids, SUBJECTS
 from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, ANALYSIS_PATH, OUTPUT_PATH
 
 
+config.update_config({
+    'logging': {
+        'log_directory': NIPYPE_PATH / 'log',
+        'log_to_file': True,
+        },
+    'execution': {
+        'crashdump_dir': NIPYPE_PATH / 'log',
+        'keep_inputs': 'true',
+        'remove_unnecessary_outputs': 'false',
+        },
+    })
+logging.update_logging(config)
+
+
 def create_grvx_workflow():
-    node_reconall.inputs.subjects_dir = str(FREESURFER_PATH)
     bids.iterables = ('subject', SUBJECTS)
+
+    node_reconall = Node(ReconAll(), name='freesurfer')
+    node_reconall.inputs.subjects_dir = str(FREESURFER_PATH)
+    node_reconall.inputs.flags = ['-cw256', ]
 
     node_featdesign = Node(FEAT_model, name='feat_design')
     node_featdesign.inputs.analysis_dir = str(ANALYSIS_PATH)
@@ -56,8 +73,8 @@ def create_grvx_workflow():
 
     w = Workflow('grvx')
     w.base_dir = str(NIPYPE_PATH)
-    # w.connect(bids, 'subject', node_reconall, 'subject_id')
-    # w.connect(bids, 'anat', node_reconall, 'T1_files')
+    w.connect(bids, 'subject', node_reconall, 'subject_id')
+    w.connect(bids, 'anat', node_reconall, 'T1_files')
 
     w.connect(bids, 'func', node_featdesign, 'func')
     w.connect(bids, 'anat', node_featdesign, 'anat')
