@@ -1,5 +1,5 @@
 from nipype import Workflow, Node, MapNode, config, logging
-from nipype.interfaces.fsl import FEAT, BET
+from nipype.interfaces.fsl import FEAT, BET, FLIRT
 from nipype.interfaces.freesurfer import ReconAll
 
 from boavus.ieeg import (function_ieeg_read,
@@ -10,13 +10,19 @@ from boavus.ieeg import (function_ieeg_read,
 
 from boavus.fsl import (function_prepare_design,
                         )
-from boavus.nipype import (function_fmri_compare,
-                           function_fmri_atelec,
-                           function_corr,
+from boavus.fmri import (function_fmri_compare,
+                         function_fmri_atelec,
+                         function_fmri_graymatter,
+                         )
+from boavus.nipype import (function_corr,
                            )
 
 from .bids import bids, SUBJECTS
-from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, ANALYSIS_PATH, OUTPUT_PATH
+from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, OUTPUT_PATH
+
+GRAYMATTER = True
+UPSAMPLE = True
+UPSAMPLE_RESOLUTION = 1
 
 
 config.update_config({
@@ -72,24 +78,32 @@ def workflow_fmri():
 
     node_feat = Node(FEAT(), name='feat')
 
-    node_fmri_compare = Node(function_fmri_compare, name='fmri_compare')
-    node_fmri_compare.inputs.analysis_dir = str(ANALYSIS_PATH)
-    node_fmri_compare.inputs.measure = 'percent'
-    node_fmri_compare.inputs.normalize_to_mean = False
+    node_compare = Node(function_fmri_compare, name='compare')
+    node_compare.inputs.measure = 'percent'
+    node_compare.inputs.normalize_to_mean = False
 
-    node_fmri_atelec = Node(function_fmri_atelec, name='fmri_atelec')
-    node_fmri_atelec.inputs.upsample = False
-    node_fmri_atelec.inputs.graymatter = False
-    node_fmri_atelec.inputs.distance = 'gaussian'
-    node_fmri_atelec.inputs.kernel_start = 4
-    node_fmri_atelec.inputs.kernel_end = 9
-    node_fmri_atelec.inputs.kernel_step = 1
+    node_upsample = Node(FLIRT(), name='upsample')  # not perfect, there is a small offset
+    node_upsample.inputs.apply_isoxfm = UPSAMPLE_RESOLUTION
+    node_upsample.inputs.interp = 'nearestneighbour'
+
+    node_atelec = Node(function_fmri_atelec, name='at_elec')
+    node_atelec.inputs.distance = 'gaussian'
+    node_atelec.inputs.kernel_sizes = list(range(1, 12, 1))
+    node_atelec.inputs.graymatter = False
 
     w = Workflow('fmri')
     w.connect(node_bet, 'out_file', node_featdesign, 'anat')
 
-    # w.connect(node_featdesign, 'fsf_file', node_feat, 'fsf_file')
-    # w.connect(node_feat, 'feat_dir', node_fmri_compare, 'feat_path')
+    w.connect(node_featdesign, 'fsf_file', node_feat, 'fsf_file')
+    w.connect(node_feat, 'feat_dir', node_compare, 'feat_path')
+
+    if UPSAMPLE:
+        w.connect(node_compare, 'out_file', node_upsample, 'in_file')
+        w.connect(node_compare, 'out_file', node_upsample, 'reference')
+        # w.connect(node_upsample, 'out_file', node_atelec, 'in_file')
+    else:
+        pass
+        # w.connect(node_compare, 'out_file', node_atelec, 'in_file')
 
     return w
 
@@ -101,6 +115,12 @@ def create_grvx_workflow():
     node_reconall.inputs.subjects_dir = str(FREESURFER_PATH)
     node_reconall.inputs.flags = ['-cw256', ]
 
+    node_graymatter = Node(function_fmri_graymatter, name='graymatter')
+
+    node_realign_gm = Node(FLIRT(), name='realign_gm')
+    node_realign_gm.inputs.apply_xfm = True
+    node_realign_gm.inputs.uses_qform = True
+
     node_corr = Node(function_corr, name='corr_fmri_ecog')
     node_corr.inputs.output_dir = str(OUTPUT_PATH)
     node_corr.inputs.PVALUE = 0.05
@@ -110,17 +130,22 @@ def create_grvx_workflow():
 
     w = Workflow('grvx')
     w.base_dir = str(NIPYPE_PATH)
-    # w.connect(bids, 'subject', w_fmri, 'freesurfer.subject_id')
-    # w.connect(bids, 'anat', w_fmri, 'freesurfer.T1_files')
+    w.connect(bids, 'subject', node_reconall, 'subject_id')
+    w.connect(bids, 'anat', node_reconall, 'T1_files')
 
-    w.connect(bids, 'anat', w_fmri, 'bet.in_file')
-    w.connect(bids, 'func', w_fmri, 'feat_design.func')
+    w.connect(node_reconall, 'ribbon', node_graymatter, 'ribbon')
+    w.connect(node_graymatter, 'out_file', node_realign_gm, 'in_file')
+    w.connect(w_fmri, 'upsample.out_file', node_realign_gm, 'reference')
 
     w.connect(bids, 'ieeg', w_ieeg, 'read.ieeg')
     w.connect(bids, 'elec', w_ieeg, 'read.electrodes')
 
+    w.connect(bids, 'anat', w_fmri, 'bet.in_file')
+    w.connect(bids, 'func', w_fmri, 'feat_design.func')
+
+    # w.connect(bids, 'elec', w_fmri, 'at_elec.electrodes')
+
     # w.connect(node_fmri_compare, 'out_file', node_fmri_atelec, 'measure_nii')
-    # w.connect(bids, 'elec', node_fmri_atelec, 'electrodes')
 
     # w.connect(node_ieeg_compare, 'tsv_compare', node_corr, 'ecog_file')
     # w.connect(node_fmri_atelec, 'fmri_vals', node_corr, 'fmri_file')
