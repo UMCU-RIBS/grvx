@@ -1,5 +1,5 @@
 from nipype import Workflow, Node, MapNode, config, logging
-from nipype.interfaces.fsl import FEAT, BET, FLIRT
+from nipype.interfaces.fsl import FEAT, BET, FLIRT, Threshold
 from nipype.interfaces.freesurfer import ReconAll
 
 from boavus.ieeg import (function_ieeg_read,
@@ -21,8 +21,10 @@ from .bids import bids, SUBJECTS
 from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, OUTPUT_PATH
 
 GRAYMATTER = True
-UPSAMPLE = True
+UPSAMPLE = False
 UPSAMPLE_RESOLUTION = 1
+DOWNSAMPLE_RESOLUTION = 4
+GRAYMATTER_THRESHOLD = 0.5
 
 
 config.update_config({
@@ -68,7 +70,7 @@ def workflow_ieeg():
     return w
 
 
-def workflow_fmri():
+def workflow_fmri(upsample, graymatter):
     node_bet = Node(BET(), name='bet')
     node_bet.inputs.frac = 0.5
     node_bet.inputs.vertical_gradient = 0
@@ -85,6 +87,14 @@ def workflow_fmri():
     node_upsample = Node(FLIRT(), name='upsample')  # not perfect, there is a small offset
     node_upsample.inputs.apply_isoxfm = UPSAMPLE_RESOLUTION
     node_upsample.inputs.interp = 'nearestneighbour'
+
+    node_downsample = Node(FLIRT(), name='downsample')  # not perfect, there is a small offset
+    node_downsample.inputs.apply_isoxfm = DOWNSAMPLE_RESOLUTION
+    node_downsample.inputs.interp = 'nearestneighbour'
+
+    node_threshold = Node(Threshold(), name='threshold')
+    node_threshold.inputs.thresh = GRAYMATTER_THRESHOLD
+    node_threshold.inputs.args = '-bin'
 
     node_graymatter = Node(function_fmri_graymatter, name='graymatter')
 
@@ -103,18 +113,29 @@ def workflow_fmri():
     w.connect(node_featdesign, 'fsf_file', node_feat, 'fsf_file')
     w.connect(node_feat, 'feat_dir', node_compare, 'feat_path')
 
-    w.connect(node_compare, 'out_file', node_upsample, 'in_file')
-    w.connect(node_compare, 'out_file', node_upsample, 'reference')
-    w.connect(node_upsample, 'out_file', node_atelec, 'in_file')
+    if upsample:
+        w.connect(node_compare, 'out_file', node_upsample, 'in_file')
+        w.connect(node_compare, 'out_file', node_upsample, 'reference')
+        w.connect(node_upsample, 'out_file', node_atelec, 'in_file')
+    else:
+        w.connect(node_compare, 'out_file', node_atelec, 'in_file')
 
-    w.connect(node_graymatter, 'out_file', node_realign_gm, 'in_file')
-    w.connect(node_upsample, 'out_file', node_realign_gm, 'reference')
-    w.connect(node_realign_gm, 'out_file', node_atelec, 'graymatter')
+    if graymatter:
+
+        if upsample:
+            w.connect(node_graymatter, 'out_file', node_realign_gm, 'in_file')
+            w.connect(node_upsample, 'out_file', node_realign_gm, 'reference')
+            w.connect(node_realign_gm, 'out_file', node_atelec, 'graymatter')
+        else:
+            w.connect(node_graymatter, 'out_file', node_downsample, 'in_file')
+            w.connect(node_graymatter, 'out_file', node_downsample, 'reference')
+            w.connect(node_downsample, 'out_file', node_threshold, 'in_file')
+            w.connect(node_threshold, 'out_file', node_atelec, 'graymatter')
 
     return w
 
 
-def create_grvx_workflow():
+def create_grvx_workflow(upsample=False, graymatter=False):
     bids.iterables = ('subject', SUBJECTS)
 
     node_reconall = Node(ReconAll(), name='freesurfer')
@@ -125,15 +146,16 @@ def create_grvx_workflow():
     node_corr.inputs.output_dir = str(OUTPUT_PATH)
     node_corr.inputs.PVALUE = 0.05
 
-    w_fmri = workflow_fmri()
+    w_fmri = workflow_fmri(upsample, graymatter)
     w_ieeg = workflow_ieeg()
 
     w = Workflow('grvx')
     w.base_dir = str(NIPYPE_PATH)
-    w.connect(bids, 'subject', node_reconall, 'subject_id')
-    w.connect(bids, 'anat', node_reconall, 'T1_files')
 
-    w.connect(node_reconall, 'ribbon', w_fmri, 'graymatter.ribbon')
+    if graymatter:
+        w.connect(bids, 'subject', node_reconall, 'subject_id')  # we might use freesurfer for other stuff too
+        w.connect(bids, 'anat', node_reconall, 'T1_files')
+        w.connect(node_reconall, 'ribbon', w_fmri, 'graymatter.ribbon')
 
     w.connect(bids, 'ieeg', w_ieeg, 'read.ieeg')
     w.connect(bids, 'elec', w_ieeg, 'read.electrodes')
@@ -143,8 +165,8 @@ def create_grvx_workflow():
 
     w.connect(bids, 'elec', w_fmri, 'at_elec.electrodes')
 
-    # w.connect(node_ieeg_compare, 'tsv_compare', node_corr, 'ecog_file')
-    # w.connect(node_fmri_atelec, 'fmri_vals', node_corr, 'fmri_file')
+    w.connect(w_ieeg, 'compare.tsv_compare', node_corr, 'ecog_file')
+    w.connect(w_fmri, 'at_elec.fmri_vals', node_corr, 'fmri_file')
 
     w.write_graph(graph2use='flat')
 
