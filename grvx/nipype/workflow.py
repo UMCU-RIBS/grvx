@@ -1,5 +1,5 @@
 from nipype import Workflow, Node, MapNode, config, logging
-from nipype.interfaces.fsl import FEAT
+from nipype.interfaces.fsl import FEAT, BET
 from nipype.interfaces.freesurfer import ReconAll
 
 from boavus.ieeg import (function_ieeg_read,
@@ -8,8 +8,9 @@ from boavus.ieeg import (function_ieeg_read,
                          function_ieeg_compare,
                          )
 
-from boavus.nipype import (FEAT_model,
-                           function_fmri_compare,
+from boavus.fsl import (function_prepare_design,
+                        )
+from boavus.nipype import (function_fmri_compare,
                            function_fmri_atelec,
                            function_corr,
                            )
@@ -62,12 +63,12 @@ def workflow_ieeg():
 
 
 def workflow_fmri():
-    node_reconall = Node(ReconAll(), name='freesurfer')
-    node_reconall.inputs.subjects_dir = str(FREESURFER_PATH)
-    node_reconall.inputs.flags = ['-cw256', ]
+    node_bet = Node(BET(), name='bet')
+    node_bet.inputs.frac = 0.5
+    node_bet.inputs.vertical_gradient = 0
+    node_bet.inputs.robust = True
 
-    node_featdesign = Node(FEAT_model, name='feat_design')
-    node_featdesign.inputs.analysis_dir = str(ANALYSIS_PATH)
+    node_featdesign = Node(function_prepare_design, name='feat_design')
 
     node_feat = Node(FEAT(), name='feat')
 
@@ -84,34 +85,45 @@ def workflow_fmri():
     node_fmri_atelec.inputs.kernel_end = 9
     node_fmri_atelec.inputs.kernel_step = 1
 
-    # w.connect(bids, 'func', node_featdesign, 'func')
-    # w.connect(bids, 'anat', node_featdesign, 'anat')
+    w = Workflow('fmri')
+    w.connect(node_bet, 'out_file', node_featdesign, 'anat')
 
     # w.connect(node_featdesign, 'fsf_file', node_feat, 'fsf_file')
     # w.connect(node_feat, 'feat_dir', node_fmri_compare, 'feat_path')
+
+    return w
+
+
+def create_grvx_workflow():
+    bids.iterables = ('subject', SUBJECTS)
+
+    node_reconall = Node(ReconAll(), name='freesurfer')
+    node_reconall.inputs.subjects_dir = str(FREESURFER_PATH)
+    node_reconall.inputs.flags = ['-cw256', ]
+
+    node_corr = Node(function_corr, name='corr_fmri_ecog')
+    node_corr.inputs.output_dir = str(OUTPUT_PATH)
+    node_corr.inputs.PVALUE = 0.05
+
+    w_fmri = workflow_fmri()
+    w_ieeg = workflow_ieeg()
+
+    w = Workflow('grvx')
+    w.base_dir = str(NIPYPE_PATH)
+    # w.connect(bids, 'subject', w_fmri, 'freesurfer.subject_id')
+    # w.connect(bids, 'anat', w_fmri, 'freesurfer.T1_files')
+
+    w.connect(bids, 'anat', w_fmri, 'bet.in_file')
+    w.connect(bids, 'func', w_fmri, 'feat_design.func')
+
+    w.connect(bids, 'ieeg', w_ieeg, 'read.ieeg')
+    w.connect(bids, 'elec', w_ieeg, 'read.electrodes')
 
     # w.connect(node_fmri_compare, 'out_file', node_fmri_atelec, 'measure_nii')
     # w.connect(bids, 'elec', node_fmri_atelec, 'electrodes')
 
     # w.connect(node_ieeg_compare, 'tsv_compare', node_corr, 'ecog_file')
     # w.connect(node_fmri_atelec, 'fmri_vals', node_corr, 'fmri_file')
-
-
-def create_grvx_workflow():
-    bids.iterables = ('subject', SUBJECTS)
-    node_corr = Node(function_corr, name='corr_fmri_ecog')
-    node_corr.inputs.output_dir = str(OUTPUT_PATH)
-    node_corr.inputs.PVALUE = 0.05
-
-    w_ieeg = workflow_ieeg()
-
-    w = Workflow('grvx')
-    w.base_dir = str(NIPYPE_PATH)
-    # w.connect(bids, 'subject', node_reconall, 'subject_id')
-    # w.connect(bids, 'anat', node_reconall, 'T1_files')
-
-    w.connect(bids, 'ieeg', w_ieeg, 'read.ieeg')
-    w.connect(bids, 'elec', w_ieeg, 'read.electrodes')
 
     w.write_graph(graph2use='flat')
 
