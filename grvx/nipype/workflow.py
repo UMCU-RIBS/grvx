@@ -2,11 +2,13 @@ from nipype import Workflow, Node, MapNode, config, logging
 from nipype.interfaces.fsl import FEAT
 from nipype.interfaces.freesurfer import ReconAll
 
-from boavus.ieeg import function_ieeg_read
-from boavus.nipype import (function_ieeg_preprocess,
-                           function_ieeg_frequency,
-                           function_ieeg_compare,
-                           FEAT_model,
+from boavus.ieeg import (function_ieeg_read,
+                         function_ieeg_preprocess,
+                         function_ieeg_powerspectrum,
+                         function_ieeg_compare,
+                         )
+
+from boavus.nipype import (FEAT_model,
                            function_fmri_compare,
                            function_fmri_atelec,
                            function_corr,
@@ -36,13 +38,19 @@ def workflow_ieeg():
     node_read.inputs.minimalduration = 20
 
     node_preprocess = MapNode(function_ieeg_preprocess, name='preprocess', iterfield=['ieeg', ])
-    node_frequency = MapNode(function_ieeg_frequency, name='frequency', iterfield=['ieeg', ])
+    node_preprocess.inputs.duration = 2
+    node_preprocess.inputs.reref = 'average'
+
+    node_frequency = MapNode(function_ieeg_powerspectrum, name='powerspectrum', iterfield=['ieeg', ])
     node_frequency.inputs.method = 'dh2012'
     node_frequency.inputs.taper = ''
     node_frequency.inputs.duration = 2
 
     node_compare = Node(function_ieeg_compare, name='compare')
-    node_compare.inputs.analysis_dir = str(ANALYSIS_PATH)
+    node_compare.inputs.frequency = (65, 96)
+    node_compare.inputs.baseline = False
+    node_compare.inputs.method = 'dh2012'
+    node_compare.inputs.measure = 'dh2012_r2'
 
     w = Workflow('ieeg')
 
