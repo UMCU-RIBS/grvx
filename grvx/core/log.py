@@ -1,4 +1,3 @@
-from base64 import b64encode
 from datetime import datetime
 from functools import wraps
 from logging import (DEBUG,
@@ -8,91 +7,14 @@ from logging import (DEBUG,
                      getLogger,
                      StreamHandler)
 from pprint import pformat
-from re import sub
 from socket import gethostname
-from subprocess import check_output, check_call
+from subprocess import check_output
 from shutil import rmtree
 
-from .constants import (ALL_FUNC, LOG_PATH, LOGSRC_PATH, PROJECT, IMAGES_PATH,
-                        PARAMETERS)
+from .constants import LOGSRC_PATH, PROJECT, IMAGES_PATH, PARAMETERS
 
 import grvx
 MODULE = grvx
-
-"""import plotly here, because at least it doesn't show all the warnings
-when import ipython and plotly"""
-import plotly
-
-
-def run_pandoc(export='pdf'):
-    """Convert log files to html or pdf"""
-
-    t = datetime.now()
-
-    # Prepare pandoc file
-    md_files = []
-    for func_name in ALL_FUNC.values():
-        one_md_file = LOGSRC_PATH / (func_name + '.md')
-        if one_md_file.exists():
-            md_files.append(str(one_md_file))
-
-    LOGOUTPUT_PATH = LOG_PATH / export
-    LOGOUTPUT_PATH.mkdir(exist_ok=True)
-
-    output_name = t.strftime(PROJECT + '_%y%m%d_%H%M%S') + '.' + export
-    output_file = str(LOGOUTPUT_PATH / output_name)
-
-    # Convert with pandoc
-    cmd = ['pandoc', '-s', '-f', 'markdown+smart', '--toc']
-    if export == 'pdf':
-        cmd.extend(['-V', 'documentclass=report'])
-        cmd.extend(['-V', 'geometry:margin=1cm'])
-    cmd.extend(md_files)
-    cmd.extend(['-o', output_file])
-    check_call(cmd)
-
-    if export == 'html':
-        embed_images_in_html(output_file)
-
-
-def embed_images_in_html(html_file):
-    """read images from png file and embed them into the html.
-
-    Parameters
-    ----------
-    html_file : path to file
-        path to html file
-
-    """
-    with open(html_file, 'r') as f:
-        s = f.read()
-
-    s1 = sub('<img src="([a-zA-Z0-9_/\.]*)" ', _embed_png, s)
-
-    with open(html_file, 'w') as f:
-        f.write(s1)
-
-
-def _embed_png(matched):
-    """Take a regex object with img tag and convert the png path to base64 data.
-
-    Parameters
-    ----------
-    matched : regex match object
-        matched regex of the img tag
-
-    Returns
-    -------
-    str
-        string to replace the whole img tag.
-    """
-    string = matched.group(0)
-    image_path = matched.group(1)
-
-    with open(image_path, 'rb') as f:
-        image_data = b64encode(f.read()).decode()
-
-    return string.replace(image_path, 'data:image/png;base64,' + image_data)
 
 
 def git_hash(package):
@@ -178,15 +100,3 @@ def with_log(function):
         return output
 
     return add_log
-
-
-def from_pandas_to_table(df, float_format='%g'):
-    """Convert pandas dataframe to markdown table.
-    """
-    txt = ['',
-           '|'.join(df.columns),
-           '|'.join(['---'] * len(df.columns)),
-           df.to_csv(index=False, header=False,
-                     float_format=float_format, sep='|'),
-           ]
-    return '\n'.join(txt)

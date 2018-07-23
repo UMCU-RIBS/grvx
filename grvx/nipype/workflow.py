@@ -20,8 +20,6 @@ from boavus.nipype import (function_corr,
 from .bids import bids, SUBJECTS
 from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, OUTPUT_PATH
 
-GRAYMATTER = True
-UPSAMPLE = False
 UPSAMPLE_RESOLUTION = 1
 DOWNSAMPLE_RESOLUTION = 4
 GRAYMATTER_THRESHOLD = 0.5
