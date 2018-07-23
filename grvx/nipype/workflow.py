@@ -14,8 +14,10 @@ from boavus.fmri import (function_fmri_compare,
                          function_fmri_atelec,
                          function_fmri_graymatter,
                          )
-from boavus.nipype import (function_corr,
-                           )
+from boavus.corr import (function_corr,
+                         function_corr_plot,
+                         function_corr_plot_all,
+                         )
 
 from .bids import bids, SUBJECTS
 from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, OUTPUT_PATH
@@ -142,7 +144,11 @@ def create_grvx_workflow(upsample=False, graymatter=False):
 
     node_corr = Node(function_corr, name='corr_fmri_ecog')
     node_corr.inputs.output_dir = str(OUTPUT_PATH)
-    node_corr.inputs.PVALUE = 0.05
+    node_corr.inputs.pvalue = 0.05
+
+    node_corr_plot = Node(function_corr_plot, name='corr_fmri_ecog_plot')
+    node_corr_plot.inputs.images_dir = str(OUTPUT_PATH)
+    node_corr_plot.inputs.pvalue = 0.05
 
     w_fmri = workflow_fmri(upsample, graymatter)
     w_ieeg = workflow_ieeg()
@@ -165,6 +171,11 @@ def create_grvx_workflow(upsample=False, graymatter=False):
 
     w.connect(w_ieeg, 'compare.tsv_compare', node_corr, 'ecog_file')
     w.connect(w_fmri, 'at_elec.fmri_vals', node_corr, 'fmri_file')
+
+    w.connect(w_ieeg, 'compare.tsv_compare', node_corr_plot, 'ecog_file')
+    w.connect(w_fmri, 'at_elec.fmri_vals', node_corr_plot, 'fmri_file')
+
+    w.connect(node_corr, 'out_file', node_corr_plot, 'corr_file')
 
     w.write_graph(graph2use='flat')
 

@@ -9,9 +9,8 @@ from logging import (DEBUG,
 from pprint import pformat
 from socket import gethostname
 from subprocess import check_output
-from shutil import rmtree
 
-from .constants import LOGSRC_PATH, PROJECT, IMAGES_PATH, PARAMETERS
+from .constants import LOGSRC_PATH, PROJECT, PARAMETERS
 
 import grvx
 MODULE = grvx
@@ -42,13 +41,6 @@ def with_log(function):
         log_file = LOGSRC_PATH / (function.__name__ + '.md')
         if log_file.exists():
             log_file.unlink()
-
-        images_dir = IMAGES_PATH / function.__name__
-        try:
-            rmtree(str(images_dir))
-        except (FileNotFoundError, OSError):
-            pass
-        images_dir.mkdir(parents=True, exist_ok=True)
 
         lg = getLogger('boavus')
         lg.setLevel(DEBUG)
@@ -82,7 +74,7 @@ def with_log(function):
         lg.info('{} on {}'.format(t0.strftime('%Y-%m-%d %H:%M:%S'),
                                   gethostname()))
 
-        output = function(lg, images_dir)
+        output = function(lg, None)
 
         lg.info('## Finished')
         t1 = datetime.now()
