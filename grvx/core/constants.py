@@ -27,8 +27,6 @@ DERIVATIVES_PATH.mkdir(parents=True, exist_ok=True)
 # DERIVATIVES -----------------------------------------------------------------#
 FREESURFER_PATH = DERIVATIVES_PATH / 'freesurfer'
 FREESURFER_PATH.mkdir(parents=True, exist_ok=True)
-ANALYSIS_PATH = DERIVATIVES_PATH / 'analysis'
-ANALYSIS_PATH.mkdir(parents=True, exist_ok=True)
 OUTPUT_PATH = DERIVATIVES_PATH / 'report'
 OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 NIPYPE_PATH = DERIVATIVES_PATH / 'nipype'

@@ -21,7 +21,7 @@ from boavus.corr import (function_corr,
                          )
 
 from .bids import bids, SUBJECTS
-from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, OUTPUT_PATH
+from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, OUTPUT_PATH, PARAMETERS
 
 UPSAMPLE_RESOLUTION = 1
 DOWNSAMPLE_RESOLUTION = 4
@@ -48,19 +48,19 @@ def workflow_ieeg():
     node_read.inputs.minimalduration = 20
 
     node_preprocess = MapNode(function_ieeg_preprocess, name='preprocess', iterfield=['ieeg', ])
-    node_preprocess.inputs.duration = 2
-    node_preprocess.inputs.reref = 'average'
+    node_preprocess.inputs.duration = PARAMETERS['preprocess']['duration']
+    node_preprocess.inputs.reref = PARAMETERS['preprocess']['reref']
 
     node_frequency = MapNode(function_ieeg_powerspectrum, name='powerspectrum', iterfield=['ieeg', ])
-    node_frequency.inputs.method = 'dh2012'
+    node_frequency.inputs.method = PARAMETERS['powerspectrum']['method']
     node_frequency.inputs.taper = ''
     node_frequency.inputs.duration = 2
 
-    node_compare = Node(function_ieeg_compare, name='compare')
-    node_compare.inputs.frequency = (65, 96)
-    node_compare.inputs.baseline = False
-    node_compare.inputs.method = 'dh2012'
-    node_compare.inputs.measure = 'dh2012_r2'
+    node_compare = Node(function_ieeg_compare, name='ecog_compare')
+    node_compare.inputs.frequency = PARAMETERS['ecog_compare']['frequency']
+    node_compare.inputs.baseline = PARAMETERS['ecog_compare']['baseline']
+    node_compare.inputs.method = PARAMETERS['ecog_compare']['method']
+    node_compare.inputs.measure = PARAMETERS['ecog_compare']['measure']
 
     w = Workflow('ieeg')
 
@@ -81,9 +81,9 @@ def workflow_fmri(upsample, graymatter):
 
     node_feat = Node(FEAT(), name='feat')
 
-    node_compare = Node(function_fmri_compare, name='compare')
-    node_compare.inputs.measure = 'percent'
-    node_compare.inputs.normalize_to_mean = True
+    node_compare = Node(function_fmri_compare, name='fmri_compare')
+    node_compare.inputs.measure = PARAMETERS['fmri_compare']['measure']
+    node_compare.inputs.normalize_to_mean = PARAMETERS['fmri_compare']['normalize_to_mean']
 
     node_upsample = Node(FLIRT(), name='upsample')  # not perfect, there is a small offset
     node_upsample.inputs.apply_isoxfm = UPSAMPLE_RESOLUTION
@@ -103,10 +103,15 @@ def workflow_fmri(upsample, graymatter):
     node_realign_gm.inputs.apply_xfm = True
     node_realign_gm.inputs.uses_qform = True
 
+    kernel_sizes = arange(
+        PARAMETERS['at_elec']['kernel_start'],
+        PARAMETERS['at_elec']['kernel_end'],
+        PARAMETERS['at_elec']['kernel_step'],
+        )
     node_atelec = Node(function_fmri_atelec, name='at_elec')
     node_atelec.inputs.distance = 'gaussian'
-    node_atelec.inputs.kernel_sizes = list(arange(1, 15, .2))
-    node_atelec.inputs.graymatter = False
+    node_atelec.inputs.kernel_sizes = list(kernel_sizes)
+    node_atelec.inputs.graymatter = graymatter
 
     w = Workflow('fmri')
     w.connect(node_bet, 'out_file', node_featdesign, 'anat')
@@ -136,7 +141,12 @@ def workflow_fmri(upsample, graymatter):
     return w
 
 
-def create_grvx_workflow(upsample=False, graymatter=False):
+def create_grvx_workflow(upsample=None, graymatter=None):
+    if upsample is None:
+        upsample = PARAMETERS['upsample']
+    if graymatter is None:
+        graymatter = PARAMETERS['graymatter']
+
     bids.iterables = ('subject', SUBJECTS)
 
     node_reconall = Node(ReconAll(), name='freesurfer')
@@ -145,11 +155,11 @@ def create_grvx_workflow(upsample=False, graymatter=False):
 
     node_corr = Node(function_corr, name='corr_fmri_ecog')
     node_corr.inputs.output_dir = str(OUTPUT_PATH / 'corr_values')
-    node_corr.inputs.pvalue = 0.05
+    node_corr.inputs.pvalue = PARAMETERS['corr']['pvalue']
 
     node_corr_plot = Node(function_corr_plot, name='corr_fmri_ecog_plot')
     node_corr_plot.inputs.images_dir = str(OUTPUT_PATH / 'best_kernel')
-    node_corr_plot.inputs.pvalue = 0.05
+    node_corr_plot.inputs.pvalue = PARAMETERS['corr']['pvalue']
 
     node_corr_plot_all = JoinNode(function_corr_plot_all, name='corr_fmri_ecog_plot_all', joinsource='bids', joinfield='in_files')
     node_corr_plot_all.inputs.images_dir = str(OUTPUT_PATH / 'corr_size')
@@ -173,10 +183,10 @@ def create_grvx_workflow(upsample=False, graymatter=False):
 
     w.connect(bids, 'elec', w_fmri, 'at_elec.electrodes')
 
-    w.connect(w_ieeg, 'compare.tsv_compare', node_corr, 'ecog_file')
+    w.connect(w_ieeg, 'ecog_compare.tsv_compare', node_corr, 'ecog_file')
     w.connect(w_fmri, 'at_elec.fmri_vals', node_corr, 'fmri_file')
 
-    w.connect(w_ieeg, 'compare.tsv_compare', node_corr_plot, 'ecog_file')
+    w.connect(w_ieeg, 'ecog_compare.tsv_compare', node_corr_plot, 'ecog_file')
     w.connect(w_fmri, 'at_elec.fmri_vals', node_corr_plot, 'fmri_file')
     w.connect(node_corr, 'out_file', node_corr_plot, 'corr_file')
 
