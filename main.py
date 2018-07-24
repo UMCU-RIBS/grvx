@@ -1,38 +1,31 @@
 #!/usr/bin/env python3
 """
-Run one or all functions of GRVX analysis and make a log as html or pdf.
+Run one or all functions of GRVX analysis
 """
 from argparse import ArgumentParser
-from pathlib import Path
 
-import grvx
-
-from grvx.core.constants import ALL_FUNC, PROJECT
-from grvx.core.log import run_pandoc
-
-BASE_PATH = Path(__file__).resolve().parent
+from grvx.core.constants import PROJECT
+from grvx.read_bids import Read_As_Bids
+from grvx.nipype.workflow import create_grvx_workflow
 
 
 parser = ArgumentParser(prog=PROJECT,
                         description=PROJECT.upper() + ' analysis')
 parser.add_argument('--all', action='store_true',
-                    help='run ALL the analysis steps')
-parser.add_argument('--to', default='html',
-                    help='format to export to: html (default), pdf')
-parser.add_argument('--pandoc', action='store_true',
-                    help='no analysis, only run pandoc')
+                    help='read and run analysis')
+parser.add_argument('-r', '--read', action='store_true',
+                    help='read data into BIDS format')
+parser.add_argument('-a', '--analysis', action='store_true',
+                    help='run analysis')
 
-
-for abbr, func_name in ALL_FUNC.items():
-    parser.add_argument(abbr, help=func_name.replace('_', ' '),
-                        action='store_true')
 args = parser.parse_args()
 
 
 if __name__ == '__main__':
 
-    for abbr, func_name in ALL_FUNC.items():
-        if args.all or getattr(args, abbr[1:]):
-            eval('grvx.' + func_name + '()')
+    if args.all or args.read:
+        Read_As_Bids()
 
-    run_pandoc(args.to)
+    if args.all or args.analysis:
+        w = create_grvx_workflow()
+        w.run('MultiProc')
