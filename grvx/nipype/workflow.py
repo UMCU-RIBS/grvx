@@ -1,6 +1,7 @@
-from nipype import Workflow, Node, MapNode, config, logging
+from nipype import Workflow, Node, MapNode, config, logging, JoinNode
 from nipype.interfaces.fsl import FEAT, BET, FLIRT, Threshold
 from nipype.interfaces.freesurfer import ReconAll
+from numpy import arange
 
 from boavus.ieeg import (function_ieeg_read,
                          function_ieeg_preprocess,
@@ -82,7 +83,7 @@ def workflow_fmri(upsample, graymatter):
 
     node_compare = Node(function_fmri_compare, name='compare')
     node_compare.inputs.measure = 'percent'
-    node_compare.inputs.normalize_to_mean = False
+    node_compare.inputs.normalize_to_mean = True
 
     node_upsample = Node(FLIRT(), name='upsample')  # not perfect, there is a small offset
     node_upsample.inputs.apply_isoxfm = UPSAMPLE_RESOLUTION
@@ -104,7 +105,7 @@ def workflow_fmri(upsample, graymatter):
 
     node_atelec = Node(function_fmri_atelec, name='at_elec')
     node_atelec.inputs.distance = 'gaussian'
-    node_atelec.inputs.kernel_sizes = list(range(1, 12, 1))
+    node_atelec.inputs.kernel_sizes = list(arange(1, 15, .2))
     node_atelec.inputs.graymatter = False
 
     w = Workflow('fmri')
@@ -143,12 +144,15 @@ def create_grvx_workflow(upsample=False, graymatter=False):
     node_reconall.inputs.flags = ['-cw256', ]
 
     node_corr = Node(function_corr, name='corr_fmri_ecog')
-    node_corr.inputs.output_dir = str(OUTPUT_PATH)
+    node_corr.inputs.output_dir = str(OUTPUT_PATH / 'corr_values')
     node_corr.inputs.pvalue = 0.05
 
     node_corr_plot = Node(function_corr_plot, name='corr_fmri_ecog_plot')
-    node_corr_plot.inputs.images_dir = str(OUTPUT_PATH)
+    node_corr_plot.inputs.images_dir = str(OUTPUT_PATH / 'best_kernel')
     node_corr_plot.inputs.pvalue = 0.05
+
+    node_corr_plot_all = JoinNode(function_corr_plot_all, name='corr_fmri_ecog_plot_all', joinsource='bids', joinfield='in_files')
+    node_corr_plot_all.inputs.images_dir = str(OUTPUT_PATH / 'corr_size')
 
     w_fmri = workflow_fmri(upsample, graymatter)
     w_ieeg = workflow_ieeg()
@@ -174,8 +178,9 @@ def create_grvx_workflow(upsample=False, graymatter=False):
 
     w.connect(w_ieeg, 'compare.tsv_compare', node_corr_plot, 'ecog_file')
     w.connect(w_fmri, 'at_elec.fmri_vals', node_corr_plot, 'fmri_file')
-
     w.connect(node_corr, 'out_file', node_corr_plot, 'corr_file')
+
+    w.connect(node_corr, 'out_file', node_corr_plot_all, 'in_files')
 
     w.write_graph(graph2use='flat')
 
