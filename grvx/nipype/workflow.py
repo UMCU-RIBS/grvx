@@ -1,3 +1,4 @@
+from shutil import rmtree
 from nipype import Workflow, Node, MapNode, config, logging, JoinNode
 from nipype.interfaces.fsl import FEAT, BET, FLIRT, Threshold
 from nipype.interfaces.freesurfer import ReconAll
@@ -26,15 +27,16 @@ from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, OUTPUT_PATH, PARAMETE
 UPSAMPLE_RESOLUTION = 1
 DOWNSAMPLE_RESOLUTION = 4
 GRAYMATTER_THRESHOLD = 0.5
+LOG_PATH = NIPYPE_PATH / 'log'
 
 
 config.update_config({
     'logging': {
-        'log_directory': NIPYPE_PATH / 'log',
+        'log_directory': LOG_PATH,
         'log_to_file': True,
         },
     'execution': {
-        'crashdump_dir': NIPYPE_PATH / 'log',
+        'crashdump_dir': LOG_PATH,
         'keep_inputs': 'false',
         'remove_unnecessary_outputs': 'false',
         },
@@ -50,6 +52,7 @@ def workflow_ieeg():
     node_preprocess = MapNode(function_ieeg_preprocess, name='preprocess', iterfield=['ieeg', ])
     node_preprocess.inputs.duration = PARAMETERS['preprocess']['duration']
     node_preprocess.inputs.reref = PARAMETERS['preprocess']['reref']
+    node_preprocess.inputs.offset = PARAMETERS['preprocess']['offset']
 
     node_frequency = MapNode(function_ieeg_powerspectrum, name='powerspectrum', iterfield=['ieeg', ])
     node_frequency.inputs.method = PARAMETERS['powerspectrum']['method']
@@ -193,5 +196,7 @@ def create_grvx_workflow(upsample=None, graymatter=None):
     w.connect(node_corr, 'out_file', node_corr_plot_all, 'in_files')
 
     w.write_graph(graph2use='flat')
+
+    rmtree(LOG_PATH, ignore_errors=True)
 
     return w
