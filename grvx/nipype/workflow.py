@@ -41,7 +41,6 @@ config.update_config({
         'remove_unnecessary_outputs': 'false',
         },
     })
-logging.update_logging(config)
 
 
 def workflow_ieeg():
@@ -134,12 +133,13 @@ def workflow_fmri(upsample, graymatter):
         if upsample:
             w.connect(node_graymatter, 'out_file', node_realign_gm, 'in_file')
             w.connect(node_upsample, 'out_file', node_realign_gm, 'reference')
-            w.connect(node_realign_gm, 'out_file', node_atelec, 'graymatter')
+            w.connect(node_realign_gm, 'out_file', node_threshold, 'in_file')
         else:
             w.connect(node_graymatter, 'out_file', node_downsample, 'in_file')
             w.connect(node_graymatter, 'out_file', node_downsample, 'reference')
             w.connect(node_downsample, 'out_file', node_threshold, 'in_file')
-            w.connect(node_threshold, 'out_file', node_atelec, 'graymatter')
+
+        w.connect(node_threshold, 'out_file', node_atelec, 'graymatter')
 
     return w
 
@@ -200,5 +200,7 @@ def create_grvx_workflow(upsample=None, graymatter=None):
     w.write_graph(graph2use='flat')
 
     rmtree(LOG_PATH, ignore_errors=True)
+    LOG_PATH.mkdir()
+    logging.update_logging(config)
 
     return w
