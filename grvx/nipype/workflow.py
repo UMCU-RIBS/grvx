@@ -92,7 +92,9 @@ def workflow_fmri(upsample, graymatter):
     node_upsample.inputs.interp = 'nearestneighbour'
 
     node_downsample = Node(FLIRT(), name='downsample')  # not perfect, there is a small offset
-    node_downsample.inputs.apply_isoxfm = DOWNSAMPLE_RESOLUTION
+    node_downsample.inputs.apply_xfm = True
+    node_downsample.inputs.uses_qform = True
+    # node_downsample.inputs.apply_isoxfm = DOWNSAMPLE_RESOLUTION
     node_downsample.inputs.interp = 'nearestneighbour'
 
     node_threshold = Node(Threshold(), name='threshold')
@@ -136,7 +138,7 @@ def workflow_fmri(upsample, graymatter):
             w.connect(node_realign_gm, 'out_file', node_threshold, 'in_file')
         else:
             w.connect(node_graymatter, 'out_file', node_downsample, 'in_file')
-            w.connect(node_graymatter, 'out_file', node_downsample, 'reference')
+            w.connect(node_compare, 'out_file', node_downsample, 'reference')
             w.connect(node_downsample, 'out_file', node_threshold, 'in_file')
 
         w.connect(node_threshold, 'out_file', node_atelec, 'graymatter')
