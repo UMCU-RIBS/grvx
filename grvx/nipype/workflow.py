@@ -170,11 +170,11 @@ def create_grvx_workflow(upsample=None, graymatter=None):
     node_corr_plot = Node(function_corr_plot, name='corr_fmri_ecog_plot')
     node_corr_plot.inputs.images_dir = str(IMG_PATH / 'best_kernel')
     node_corr_plot.inputs.pvalue = PARAMETERS['corr']['pvalue']
-    node_corr_plot.inputs.image = 'svg'
+    node_corr_plot.inputs.image = PARAMETERS['image_format']
 
     node_corr_plot_all = JoinNode(function_corr_plot_all, name='corr_fmri_ecog_plot_all', joinsource='bids', joinfield='in_files')
     node_corr_plot_all.inputs.images_dir = str(IMG_PATH / 'corr_size')
-    node_corr_plot_all.inputs.image = 'svg'
+    node_corr_plot_all.inputs.image = PARAMETERS['image_format']
 
     w_fmri = workflow_fmri(upsample, graymatter)
     w_ieeg = workflow_ieeg()
