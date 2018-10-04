@@ -14,3 +14,13 @@ def Plot_Results(lg):
 
     with Webdriver(PLOT_PATH) as wd:
         plot_gaussian(wd)
+
+
+"""
+    node_corr_plot = Node(function_corr_plot, name='corr_fmri_ecog_plot')
+    node_corr_plot.inputs.pvalue = PARAMETERS['corr']['pvalue']
+    node_corr_plot.inputs.image = PARAMETERS['image_format']
+
+    node_corr_plot_all = JoinNode(function_corr_plot_all, name='corr_fmri_ecog_plot_all', joinsource='bids', joinfield='in_files')
+    node_corr_plot_all.inputs.image = PARAMETERS['image_format']
+"""

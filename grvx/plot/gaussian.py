@@ -42,6 +42,7 @@ def plot_gaussian(wd):
 
     fig = go.Figure(
         data=traces,
-        layout=layout)
+        layout=layout,
+        )
 
     export_plotly(fig, 'gaussian.svg', int(4.5 * 90), int(6 * 90), wd)
