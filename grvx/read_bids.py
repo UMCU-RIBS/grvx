@@ -34,7 +34,7 @@ commontasks = DataFrame(df)
 
 
 @with_log
-def Read_As_Bids(lg, img_dir):
+def Read_As_Bids(lg):
     try:
         rmtree(DATA_PATH)
     except Exception:

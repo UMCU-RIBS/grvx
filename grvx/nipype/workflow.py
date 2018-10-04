@@ -22,7 +22,7 @@ from boavus.corr import (function_corr,
                          )
 
 from .bids import bids, SUBJECTS
-from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, OUTPUT_PATH, PARAMETERS
+from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, PARAMETERS
 
 UPSAMPLE_RESOLUTION = 1
 DOWNSAMPLE_RESOLUTION = 4
@@ -41,10 +41,6 @@ config.update_config({
         'remove_unnecessary_outputs': 'false',
         },
     })
-
-
-IMG_PATH = OUTPUT_PATH / PARAMETERS['at_elec']['distance']
-IMG_PATH.mkdir(exist_ok=True, parents=True)
 
 
 def workflow_ieeg():

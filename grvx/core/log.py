@@ -74,7 +74,7 @@ def with_log(function):
         lg.info('{} on {}'.format(t0.strftime('%Y-%m-%d %H:%M:%S'),
                                   gethostname()))
 
-        output = function(lg, None)
+        output = function(lg)
 
         lg.info('## Finished')
         t1 = datetime.now()
