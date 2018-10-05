@@ -161,7 +161,12 @@ def create_grvx_workflow(upsample=None, graymatter=None):
     node_corr = Node(function_corr, name='corr_fmri_ecog')
     node_corr.inputs.pvalue = PARAMETERS['corr']['pvalue']
 
-    node_corr_summary = JoinNode(function_corr_summary, name='corr_fmri_ecog_summary', joinsource='bids', joinfield='in_files')
+    node_corr_summary = JoinNode(
+        function_corr_summary,
+        name='corr_fmri_ecog_summary',
+        joinsource='bids',
+        joinfield=('in_files', 'ecog_files', 'fmri_files'),
+        )
 
     w_fmri = workflow_fmri(upsample, graymatter)
     w_ieeg = workflow_ieeg()
@@ -186,6 +191,8 @@ def create_grvx_workflow(upsample=None, graymatter=None):
     w.connect(w_fmri, 'at_elec.fmri_vals', node_corr, 'fmri_file')
 
     w.connect(node_corr, 'out_file', node_corr_summary, 'in_files')
+    w.connect(w_ieeg, 'ecog_compare.tsv_compare', node_corr_summary, 'ecog_files')
+    w.connect(w_fmri, 'at_elec.fmri_vals', node_corr_summary, 'fmri_files')
 
     w.write_graph(graph2use='flat')
 
