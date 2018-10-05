@@ -6,7 +6,7 @@ from exportimages import export_plotly
 from bidso.utils import read_tsv
 
 
-def plot_derivative(wd):
+def plot_smooth(wd):
     one_tsv = '/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/_subject_delft/corr_fmri_ecog/corr_values/sub-delft_ses-UMCUECOGday01_task-motorHandLeft_run-1_acq-clinical_bold_r2.tsv'
     one_tsv = Path(one_tsv)
     results = read_tsv(one_tsv)
@@ -41,7 +41,7 @@ def plot_derivative(wd):
         data=traces,
         layout=layout,
         )
-    export_plotly(fig, 'original.svg', int(3 * 96), int(5 * 96), wd)
+    export_plotly(fig, 'smooth_r2.svg', int(3 * 96), int(5 * 96), wd)
 
     traces = [
         dict(
@@ -64,4 +64,4 @@ def plot_derivative(wd):
         data=traces,
         layout=layout,
         )
-    export_plotly(fig, 'derivative.svg', int(3 * 96), int(5 * 96), wd)
+    export_plotly(fig, 'smooth_deriv.svg', int(3 * 96), int(5 * 96), wd)

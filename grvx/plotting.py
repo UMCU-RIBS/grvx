@@ -7,10 +7,14 @@ from .plot.histogram import plot_histogram
 from .plot.gaussian import plot_gaussian
 from .plot.fmri import plot_fmri
 from .plot.scatter import plot_scatter
+from .plot.smooth import plot_smooth
 
 
 @with_log
 def Plot_Results(lg):
+
+    for i in PLOT_PATH.glob('*'):
+        i.unlink()
 
     plot_fmri(PLOT_PATH)
 
@@ -18,3 +22,4 @@ def Plot_Results(lg):
         plot_gaussian(wd)
         plot_histogram(wd)
         plot_scatter(wd)
+        plot_smooth(wd)
