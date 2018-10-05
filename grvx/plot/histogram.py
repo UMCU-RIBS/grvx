@@ -4,6 +4,14 @@ from exportimages import export_plotly
 from pathlib import Path
 
 
+COLOR = {
+    'clinical': 'rgb(0, 0, 255)',
+    'experimental': 'rgb(255, 0, 0)',
+    }
+
+SHIFT = 'middle'  # middle / whole
+
+
 def plot_histogram(wd):
     summary = read_tsv(Path('/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv'))
 
@@ -18,11 +26,19 @@ def plot_histogram(wd):
             dtick = 0.2
             max_val = 1
 
-        xbins = dict(
-            start=bin_size / -2,
-            end=max_val + bin_size / 2,
-            size=bin_size,
-            )
+        if SHIFT == 'middle':
+            xbins = dict(
+                start=bin_size / -2,
+                end=max_val + bin_size / 2,
+                size=bin_size,
+                )
+
+        else:
+            xbins = dict(
+                start=0,
+                end=max_val + bin_size,
+                size=bin_size,
+                )
 
         traces = []
         for acq in set(summary['acquisition']):
@@ -32,18 +48,27 @@ def plot_histogram(wd):
                 go.Histogram(
                     x=values,
                     xbins=xbins,
-                    name=acq
+                    name=acq,
+                    marker=dict(
+                        color=COLOR[acq],
+                        ),
                 ))
 
         layout = go.Layout(
             barmode='stack',
+            showlegend=False,
             xaxis=dict(
                 range=(0, max_val + bin_size / 2),
                 dtick=dtick,
+                tickfont=dict(
+                    size=8,
+                    ),
                 ),
             yaxis=dict(
-                title='# participants',
                 dtick=1,
+                tickfont=dict(
+                    size=8,
+                    ),
                 ),
             )
 
