@@ -30,8 +30,8 @@ def plot_scatter(wd):
             y=y_fmri[ecog_tsv['pvalue'] > pvalue],
             mode='markers',
             marker=go.Marker(
-                symbol='circle-open',
-                color='black',
+                symbol='circle',
+                color='rgb(204, 204, 204)',
                 )
             ),
         go.Scatter(
@@ -41,7 +41,7 @@ def plot_scatter(wd):
             mode='markers',
             marker=go.Marker(
                 symbol='circle',
-                color='black',
+                color='rgb(0, 0, 0)',
                 )
             ),
         go.Scatter(
