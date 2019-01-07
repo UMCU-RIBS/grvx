@@ -1,7 +1,9 @@
 from shutil import rmtree
+from numpy import where
 
-from pandas import DataFrame
+from pandas import DataFrame, read_pickle
 
+from xelo2bids.core.constants import TASKS_PATH
 from xelo2bids import bids_mri, xelo2bids
 
 from .core.constants import DATA_PATH
@@ -9,9 +11,10 @@ from .core.log import with_log
 
 bids_mri.RUN_DEFACE = False
 
+"""
 # only TR = 0.6
 df = [
-    {'subj': 'arnhem', 'ECoG': 'arnhem2097', 'fMRI': 'd44f92264b48326c0c365b86c6e9b6e1'},
+    {'subj': 'arnhem', 'ECoG': 'arnhem2097', 'fMRI': '6abaa4da1779fdcbf148b759f13f366e'},
     {'subj': 'boxtel', 'ECoG': 'boxtel1964', 'fMRI': '5dcbae36c46e31039d2cdd4155a85f2e'},
     {'subj': 'bunnik', 'ECoG': 'bunnik_bunnik011116_motor_right_hand_streched_palmUpS001R01_TaskXML', 'fMRI': 'bunnik_bunnik160916_WIP_Circle_MotorHand_PrestoSense40sl_u_SENSE_8_1_TaskXML'},
     {'subj': 'delft', 'ECoG': 'delft1802', 'fMRI': 'delft1818'},
@@ -31,6 +34,9 @@ df = [
     {'subj': 'zwolle', 'ECoG': 'zwolle2008', 'fMRI': '8d21531d6cf396703b909c0324df3550'},
     ]
 commontasks = DataFrame(df)
+"""
+
+TASKNAME = 'motor'
 
 
 @with_log
@@ -40,11 +46,86 @@ def Read_As_Bids(lg):
     except Exception:
         pass
 
+    tasks = _find_tasks_with_motor()
+
     xelo2bids([
         '--log', 'debug',
         'create',
         str(DATA_PATH),
         '--keys',
-        ] +
-        list(commontasks.ECoG) + list(commontasks.fMRI)
+        ]
+        + tasks
         )
+
+
+def _find_tasks_with_motor():
+
+    df = read_pickle(TASKS_PATH)
+    tasks = []
+
+    for bodypart in ('Hand', 'Thumb'):
+        for leftright in ('Left', 'Right'):
+
+            ecog_subj = df.loc[
+                (df.Technique == 'ECoG')
+                & (df.TaskName == TASKNAME)
+                & (df.BodyPart == bodypart)
+                & (df.LeftRight == leftright),
+                'SubjectCode'].unique()
+
+            fmri_subj = df.loc[
+                (df.FieldStrength == '3T')
+                & (df.TaskName == TASKNAME)
+                & (df.BodyPart == bodypart)
+                & (df.LeftRight == leftright),
+                'SubjectCode'].unique()
+
+            subjects = set(ecog_subj) & set(fmri_subj)
+
+            for subj in subjects:
+                for technique in ('fMRI', 'ECoG'):
+
+                    if technique == 'fMRI':
+                        i = where(
+                            (df.Technique == technique)
+                            & (df.FieldStrength == '3T')
+                            & (df.SubjectCode == subj)
+                            & (df.TaskName == TASKNAME)
+                            & (df.BodyPart == bodypart)
+                            & (df.LeftRight == leftright))[0]
+                    else:
+                        i = where(
+                            (df.Technique == technique)
+                            & (df.SubjectCode == subj)
+                            & (df.TaskName == TASKNAME)
+                            & (df.BodyPart == bodypart)
+                            & (df.LeftRight == leftright))[0]
+
+                    if len(i) == 1:
+                        stem = df.index[i[0]]
+                    elif subj in ('buij', 'albe', 'enge', 'weve', 'mars'):  # don't remember why
+                        continue
+                    elif (subj == 'boxtel') & (technique == 'ECoG'):
+                        stem = 'boxtel1964'
+                    elif (subj == 'bunnik') & (technique == 'ECoG'):
+                        stem = 'bunnik_bunnik011116_motor_right_hand_streched_palmUpS001R01_TaskXML'
+                    elif (subj == 'duiven') & (technique == 'ECoG'):
+                        stem = 'duiven_20170212-102941-001_TaskXML'
+                    elif (subj == 'itens') & (technique == 'ECoG'):
+                        stem = 'itens_Itens_08032017_Motor_L_fingertappingS001R02_TaskXML'
+                    elif (subj == 'ommen') & (technique == 'ECoG'):
+                        stem = 'ommen_20170114-110422-013_TaskXML'
+                    elif (subj == 'ruit') & (technique == 'ECoG'):
+                        stem = 'ruit590'
+                    elif (subj == 'vledder') & (technique == 'ECoG'):
+                        stem = 'vledder_20170116-100726-001_TaskXML'
+                    elif (subj == '') & (technique == 'ECoG'):
+                        stem = ''
+                    elif (subj == 'zuil') & (technique == 'ECoG'):
+                        stem = 'zuil744'
+                    else:
+                        raise ValueError(f'Multiple tasks for {i}')
+
+                    tasks.append(stem)
+
+    return tasks
