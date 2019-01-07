@@ -1,7 +1,7 @@
 from shutil import rmtree
 from numpy import where
 
-from pandas import DataFrame, read_pickle
+from pandas import DataFrame, read_pickle, isnull
 
 from xelo2bids.core.constants import TASKS_PATH
 from xelo2bids import bids_mri, xelo2bids
@@ -74,7 +74,9 @@ def _find_tasks_with_motor():
                 'SubjectCode'].unique()
 
             fmri_subj = df.loc[
-                (df.FieldStrength == '3T')
+                (df.Technique == 'fMRI')
+                & (df.FieldStrength == '3T')
+                & (isnull(df.TR) | (df.TR < 0.7))
                 & (df.TaskName == TASKNAME)
                 & (df.BodyPart == bodypart)
                 & (df.LeftRight == leftright),
@@ -83,12 +85,16 @@ def _find_tasks_with_motor():
             subjects = set(ecog_subj) & set(fmri_subj)
 
             for subj in subjects:
+                if subj in ('buij', 'albe', 'enge', 'weve', 'mars', 'mang'):  # don't remember why
+                    continue
+
                 for technique in ('fMRI', 'ECoG'):
 
                     if technique == 'fMRI':
                         i = where(
                             (df.Technique == technique)
                             & (df.FieldStrength == '3T')
+                            & (isnull(df.TR) | (df.TR < 0.7))
                             & (df.SubjectCode == subj)
                             & (df.TaskName == TASKNAME)
                             & (df.BodyPart == bodypart)
@@ -103,8 +109,6 @@ def _find_tasks_with_motor():
 
                     if len(i) == 1:
                         stem = df.index[i[0]]
-                    elif subj in ('buij', 'albe', 'enge', 'weve', 'mars'):  # don't remember why
-                        continue
                     elif (subj == 'boxtel') & (technique == 'ECoG'):
                         stem = 'boxtel1964'
                     elif (subj == 'bunnik') & (technique == 'ECoG'):
