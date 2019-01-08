@@ -1,4 +1,5 @@
 from json import load
+from os import environ
 from pathlib import Path
 
 PROJECT = 'grvx'
@@ -25,8 +26,7 @@ DERIVATIVES_PATH.mkdir(parents=True, exist_ok=True)
 
 
 # DERIVATIVES -----------------------------------------------------------------#
-FREESURFER_PATH = DERIVATIVES_PATH / 'freesurfer'
-FREESURFER_PATH.mkdir(parents=True, exist_ok=True)
+FREESURFER_PATH = Path(environ['SUBJECTS_DIR'])
 PLOT_PATH = DERIVATIVES_PATH / 'plots'
 PLOT_PATH.mkdir(parents=True, exist_ok=True)
 NIPYPE_PATH = DERIVATIVES_PATH / 'nipype'
