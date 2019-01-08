@@ -87,6 +87,8 @@ def _find_tasks_with_motor():
             for subj in subjects:
                 if subj in ('buij', 'albe', 'enge', 'weve', 'mars', 'mang'):  # don't remember why
                     continue
+                if subj in ('arnhem', ):  # cannot use clinical data
+                    continue
 
                 for technique in ('fMRI', 'ECoG'):
 
