@@ -33,5 +33,5 @@ if __name__ == '__main__':
         w = create_grvx_workflow()
         w.run('MultiProc')
 
-    if args.all or args.plot:
+    if args.all or args.analysis or args.plot:
         Plot_Results()

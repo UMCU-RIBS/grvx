@@ -16,7 +16,7 @@ def Plot_Results(lg):
     for i in PLOT_PATH.glob('*'):
         i.unlink()
 
-    plot_fmri(PLOT_PATH)
+    # plot_fmri(PLOT_PATH)
 
     with Webdriver(PLOT_PATH) as wd:
         plot_gaussian(wd)
