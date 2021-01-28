@@ -16,7 +16,7 @@ def get_bids(bids_dir, subject):
         str(find_in_bids(bids_dir, subject=subject, modality='T1w', extension='.nii.gz')),
         str(find_in_bids(bids_dir, subject=subject, modality='bold', extension='.nii.gz')),
         str(find_in_bids(bids_dir, subject=subject, modality='ieeg', extension='.eeg')),
-        str(find_in_bids(bids_dir, subject=subject, acquisition='*al', modality='electrodes', extension='.tsv')),
+        str(find_in_bids(bids_dir, subject=subject, modality='electrodes', extension='.tsv')),
         )
 
 

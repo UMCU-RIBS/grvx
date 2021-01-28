@@ -1,7 +1,6 @@
 from numpy import arange
 from scipy.stats import norm
 import plotly.graph_objs as go
-from exportimages import export_plotly
 
 import colorlover as cl
 

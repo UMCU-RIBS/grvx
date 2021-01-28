@@ -2,7 +2,6 @@ from bidso.utils import read_tsv
 from boavus.corr.corrfmri import select_channels
 import plotly.graph_objs as go
 from pathlib import Path
-from exportimages import export_plotly
 
 pvalue = 0.05  # TODO: PARAMETERS
 

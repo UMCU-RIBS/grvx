@@ -48,20 +48,20 @@ def workflow_ieeg():
     node_read.inputs.minimalduration = 20
 
     node_preprocess = MapNode(function_ieeg_preprocess, name='preprocess', iterfield=['ieeg', ])
-    node_preprocess.inputs.duration = PARAMETERS['preprocess']['duration']
-    node_preprocess.inputs.reref = PARAMETERS['preprocess']['reref']
-    node_preprocess.inputs.offset = PARAMETERS['preprocess']['offset']
+    node_preprocess.inputs.duration = PARAMETERS['ieeg']['preprocess']['duration']
+    node_preprocess.inputs.reref = PARAMETERS['ieeg']['preprocess']['reref']
+    node_preprocess.inputs.offset = PARAMETERS['ieeg']['preprocess']['offset']
 
     node_frequency = MapNode(function_ieeg_powerspectrum, name='powerspectrum', iterfield=['ieeg', ])
-    node_frequency.inputs.method = PARAMETERS['powerspectrum']['method']
-    node_frequency.inputs.taper = PARAMETERS['powerspectrum']['taper']
-    node_frequency.inputs.duration = PARAMETERS['powerspectrum']['duration']
+    node_frequency.inputs.method = PARAMETERS['ieeg']['powerspectrum']['method']
+    node_frequency.inputs.taper = PARAMETERS['ieeg']['powerspectrum']['taper']
+    node_frequency.inputs.duration = PARAMETERS['ieeg']['powerspectrum']['duration']
 
     node_compare = Node(function_ieeg_compare, name='ecog_compare')
-    node_compare.inputs.frequency = PARAMETERS['ecog_compare']['frequency']
-    node_compare.inputs.baseline = PARAMETERS['ecog_compare']['baseline']
-    node_compare.inputs.method = PARAMETERS['ecog_compare']['method']
-    node_compare.inputs.measure = PARAMETERS['ecog_compare']['measure']
+    node_compare.inputs.frequency = PARAMETERS['ieeg']['ecog_compare']['frequency']
+    node_compare.inputs.baseline = PARAMETERS['ieeg']['ecog_compare']['baseline']
+    node_compare.inputs.method = PARAMETERS['ieeg']['ecog_compare']['method']
+    node_compare.inputs.measure = PARAMETERS['ieeg']['ecog_compare']['measure']
 
     w = Workflow('ieeg')
 
@@ -83,8 +83,8 @@ def workflow_fmri(upsample, graymatter):
     node_feat = Node(FEAT(), name='feat')
 
     node_compare = Node(function_fmri_compare, name='fmri_compare')
-    node_compare.inputs.measure = PARAMETERS['fmri_compare']['measure']
-    node_compare.inputs.normalize_to_mean = PARAMETERS['fmri_compare']['normalize_to_mean']
+    node_compare.inputs.measure = PARAMETERS['fmri']['fmri_compare']['measure']
+    node_compare.inputs.normalize_to_mean = PARAMETERS['fmri']['fmri_compare']['normalize_to_mean']
 
     node_upsample = Node(FLIRT(), name='upsample')  # not perfect, there is a small offset
     node_upsample.inputs.apply_isoxfm = UPSAMPLE_RESOLUTION
@@ -107,12 +107,12 @@ def workflow_fmri(upsample, graymatter):
     node_realign_gm.inputs.uses_qform = True
 
     kernel_sizes = arange(
-        PARAMETERS['at_elec']['kernel_start'],
-        PARAMETERS['at_elec']['kernel_end'],
-        PARAMETERS['at_elec']['kernel_step'],
+        PARAMETERS['fmri']['at_elec']['kernel_start'],
+        PARAMETERS['fmri']['at_elec']['kernel_end'],
+        PARAMETERS['fmri']['at_elec']['kernel_step'],
         )
     node_atelec = Node(function_fmri_atelec, name='at_elec')
-    node_atelec.inputs.distance = PARAMETERS['at_elec']['distance']
+    node_atelec.inputs.distance = PARAMETERS['fmri']['at_elec']['distance']
     node_atelec.inputs.kernel_sizes = list(kernel_sizes)
     node_atelec.inputs.graymatter = graymatter
 
@@ -148,9 +148,9 @@ def workflow_fmri(upsample, graymatter):
 def create_grvx_workflow(upsample=None, graymatter=None):
 
     if upsample is None:
-        upsample = PARAMETERS['upsample']
+        upsample = PARAMETERS['fmri']['upsample']
     if graymatter is None:
-        graymatter = PARAMETERS['graymatter']
+        graymatter = PARAMETERS['fmri']['graymatter']
 
     bids.iterables = ('subject', SUBJECTS)
 

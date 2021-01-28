@@ -2,7 +2,7 @@ from json import load
 from os import environ
 from pathlib import Path
 
-PROJECT = 'grvx'
+PROJECT = 'grvx_tmp'
 
 HOME = Path('/Fridge/users/giovanni')
 

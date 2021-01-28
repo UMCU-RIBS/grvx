@@ -1,5 +1,3 @@
-from exportimages import Webdriver
-
 from .core.log import with_log
 from .core.constants import PLOT_PATH
 

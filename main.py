@@ -5,7 +5,7 @@ Run one or all functions of GRVX analysis
 from argparse import ArgumentParser
 
 from grvx.core.constants import PROJECT
-from grvx.read_bids import Read_As_Bids
+# from grvx.read_bids import Read_As_Bids
 from grvx.nipype.workflow import create_grvx_workflow
 from grvx.plotting import Plot_Results
 

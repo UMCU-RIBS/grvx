@@ -1,7 +1,6 @@
 from pathlib import Path
 from numpy import gradient
 import plotly.graph_objs as go
-from exportimages import export_plotly
 
 from bidso.utils import read_tsv
 from bidso import file_Core

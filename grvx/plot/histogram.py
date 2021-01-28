@@ -1,6 +1,5 @@
 from bidso.utils import read_tsv
 import plotly.graph_objs as go
-from exportimages import export_plotly
 from pathlib import Path
 
 
