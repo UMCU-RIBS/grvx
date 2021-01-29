@@ -12,9 +12,8 @@ BAD_SUBJECTS = [
     'maas',  # TODO: maybe you can include it, but you need to check data
     'arnhem',  # no permission to use electrodes
     'boxtel',  # no permission to use electrodes
-    'hulst',  # wait for freesurfer
-    'delft',  # wait for freesurfer
     'smilde',  # no channels
+    'maarn',  # no channels
     ]
 
 task_name = 'motor'
