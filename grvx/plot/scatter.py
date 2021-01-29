@@ -6,7 +6,7 @@ from pathlib import Path
 pvalue = 0.05  # TODO: PARAMETERS
 
 
-def plot_scatter(wd):
+def plot_scatter():
     summary = read_tsv(Path('/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv'))
     ecog_file = Path('/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/ecog/sub-delft_ses-UMCUECOGday01_task-motorHandLeft_run-1_acq-clinical_compare.tsv')
     fmri_file = Path('/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/fmri/sub-delft_ses-UMCU3Tdaym13_task-motorHandLeft_run-1_bold_compare.tsv')
@@ -72,4 +72,4 @@ def plot_scatter(wd):
         layout=layout,
         )
 
-    export_plotly(fig, 'scatter.svg', int(3 * 96), int(5 * 96), wd)
+    return fig
