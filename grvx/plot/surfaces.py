@@ -1,5 +1,4 @@
 from wonambi.attr import Surf, Channels, Freesurfer
-from wonambi.viz import Viz3
 from numpy import hstack, vstack, array, median
 from bidso import Electrodes
 from bidso import file_Core

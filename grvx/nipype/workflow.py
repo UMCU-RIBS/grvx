@@ -4,45 +4,28 @@ from nipype.interfaces.fsl import FEAT, BET, FLIRT, Threshold
 from nipype.interfaces.freesurfer import ReconAll
 from numpy import arange
 
-from boavus.ieeg import (function_ieeg_read,
-                         function_ieeg_preprocess,
-                         function_ieeg_powerspectrum,
-                         function_ieeg_compare,
-                         )
+from ..nodes.ieeg import (
+    function_ieeg_read,
+    function_ieeg_preprocess,
+    function_ieeg_powerspectrum,
+    function_ieeg_compare,
+    )
+from ..nodes.fsl import function_prepare_design
+from ..nodes.fmri import (
+    function_fmri_compare,
+    function_fmri_atelec,
+    function_fmri_graymatter,
+    )
+from ..nodes.corr import function_corr, function_corr_summary
 
-from boavus.fsl import (function_prepare_design,
-                        )
-from boavus.fmri import (function_fmri_compare,
-                         function_fmri_atelec,
-                         function_fmri_graymatter,
-                         )
-from boavus.corr import (function_corr,
-                         function_corr_summary,
-                         )
-
-from .bids import bids, SUBJECTS
-from ..core.constants import NIPYPE_PATH, FREESURFER_PATH, PARAMETERS
+from .bids import bids
 
 UPSAMPLE_RESOLUTION = 1
 DOWNSAMPLE_RESOLUTION = 4
 GRAYMATTER_THRESHOLD = 0.2
-LOG_PATH = NIPYPE_PATH / 'log'
 
 
-config.update_config({
-    'logging': {
-        'log_directory': LOG_PATH,
-        'log_to_file': True,
-        },
-    'execution': {
-        'crashdump_dir': LOG_PATH,
-        'keep_inputs': 'false',
-        'remove_unnecessary_outputs': 'false',
-        },
-    })
-
-
-def workflow_ieeg():
+def workflow_ieeg(PARAMETERS):
     node_read = Node(function_ieeg_read, name='read')
     node_read.inputs.conditions = PARAMETERS['ieeg']['read']['conditions']
     node_read.inputs.minimalduration = PARAMETERS['ieeg']['read']['minimalduration']
@@ -72,7 +55,7 @@ def workflow_ieeg():
     return w
 
 
-def workflow_fmri(upsample, graymatter):
+def workflow_fmri(PARAMETERS):
     node_bet = Node(BET(), name='bet')
     node_bet.inputs.frac = 0.5
     node_bet.inputs.vertical_gradient = 0
@@ -145,12 +128,10 @@ def workflow_fmri(upsample, graymatter):
     return w
 
 
-def create_grvx_workflow(upsample=None, graymatter=None):
+def create_grvx_workflow(PARAMETERS):
 
-    if upsample is None:
-        upsample = PARAMETERS['fmri']['upsample']
-    if graymatter is None:
-        graymatter = PARAMETERS['fmri']['graymatter']
+    upsample = PARAMETERS['fmri']['upsample']
+    graymatter = PARAMETERS['fmri']['graymatter']
 
     bids.iterables = ('subject', SUBJECTS)
 
@@ -168,8 +149,8 @@ def create_grvx_workflow(upsample=None, graymatter=None):
         joinfield=('in_files', 'ecog_files', 'fmri_files'),
         )
 
-    w_fmri = workflow_fmri(upsample, graymatter)
-    w_ieeg = workflow_ieeg()
+    w_fmri = workflow_fmri(PARAMETERS)
+    w_ieeg = workflow_ieeg(PARAMETERS)
 
     w = Workflow('grvx')
     w.base_dir = str(NIPYPE_PATH)
@@ -195,6 +176,18 @@ def create_grvx_workflow(upsample=None, graymatter=None):
     w.connect(w_fmri, 'at_elec.fmri_vals', node_corr_summary, 'fmri_files')
 
     w.write_graph(graph2use='flat')
+
+    config.update_config({
+        'logging': {
+            'log_directory': LOG_PATH,
+            'log_to_file': True,
+            },
+        'execution': {
+            'crashdump_dir': LOG_PATH,
+            'keep_inputs': 'false',
+            'remove_unnecessary_outputs': 'false',
+            },
+        })
 
     rmtree(LOG_PATH, ignore_errors=True)
     LOG_PATH.mkdir()

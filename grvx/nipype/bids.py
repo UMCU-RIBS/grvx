@@ -1,12 +1,5 @@
 from nipype import Function, Node
 
-from ..core.constants import DATA_PATH
-
-# TODO: put this into constants
-SUBJECTS = [x.name[4:] for x in DATA_PATH.glob('sub-*')]
-# SUBJECTS = list(set(SUBJECTS) - {'spoo', 'zuil'})
-# SUBJECTS = list(set(SUBJECTS) - {'kuit', 'joure', 'maarn', 'mierlo'})  # no FS yet
-
 
 def get_bids(bids_dir, subject):
     from bidso.find import find_in_bids
@@ -37,4 +30,4 @@ BIDS = Function(
 
 
 bids = Node(BIDS, name='bids')
-bids.inputs.bids_dir = DATA_PATH
+# bids.inputs.bids_dir = DATA_PATH
