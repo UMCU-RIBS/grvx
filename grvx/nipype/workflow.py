@@ -44,8 +44,8 @@ config.update_config({
 
 def workflow_ieeg():
     node_read = Node(function_ieeg_read, name='read')
-    node_read.inputs.conditions = ['move', 'rest']
-    node_read.inputs.minimalduration = 20
+    node_read.inputs.conditions = PARAMETERS['ieeg']['read']['conditions']
+    node_read.inputs.minimalduration = PARAMETERS['ieeg']['read']['minimalduration']
 
     node_preprocess = MapNode(function_ieeg_preprocess, name='preprocess', iterfield=['ieeg', ])
     node_preprocess.inputs.duration = PARAMETERS['ieeg']['preprocess']['duration']
