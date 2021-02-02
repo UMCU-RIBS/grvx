@@ -8,7 +8,7 @@ from .utils import to_html, to_div
 
 
 def plot_smooth(plot_dir, parameters):
-    rsquared_dir = parameters['paths']['output'] / 'grvx/corr_fmri_ecog_summary/output/rsquared'
+    rsquared_dir = parameters['paths']['output'] / 'nipype/grvx/corr_fmri_ecog_summary/output/rsquared'
     for one_tsv in rsquared_dir.glob('*.tsv'):
         results = read_tsv(one_tsv)
         subject = file_Core(one_tsv).subject
@@ -18,7 +18,7 @@ def plot_smooth(plot_dir, parameters):
                 x=results['Kernel'],
                 y=results['Rsquared'],
                 marker=dict(
-                    color='k',
+                    color='black',
                     ),
                 ),
             ]
@@ -44,14 +44,14 @@ def plot_smooth(plot_dir, parameters):
             data=traces,
             layout=layout,
             )
-        to_html([to_div(fig), ], plot_dir / 'smooth' / f'{subject}_r2_smooth.html')
+        divs = [to_div(fig), ]
 
         traces = [
             dict(
                 x=results['Kernel'],
                 y=gradient(gradient(results['Rsquared'])),
                 marker=dict(
-                    color='k',
+                    color='black',
                     ),
                 ),
             ]
@@ -68,4 +68,5 @@ def plot_smooth(plot_dir, parameters):
             layout=layout,
             )
 
-        to_html([to_div(fig), ], plot_dir / 'smooth' / f'{subject}_r2_deriv.html')
+        divs = [to_div(fig), ]
+        to_html(divs, plot_dir / 'smooth' / f'{subject}_r2.html')

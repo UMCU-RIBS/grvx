@@ -1,12 +1,11 @@
 from bidso.utils import read_tsv
 import plotly.graph_objs as go
-from pathlib import Path
 from .utils import to_div, to_html
 
 
 COLOR = {
-    'clinical': 'rgb(0, 0, 255)',
-    'experimental': 'rgb(255, 0, 0)',
+    'micromed': 'rgb(0, 0, 255)',
+    'blackrock': 'rgb(255, 0, 0)',
     }
 
 SHIFT = 'middle'  # middle / whole
@@ -14,7 +13,7 @@ SHIFT = 'middle'  # middle / whole
 
 def plot_histogram(plot_dir, parameters):
 
-    summary_tsv = parameters['paths']['output'] / 'grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv')
+    summary_tsv = parameters['paths']['output'] / 'nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv'
     summary = read_tsv(summary_tsv)
 
     for value_type in ('size_at_peak', 'r2_at_peak', 'size_at_concave'):
