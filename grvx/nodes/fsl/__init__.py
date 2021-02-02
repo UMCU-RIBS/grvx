@@ -3,7 +3,7 @@ from nipype import Function
 
 def wrapper_prepare_design(func, anat):
     from pathlib import Path
-    from boavus.fsl.feat import prepare_design
+    from grvx.nodes.fsl.feat import prepare_design
 
     output = prepare_design(
         Path(func),

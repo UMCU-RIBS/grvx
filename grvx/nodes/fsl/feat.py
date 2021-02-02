@@ -17,6 +17,8 @@ def prepare_design(func, anat, output_dir):
     events_fsl = output_dir / task.events.filename.name
     _write_events(task.events.filename, events_fsl)
 
+    assert events_fsl.exists()
+
     # collect info
     img = niload(str(task.filename))
     n_vols = img.header.get_data_shape()[3]

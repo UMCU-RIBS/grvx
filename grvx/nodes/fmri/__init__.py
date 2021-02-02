@@ -3,7 +3,7 @@ from nipype import Function
 
 def wrapper_fmri_compare(feat_path, measure, normalize_to_mean):
     from pathlib import Path
-    from boavus.fmri.compare import compare_fmri
+    from grvx.nodes.fmri.compare import compare_fmri
 
     output = compare_fmri(
         Path(feat_path),
@@ -14,9 +14,8 @@ def wrapper_fmri_compare(feat_path, measure, normalize_to_mean):
 
 
 def wrapper_at_elec(in_file, electrodes, distance, kernel_sizes, graymatter=False):
-    # measure_nii, electrodes, freesurfer_dir='', graymatter=False, distance='guassian', kernel_sizes):
     from pathlib import Path
-    from boavus.fmri.at_electrodes import calc_fmri_at_elec
+    from grvx.nodes.fmri.at_electrodes import calc_fmri_at_elec
 
     output = calc_fmri_at_elec(
         Path(in_file),
@@ -30,7 +29,7 @@ def wrapper_at_elec(in_file, electrodes, distance, kernel_sizes, graymatter=Fals
 
 def wrapper_fmri_graymatter(ribbon):
     from pathlib import Path
-    from boavus.fmri.utils import ribbon2graymatter
+    from grvx.nodes.fmri.utils import ribbon2graymatter
     print(ribbon)
 
     output = ribbon2graymatter(

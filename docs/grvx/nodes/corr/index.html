@@ -29,7 +29,7 @@
 
 def wrapper_corr(fmri_file, ecog_file, output_dir=&#39;./corr_values&#39;, pvalue=0.05):
     from pathlib import Path
-    from boavus.corr.corrfmri import compute_corr_ecog_fmri
+    from grvx.nodes.corr.corrfmri import compute_corr_ecog_fmri
 
     results_tsv, fmri_file, ecog_file = compute_corr_ecog_fmri(
         Path(fmri_file).resolve(),
@@ -42,7 +42,7 @@ def wrapper_corr(fmri_file, ecog_file, output_dir=&#39;./corr_values&#39;, pvalu
 
 def wrapper_summary(in_files, ecog_files, fmri_files, output_dir=&#39;./output&#39;):
     from pathlib import Path
-    from boavus.corr.summary import collect_corr
+    from grvx.nodes.corr.summary import collect_corr
 
     collect_corr(in_files, ecog_files, fmri_files, Path(output_dir).resolve())
 
@@ -102,7 +102,7 @@ function_corr_summary = Function(
 </summary>
 <pre><code class="python">def wrapper_corr(fmri_file, ecog_file, output_dir=&#39;./corr_values&#39;, pvalue=0.05):
     from pathlib import Path
-    from boavus.corr.corrfmri import compute_corr_ecog_fmri
+    from grvx.nodes.corr.corrfmri import compute_corr_ecog_fmri
 
     results_tsv, fmri_file, ecog_file = compute_corr_ecog_fmri(
         Path(fmri_file).resolve(),
@@ -124,7 +124,7 @@ function_corr_summary = Function(
 </summary>
 <pre><code class="python">def wrapper_summary(in_files, ecog_files, fmri_files, output_dir=&#39;./output&#39;):
     from pathlib import Path
-    from boavus.corr.summary import collect_corr
+    from grvx.nodes.corr.summary import collect_corr
 
     collect_corr(in_files, ecog_files, fmri_files, Path(output_dir).resolve())</code></pre>
 </details>

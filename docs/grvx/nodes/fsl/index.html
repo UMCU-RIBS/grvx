@@ -29,7 +29,7 @@
 
 def wrapper_prepare_design(func, anat):
     from pathlib import Path
-    from boavus.fsl.feat import prepare_design
+    from grvx.nodes.fsl.feat import prepare_design
 
     output = prepare_design(
         Path(func),
@@ -83,7 +83,7 @@ function_prepare_design = Function(
 </summary>
 <pre><code class="python">def wrapper_prepare_design(func, anat):
     from pathlib import Path
-    from boavus.fsl.feat import prepare_design
+    from grvx.nodes.fsl.feat import prepare_design
 
     output = prepare_design(
         Path(func),

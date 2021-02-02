@@ -54,9 +54,12 @@ BIDS = Function(
     function=get_bids,
     )
 
-
-bids = Node(BIDS, name=&#39;bids&#39;)
-# bids.inputs.bids_dir = DATA_PATH</code></pre>
+def bids_node(parameters):
+    bids = Node(BIDS, name=&#39;bids&#39;)
+    bids.inputs.bids_dir = parameters[&#39;paths&#39;][&#39;input&#39;]
+    subjects = [sub.stem[4:] for sub in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+    bids.iterables = (&#39;subject&#39;, subjects)
+    return bids</code></pre>
 </details>
 </section>
 <section>
@@ -66,6 +69,23 @@ bids = Node(BIDS, name=&#39;bids&#39;)
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="grvx.nipype.bids.bids_node"><code class="name flex">
+<span>def <span class="ident">bids_node</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bids_node(parameters):
+    bids = Node(BIDS, name=&#39;bids&#39;)
+    bids.inputs.bids_dir = parameters[&#39;paths&#39;][&#39;input&#39;]
+    subjects = [sub.stem[4:] for sub in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+    bids.iterables = (&#39;subject&#39;, subjects)
+    return bids</code></pre>
+</details>
+</dd>
 <dt id="grvx.nipype.bids.get_bids"><code class="name flex">
 <span>def <span class="ident">get_bids</span></span>(<span>bids_dir, subject)</span>
 </code></dt>
@@ -105,6 +125,7 @@ bids = Node(BIDS, name=&#39;bids&#39;)
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="grvx.nipype.bids.bids_node" href="#grvx.nipype.bids.bids_node">bids_node</a></code></li>
 <li><code><a title="grvx.nipype.bids.get_bids" href="#grvx.nipype.bids.get_bids">get_bids</a></code></li>
 </ul>
 </li>

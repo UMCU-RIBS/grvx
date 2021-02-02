@@ -34,7 +34,7 @@ from bidso import Task, Electrodes
 lg = getLogger(__name__)
 
 
-def read_ieeg_block(filename, electrode_file, cond, minimalduration, output_dir):
+def read_ieeg_block(filename, electrode_file, conditions, minimalduration, output_dir):
     d = Dataset(filename, bids=True)
     markers = d.read_markers()
 
@@ -42,16 +42,17 @@ def read_ieeg_block(filename, electrode_file, cond, minimalduration, output_dir)
     elec_names = [x[&#39;name&#39;] for x in electrodes.electrodes.tsv]
     elec_names = [x for x in elec_names if x in d.header[&#39;chan_name&#39;]]  # exclude elec location that have no corresponding channel
 
-    clean_labels = _reject_channels(d, elec_names, cond, minimalduration)
+    all_conditions = [x for v in conditions.values() for x in v]
+    clean_labels = _reject_channels(d, elec_names, all_conditions, minimalduration)
 
     outputs = []
-    for cond_name in cond:
+    for active_baseline, data_conds in conditions.items():
         block_beg = []
         block_end = []
 
         for mrk in markers:
 
-            if mrk[&#39;name&#39;] in cond_name:
+            if mrk[&#39;name&#39;] in data_conds:
                 dur = (mrk[&#39;end&#39;] - mrk[&#39;start&#39;])
                 if dur &gt;= minimalduration:
                     block_beg.append(mrk[&#39;start&#39;])
@@ -61,7 +62,7 @@ def read_ieeg_block(filename, electrode_file, cond, minimalduration, output_dir)
 
         output_task = Task(filename)
         output_task.extension = &#39;.pkl&#39;
-        output_task.task += cond_name
+        output_task.task += active_baseline
         output_file = output_dir / output_task.get_filename()
         with output_file.open(&#39;wb&#39;) as f:
             dump(data, f)
@@ -106,7 +107,7 @@ def reject_channels(dat, reject_chan_thresh):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.nodes.ieeg.read.read_ieeg_block"><code class="name flex">
-<span>def <span class="ident">read_ieeg_block</span></span>(<span>filename, electrode_file, cond, minimalduration, output_dir)</span>
+<span>def <span class="ident">read_ieeg_block</span></span>(<span>filename, electrode_file, conditions, minimalduration, output_dir)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -114,7 +115,7 @@ def reject_channels(dat, reject_chan_thresh):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_ieeg_block(filename, electrode_file, cond, minimalduration, output_dir):
+<pre><code class="python">def read_ieeg_block(filename, electrode_file, conditions, minimalduration, output_dir):
     d = Dataset(filename, bids=True)
     markers = d.read_markers()
 
@@ -122,16 +123,17 @@ def reject_channels(dat, reject_chan_thresh):
     elec_names = [x[&#39;name&#39;] for x in electrodes.electrodes.tsv]
     elec_names = [x for x in elec_names if x in d.header[&#39;chan_name&#39;]]  # exclude elec location that have no corresponding channel
 
-    clean_labels = _reject_channels(d, elec_names, cond, minimalduration)
+    all_conditions = [x for v in conditions.values() for x in v]
+    clean_labels = _reject_channels(d, elec_names, all_conditions, minimalduration)
 
     outputs = []
-    for cond_name in cond:
+    for active_baseline, data_conds in conditions.items():
         block_beg = []
         block_end = []
 
         for mrk in markers:
 
-            if mrk[&#39;name&#39;] in cond_name:
+            if mrk[&#39;name&#39;] in data_conds:
                 dur = (mrk[&#39;end&#39;] - mrk[&#39;start&#39;])
                 if dur &gt;= minimalduration:
                     block_beg.append(mrk[&#39;start&#39;])
@@ -141,7 +143,7 @@ def reject_channels(dat, reject_chan_thresh):
 
         output_task = Task(filename)
         output_task.extension = &#39;.pkl&#39;
-        output_task.task += cond_name
+        output_task.task += active_baseline
         output_file = output_dir / output_task.get_filename()
         with output_file.open(&#39;wb&#39;) as f:
             dump(data, f)

@@ -24,6 +24,14 @@ UPSAMPLE_RESOLUTION = 1
 DOWNSAMPLE_RESOLUTION = 4
 GRAYMATTER_THRESHOLD = 0.2
 
+config.update_config({
+    'execution': {
+        'keep_inputs': 'false',
+        'remove_unnecessary_outputs': 'false',
+        'crashfile_format': 'text',
+        },
+    })
+
 
 def workflow_ieeg(parameters):
     node_read = Node(function_ieeg_read, name='read')
@@ -180,11 +188,6 @@ def create_grvx_workflow(parameters):
         'logging': {
             'log_directory': log_dir,
             'log_to_file': True,
-            },
-        'execution': {
-            'crashdump_dir': log_dir,
-            'keep_inputs': 'false',
-            'remove_unnecessary_outputs': 'false',
             },
         })
 

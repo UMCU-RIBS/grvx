@@ -28,6 +28,7 @@
 from pathlib import Path
 from json import load
 from os import environ
+from shutil import rmtree
 
 from .nipype.workflow import create_grvx_workflow
 from .plotting import plot_results
@@ -41,10 +42,6 @@ def command():
         &#39;parameters&#39;,
         help=&#39;point to parameters.json&#39;)
     parser.add_argument(
-        &#39;--all&#39;,
-        action=&#39;store_true&#39;,
-        help=&#39;prepare, run analysis and plot results&#39;)
-    parser.add_argument(
         &#39;-n&#39;, &#39;--nipype&#39;,
         action=&#39;store_true&#39;,
         help=&#39;prepare nipype workflow&#39;)
@@ -56,6 +53,14 @@ def command():
         &#39;-p&#39;, &#39;--plot&#39;,
         action=&#39;store_true&#39;,
         help=&#39;plot results&#39;)
+    parser.add_argument(
+        &#39;--all&#39;,
+        action=&#39;store_true&#39;,
+        help=&#39;prepare, run analysis and plot results&#39;)
+    parser.add_argument(
+        &#39;--reset&#39;,
+        action=&#39;store_true&#39;,
+        help=&#39;delete the whole output directory&#39;)
 
     args = parser.parse_args()
 
@@ -63,8 +68,14 @@ def command():
     with parameters_path.open() as f:
         parameters = load(f)
 
-    if parameters[&#39;freesurfer_subjects_dir&#39;] is None:
-        parameters[&#39;freesurfer_subjects_dir&#39;] = Path(environ[&#39;SUBJECTS_DIR&#39;])
+    if parameters[&#39;paths&#39;][&#39;freesurfer_subjects_dir&#39;] is None:
+        parameters[&#39;paths&#39;][&#39;freesurfer_subjects_dir&#39;] = Path(environ[&#39;SUBJECTS_DIR&#39;])
+
+    for k in parameters[&#39;paths&#39;]:
+        parameters[&#39;paths&#39;][k] = Path(parameters[&#39;paths&#39;][k]).resolve()
+
+    if args.reset:
+        rmtree(parameters[&#39;paths&#39;][&#39;output&#39;], ignore_errors=True)
 
     if args.all or args.nipype or args.analysis:
         w = create_grvx_workflow(parameters)
@@ -100,10 +111,6 @@ def command():
         &#39;parameters&#39;,
         help=&#39;point to parameters.json&#39;)
     parser.add_argument(
-        &#39;--all&#39;,
-        action=&#39;store_true&#39;,
-        help=&#39;prepare, run analysis and plot results&#39;)
-    parser.add_argument(
         &#39;-n&#39;, &#39;--nipype&#39;,
         action=&#39;store_true&#39;,
         help=&#39;prepare nipype workflow&#39;)
@@ -115,6 +122,14 @@ def command():
         &#39;-p&#39;, &#39;--plot&#39;,
         action=&#39;store_true&#39;,
         help=&#39;plot results&#39;)
+    parser.add_argument(
+        &#39;--all&#39;,
+        action=&#39;store_true&#39;,
+        help=&#39;prepare, run analysis and plot results&#39;)
+    parser.add_argument(
+        &#39;--reset&#39;,
+        action=&#39;store_true&#39;,
+        help=&#39;delete the whole output directory&#39;)
 
     args = parser.parse_args()
 
@@ -122,8 +137,14 @@ def command():
     with parameters_path.open() as f:
         parameters = load(f)
 
-    if parameters[&#39;freesurfer_subjects_dir&#39;] is None:
-        parameters[&#39;freesurfer_subjects_dir&#39;] = Path(environ[&#39;SUBJECTS_DIR&#39;])
+    if parameters[&#39;paths&#39;][&#39;freesurfer_subjects_dir&#39;] is None:
+        parameters[&#39;paths&#39;][&#39;freesurfer_subjects_dir&#39;] = Path(environ[&#39;SUBJECTS_DIR&#39;])
+
+    for k in parameters[&#39;paths&#39;]:
+        parameters[&#39;paths&#39;][k] = Path(parameters[&#39;paths&#39;][k]).resolve()
+
+    if args.reset:
+        rmtree(parameters[&#39;paths&#39;][&#39;output&#39;], ignore_errors=True)
 
     if args.all or args.nipype or args.analysis:
         w = create_grvx_workflow(parameters)

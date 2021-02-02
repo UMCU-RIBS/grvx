@@ -2,7 +2,7 @@ from nipype import Function
 
 def wrapper_read_ieeg_block(ieeg, electrodes, active_conditions, baseline_conditions, minimalduration):
     from pathlib import Path
-    from boavus.ieeg.read import read_ieeg_block
+    from grvx.nodes.ieeg.read import read_ieeg_block
 
     conditions = {
         'active': active_conditions,
@@ -20,7 +20,7 @@ def wrapper_read_ieeg_block(ieeg, electrodes, active_conditions, baseline_condit
 
 def wrapper_preprocess(ieeg, reref, duration, offset):
     from pathlib import Path
-    from boavus.ieeg.preprocessing import preprocess_ecog
+    from grvx.nodes.ieeg.preprocessing import preprocess_ecog
 
     output = preprocess_ecog(
         Path(ieeg),
@@ -33,7 +33,7 @@ def wrapper_preprocess(ieeg, reref, duration, offset):
 
 def wrapper_powerspectrum(ieeg, method, taper, duration):
     from pathlib import Path
-    from boavus.ieeg.psd import compute_powerspectrum
+    from grvx.nodes.ieeg.psd import compute_powerspectrum
 
     output = compute_powerspectrum(
         Path(ieeg),
@@ -47,7 +47,7 @@ def wrapper_powerspectrum(ieeg, method, taper, duration):
 def wrapper_ieeg_compare(in_files, frequency, baseline=False, method='dh2012',
                          measure='dh2012_r2'):
     from pathlib import Path
-    from boavus.ieeg.compare import compare_ieeg_freq
+    from grvx.nodes.ieeg.compare import compare_ieeg_freq
 
     output = compare_ieeg_freq(
         Path(in_files[0]),
