@@ -18,33 +18,34 @@ from ..nodes.fmri import (
     )
 from ..nodes.corr import function_corr, function_corr_summary
 
-from .bids import bids
+from .bids import bids_node
 
 UPSAMPLE_RESOLUTION = 1
 DOWNSAMPLE_RESOLUTION = 4
 GRAYMATTER_THRESHOLD = 0.2
 
 
-def workflow_ieeg(PARAMETERS):
+def workflow_ieeg(parameters):
     node_read = Node(function_ieeg_read, name='read')
-    node_read.inputs.conditions = PARAMETERS['ieeg']['read']['conditions']
-    node_read.inputs.minimalduration = PARAMETERS['ieeg']['read']['minimalduration']
+    node_read.inputs.active_conditions = parameters['ieeg']['read']['active_conditions']
+    node_read.inputs.baseline_conditions = parameters['ieeg']['read']['baseline_conditions']
+    node_read.inputs.minimalduration = parameters['ieeg']['read']['minimalduration']
 
     node_preprocess = MapNode(function_ieeg_preprocess, name='preprocess', iterfield=['ieeg', ])
-    node_preprocess.inputs.duration = PARAMETERS['ieeg']['preprocess']['duration']
-    node_preprocess.inputs.reref = PARAMETERS['ieeg']['preprocess']['reref']
-    node_preprocess.inputs.offset = PARAMETERS['ieeg']['preprocess']['offset']
+    node_preprocess.inputs.duration = parameters['ieeg']['preprocess']['duration']
+    node_preprocess.inputs.reref = parameters['ieeg']['preprocess']['reref']
+    node_preprocess.inputs.offset = parameters['ieeg']['preprocess']['offset']
 
     node_frequency = MapNode(function_ieeg_powerspectrum, name='powerspectrum', iterfield=['ieeg', ])
-    node_frequency.inputs.method = PARAMETERS['ieeg']['powerspectrum']['method']
-    node_frequency.inputs.taper = PARAMETERS['ieeg']['powerspectrum']['taper']
-    node_frequency.inputs.duration = PARAMETERS['ieeg']['powerspectrum']['duration']
+    node_frequency.inputs.method = parameters['ieeg']['powerspectrum']['method']
+    node_frequency.inputs.taper = parameters['ieeg']['powerspectrum']['taper']
+    node_frequency.inputs.duration = parameters['ieeg']['powerspectrum']['duration']
 
     node_compare = Node(function_ieeg_compare, name='ecog_compare')
-    node_compare.inputs.frequency = PARAMETERS['ieeg']['ecog_compare']['frequency']
-    node_compare.inputs.baseline = PARAMETERS['ieeg']['ecog_compare']['baseline']
-    node_compare.inputs.method = PARAMETERS['ieeg']['ecog_compare']['method']
-    node_compare.inputs.measure = PARAMETERS['ieeg']['ecog_compare']['measure']
+    node_compare.inputs.frequency = parameters['ieeg']['ecog_compare']['frequency']
+    node_compare.inputs.baseline = parameters['ieeg']['ecog_compare']['baseline']
+    node_compare.inputs.method = parameters['ieeg']['ecog_compare']['method']
+    node_compare.inputs.measure = parameters['ieeg']['ecog_compare']['measure']
 
     w = Workflow('ieeg')
 
@@ -55,7 +56,7 @@ def workflow_ieeg(PARAMETERS):
     return w
 
 
-def workflow_fmri(PARAMETERS):
+def workflow_fmri(parameters):
     node_bet = Node(BET(), name='bet')
     node_bet.inputs.frac = 0.5
     node_bet.inputs.vertical_gradient = 0
@@ -66,8 +67,8 @@ def workflow_fmri(PARAMETERS):
     node_feat = Node(FEAT(), name='feat')
 
     node_compare = Node(function_fmri_compare, name='fmri_compare')
-    node_compare.inputs.measure = PARAMETERS['fmri']['fmri_compare']['measure']
-    node_compare.inputs.normalize_to_mean = PARAMETERS['fmri']['fmri_compare']['normalize_to_mean']
+    node_compare.inputs.measure = parameters['fmri']['fmri_compare']['measure']
+    node_compare.inputs.normalize_to_mean = parameters['fmri']['fmri_compare']['normalize_to_mean']
 
     node_upsample = Node(FLIRT(), name='upsample')  # not perfect, there is a small offset
     node_upsample.inputs.apply_isoxfm = UPSAMPLE_RESOLUTION
@@ -90,14 +91,14 @@ def workflow_fmri(PARAMETERS):
     node_realign_gm.inputs.uses_qform = True
 
     kernel_sizes = arange(
-        PARAMETERS['fmri']['at_elec']['kernel_start'],
-        PARAMETERS['fmri']['at_elec']['kernel_end'],
-        PARAMETERS['fmri']['at_elec']['kernel_step'],
+        parameters['fmri']['at_elec']['kernel_start'],
+        parameters['fmri']['at_elec']['kernel_end'],
+        parameters['fmri']['at_elec']['kernel_step'],
         )
     node_atelec = Node(function_fmri_atelec, name='at_elec')
-    node_atelec.inputs.distance = PARAMETERS['fmri']['at_elec']['distance']
+    node_atelec.inputs.distance = parameters['fmri']['at_elec']['distance']
     node_atelec.inputs.kernel_sizes = list(kernel_sizes)
-    node_atelec.inputs.graymatter = graymatter
+    node_atelec.inputs.graymatter = parameters['fmri']['graymatter']
 
     w = Workflow('fmri')
     w.connect(node_bet, 'out_file', node_featdesign, 'anat')
@@ -105,16 +106,16 @@ def workflow_fmri(PARAMETERS):
     w.connect(node_featdesign, 'fsf_file', node_feat, 'fsf_file')
     w.connect(node_feat, 'feat_dir', node_compare, 'feat_path')
 
-    if upsample:
+    if parameters['fmri']['upsample']:
         w.connect(node_compare, 'out_file', node_upsample, 'in_file')
         w.connect(node_compare, 'out_file', node_upsample, 'reference')
         w.connect(node_upsample, 'out_file', node_atelec, 'in_file')
     else:
         w.connect(node_compare, 'out_file', node_atelec, 'in_file')
 
-    if graymatter:
+    if parameters['fmri']['graymatter']:
 
-        if upsample:
+        if parameters['fmri']['upsample']:
             w.connect(node_graymatter, 'out_file', node_realign_gm, 'in_file')
             w.connect(node_upsample, 'out_file', node_realign_gm, 'reference')
             w.connect(node_realign_gm, 'out_file', node_threshold, 'in_file')
@@ -128,19 +129,16 @@ def workflow_fmri(PARAMETERS):
     return w
 
 
-def create_grvx_workflow(PARAMETERS):
+def create_grvx_workflow(parameters):
 
-    upsample = PARAMETERS['fmri']['upsample']
-    graymatter = PARAMETERS['fmri']['graymatter']
-
-    bids.iterables = ('subject', SUBJECTS)
+    bids = bids_node(parameters)
 
     node_reconall = Node(ReconAll(), name='freesurfer')
-    node_reconall.inputs.subjects_dir = str(FREESURFER_PATH)
+    node_reconall.inputs.subjects_dir = str(parameters['paths']['freesurfer_subjects_dir'])
     node_reconall.inputs.flags = ['-cw256', ]
 
     node_corr = Node(function_corr, name='corr_fmri_ecog')
-    node_corr.inputs.pvalue = PARAMETERS['corr']['pvalue']
+    node_corr.inputs.pvalue = parameters['corr']['pvalue']
 
     node_corr_summary = JoinNode(
         function_corr_summary,
@@ -149,13 +147,13 @@ def create_grvx_workflow(PARAMETERS):
         joinfield=('in_files', 'ecog_files', 'fmri_files'),
         )
 
-    w_fmri = workflow_fmri(PARAMETERS)
-    w_ieeg = workflow_ieeg(PARAMETERS)
+    w_fmri = workflow_fmri(parameters)
+    w_ieeg = workflow_ieeg(parameters)
 
     w = Workflow('grvx')
-    w.base_dir = str(NIPYPE_PATH)
+    w.base_dir = str(parameters['paths']['output'] / 'nipype')
 
-    if graymatter:
+    if parameters['fmri']['graymatter']:
         w.connect(bids, 'subject', node_reconall, 'subject_id')  # we might use freesurfer for other stuff too
         w.connect(bids, 'anat', node_reconall, 'T1_files')
         w.connect(node_reconall, 'ribbon', w_fmri, 'graymatter.ribbon')
@@ -176,21 +174,22 @@ def create_grvx_workflow(PARAMETERS):
     w.connect(w_fmri, 'at_elec.fmri_vals', node_corr_summary, 'fmri_files')
 
     w.write_graph(graph2use='flat')
+    log_dir = parameters['paths']['output'] / 'log'
 
     config.update_config({
         'logging': {
-            'log_directory': LOG_PATH,
+            'log_directory': log_dir,
             'log_to_file': True,
             },
         'execution': {
-            'crashdump_dir': LOG_PATH,
+            'crashdump_dir': log_dir,
             'keep_inputs': 'false',
             'remove_unnecessary_outputs': 'false',
             },
         })
 
-    rmtree(LOG_PATH, ignore_errors=True)
-    LOG_PATH.mkdir()
+    rmtree(log_dir, ignore_errors=True)
+    log_dir.mkdir()
     logging.update_logging(config)
 
     return w

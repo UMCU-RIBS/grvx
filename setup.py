@@ -1,25 +1,20 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
-VERSION = '0.4'
-
-long_description = ''
 
 setup(
-    name='gridloc',
-    version=VERSION,
+    name='grvx',
+    version='0.1',
     description='',
-    long_description=long_description,
-    url='https://github.com/gpiantoni/gridloc',
+    long_description='',
+    url='https://github.com/gpiantoni/grvx',
     author="Gio Piantoni",
-    author_email='gridloc@gpiantoni.com',
+    author_email='grvx@gpiantoni.com',
     license='GPLv3',
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         ],
-    keywords='analysis',
-    packages=find_packages(exclude=('test', )),
     install_requires=[
         'numpy',
         'scipy',
@@ -29,7 +24,7 @@ setup(
         ],
     entry_points={
         'console_scripts': [
-            'gridloc=gridloc.bin.command:main',
+            'grvx=grvx.bin:command',
         ],
     },
     )

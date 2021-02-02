@@ -28,6 +28,9 @@ BIDS = Function(
     function=get_bids,
     )
 
-
-bids = Node(BIDS, name='bids')
-# bids.inputs.bids_dir = DATA_PATH
+def bids_node(parameters):
+    bids = Node(BIDS, name='bids')
+    bids.inputs.bids_dir = parameters['paths']['input']
+    subjects = [sub.stem[4:] for sub in parameters['paths']['input'].glob('sub-*')]
+    bids.iterables = ('subject', subjects)
+    return bids

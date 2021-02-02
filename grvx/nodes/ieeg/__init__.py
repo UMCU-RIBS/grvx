@@ -1,8 +1,13 @@
 from nipype import Function
 
-def wrapper_read_ieeg_block(ieeg, electrodes, conditions, minimalduration):
+def wrapper_read_ieeg_block(ieeg, electrodes, active_conditions, baseline_conditions, minimalduration):
     from pathlib import Path
     from boavus.ieeg.read import read_ieeg_block
+
+    conditions = {
+        'active': active_conditions,
+        'baseline': baseline_conditions,
+        }
 
     outputs = read_ieeg_block(
         Path(ieeg),
@@ -59,7 +64,8 @@ function_ieeg_read = Function(
     input_names=[
         'ieeg',
         'electrodes',
-        'conditions',
+        'active_conditions',
+        'baseline_conditions',
         'minimalduration',
     ],
     output_names=[
