@@ -24,6 +24,7 @@ UPSAMPLE_RESOLUTION = 1
 DOWNSAMPLE_RESOLUTION = 4
 GRAYMATTER_THRESHOLD = 0.2
 
+# this cannot be in a function, otherwise nipype ignores it
 config.update_config({
     'execution': {
         'keep_inputs': 'false',

@@ -7,9 +7,13 @@ from .plot.smooth import plot_smooth
 
 def plot_results(parameters):
 
-    wd = None
+    plot_dir = parameters['paths']['output'] / 'plots'
+    plot_dir.mkdir(exist_ok=True, parents=True)
+
+    """
     plot_fmri()
     plot_gaussian(wd)
-    plot_histogram(wd)
     plot_scatter(wd)
-    plot_smooth(wd)
+    """
+    plot_histogram(plot_dir, parameters)
+    plot_smooth(plot_dir, parameters)
