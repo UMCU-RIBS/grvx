@@ -72,6 +72,7 @@ def workflow_fmri(parameters):
     node_bet.inputs.robust = True
 
     node_featdesign = Node(function_prepare_design, name='feat_design')
+    node_featdesign.inputs.active_conditions = parameters['fmri']['read']['active_conditions']
 
     node_feat = Node(FEAT(), name='feat')
 
@@ -159,8 +160,8 @@ def create_grvx_workflow(parameters):
     w_fmri = workflow_fmri(parameters)
     w_ieeg = workflow_ieeg(parameters)
 
-    w = Workflow('grvx')
-    w.base_dir = str(parameters['paths']['output'] / 'nipype')
+    w = Workflow('workflow')
+    w.base_dir = str(parameters['paths']['output'])
 
     if parameters['fmri']['graymatter']:
         w.connect(bids, 'subject', node_reconall, 'subject_id')  # we might use freesurfer for other stuff too

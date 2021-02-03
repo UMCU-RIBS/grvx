@@ -1,8 +1,8 @@
-from .viz.histogram import plot_histogram
-from .viz.gaussian import plot_gaussian
-from .viz.fmri import plot_fmri
-from .viz.scatter import plot_scatter
-from .viz.smooth import plot_smooth
+from .histogram import plot_histogram
+from .gaussian import plot_gaussian
+from .fmri import plot_fmri
+from .scatter import plot_scatter
+from .smooth import plot_smooth
 
 
 def plot_results(parameters):
@@ -12,8 +12,8 @@ def plot_results(parameters):
 
     """
     plot_fmri()
-    plot_gaussian(wd)
     plot_scatter(wd)
     """
+    plot_gaussian(plot_dir)
     plot_histogram(plot_dir, parameters)
     plot_smooth(plot_dir, parameters)

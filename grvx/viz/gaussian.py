@@ -4,24 +4,11 @@ import plotly.graph_objs as go
 
 import colorlover as cl
 
+from .utils import to_html, to_div
 
-def plot_gaussian(wd):
+
+def plot_gaussian(plot_dir):
     x = arange(0, 30, .05)
-
-    layout = go.Layout(
-        xaxis=dict(
-            dtick=4,
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        yaxis=dict(
-            dtick=1,
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        )
 
     colorscale = cl.scales['9']['seq']['Blues']
     scales = cl.interp(colorscale, 30)
@@ -41,7 +28,20 @@ def plot_gaussian(wd):
 
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=go.Layout(
+            xaxis=dict(
+                dtick=4,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            yaxis=dict(
+                dtick=1,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            )
         )
 
-    export_plotly(fig, 'gaussian.svg', int(4.5 * 90), int(6 * 90), wd)
+    to_html([to_div(fig), ], plot_dir / 'gaussian.html')

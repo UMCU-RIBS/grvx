@@ -7,7 +7,7 @@ from bidso.utils import replace_underscore, read_tsv, replace_extension
 DESIGN_TEMPLATE = Path(__file__).resolve().parents[1] / 'data/design_template.fsf'
 
 
-def prepare_design(func, anat, output_dir):
+def prepare_design(func, anat, active_conditions, output_dir):
     """You should set remove_unnecessary_outputs to False, otherwise it removes
     the events.tsv file
     """
@@ -15,7 +15,7 @@ def prepare_design(func, anat, output_dir):
     task = Task(func)
 
     events_fsl = output_dir / task.events.filename.name
-    _write_events(task.events.filename, events_fsl)
+    _write_events(task.events.filename, active_conditions, events_fsl)
 
     assert events_fsl.exists()
 
@@ -50,20 +50,9 @@ def prepare_design(func, anat, output_dir):
     return subj_design
 
 
-def _write_events(events_input, events_output):
-    """
-    TODO
-    ----
-    EVENTS should be in PARAMETERS
-    """
-    EVENTS = (
-        'move',
-        'verbgen',
-        'music',
-        )
-
+def _write_events(events_input, conditions, events_output):
     tsv = read_tsv(events_input)
     with events_output.open('w') as f:
         for event in tsv:
-            if event['trial_type'] in EVENTS:
+            if event['trial_type'] in conditions:
                 f.write(f'{event["onset"]}\t{event["duration"]}\t1\n')

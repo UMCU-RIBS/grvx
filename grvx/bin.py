@@ -5,7 +5,7 @@ from os import environ
 from shutil import rmtree
 
 from .nipype.workflow import create_grvx_workflow
-from .plotting import plot_results
+from .viz import plot_results
 
 
 def command():
