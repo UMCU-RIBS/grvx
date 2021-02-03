@@ -27,13 +27,14 @@
 <pre><code class="python">from nipype import Function
 
 
-def wrapper_prepare_design(func, anat):
+def wrapper_prepare_design(func, anat, active_conditions):
     from pathlib import Path
     from grvx.nodes.fsl.feat import prepare_design
 
     output = prepare_design(
         Path(func),
         Path(anat),
+        active_conditions,
         Path(&#39;.&#39;).resolve())
     return str(output)
 
@@ -42,6 +43,7 @@ function_prepare_design = Function(
     input_names=[
         &#39;func&#39;,
         &#39;anat&#39;,
+        &#39;active_conditions&#39;,
     ],
     output_names=[
         &#39;fsf_file&#39;,
@@ -73,7 +75,7 @@ function_prepare_design = Function(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.nodes.fsl.wrapper_prepare_design"><code class="name flex">
-<span>def <span class="ident">wrapper_prepare_design</span></span>(<span>func, anat)</span>
+<span>def <span class="ident">wrapper_prepare_design</span></span>(<span>func, anat, active_conditions)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -81,13 +83,14 @@ function_prepare_design = Function(
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def wrapper_prepare_design(func, anat):
+<pre><code class="python">def wrapper_prepare_design(func, anat, active_conditions):
     from pathlib import Path
     from grvx.nodes.fsl.feat import prepare_design
 
     output = prepare_design(
         Path(func),
         Path(anat),
+        active_conditions,
         Path(&#39;.&#39;).resolve())
     return str(output)</code></pre>
 </details>

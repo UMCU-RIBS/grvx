@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>grvx.plot.surfaces API documentation</title>
+<title>grvx.viz.smooth API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,61 +17,85 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>grvx.plot.surfaces</code></h1>
+<h1 class="title">Module <code>grvx.viz.smooth</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from wonambi.attr import Surf, Channels, Freesurfer
-from numpy import hstack, vstack, array, median
-from bidso import Electrodes
-from bidso import file_Core
+<pre><code class="python">from numpy import gradient
+import plotly.graph_objs as go
+
 from bidso.utils import read_tsv
-from bidso.find import find_in_bids
+from bidso import file_Core
 
-from pathlib import Path
-
-results_dir = Path(&#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/ecog&#39;)
-plots_dir = Path(&#39;/Fridge/users/giovanni/projects/grvx/derivatives/plots/surfaces&#39;)
-
-pvalue = 0.05  # TODO: PARAMETERS
+from .utils import to_html, to_div
 
 
-def plot_surfaces():
-    for results_path in results_dir.glob(&#39;*.tsv&#39;):
-        results = read_tsv(results_path)
+def plot_smooth(plot_dir, parameters):
+    rsquared_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;nipype/grvx/corr_fmri_ecog_summary/output/rsquared&#39;
+    for one_tsv in rsquared_dir.glob(&#39;*.tsv&#39;):
+        results = read_tsv(one_tsv)
+        subject = file_Core(one_tsv).subject
 
-        r = file_Core(results_path)
+        traces = [
+            dict(
+                x=results[&#39;Kernel&#39;],
+                y=results[&#39;Rsquared&#39;],
+                marker=dict(
+                    color=&#39;black&#39;,
+                    ),
+                ),
+            ]
 
-        fs = Freesurfer(f&#39;/Fridge/users/giovanni/projects/grvx/derivatives/freesurfer/sub-{r.subject}&#39;)
-        brain = fs.read_brain()
+        layout = go.Layout(
+            xaxis=dict(
+                dtick=4,
+                range=(0, 20),
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            yaxis=dict(
+                dtick=0.1,
+                rangemode=&#39;tozero&#39;,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            )
 
-        electrodes_file = find_in_bids(Path(&#39;/Fridge/users/giovanni/projects/grvx/subjects/&#39;), subject=r.subject, acquisition=&#39;*alctmrregions&#39;, modality=&#39;electrodes&#39;)
-        electrodes = Electrodes(electrodes_file)
+        fig = go.Figure(
+            data=traces,
+            layout=layout,
+            )
+        divs = [to_div(fig), ]
 
-        labels = electrodes.electrodes.get(map_lambda=lambda x: x[&#39;name&#39;])
-        chan_xyz = array(electrodes.get_xyz())
-        elec = Channels(labels, chan_xyz - fs.surface_ras_shift)
+        traces = [
+            dict(
+                x=results[&#39;Kernel&#39;],
+                y=gradient(gradient(results[&#39;Rsquared&#39;])),
+                marker=dict(
+                    color=&#39;black&#39;,
+                    ),
+                ),
+            ]
 
-        colors = array([0, 0, 0]) * (results[&#39;pvalue&#39;] &lt;= pvalue).astype(float)[:, None]
-        colors += array([0.8, 0.8, 0.8]) * (results[&#39;pvalue&#39;] &gt; pvalue).astype(float)[:, None]
+        layout.update(dict(
+            yaxis=dict(
+                dtick=0.002,
+                range=(-0.005, 0.005),
+                ),
+            ))
 
-        v = Viz3()
-        v.add_chan(elec(lambda x: x.label in results[&#39;channel&#39;]), color=colors)
-        if median(chan_xyz[:, 0]) &gt; 0:
-            v.add_surf(brain.lh)
-            v.add_surf(brain.rh)
-            v._view.camera.azimuth = 120
-        else:
-            v.add_surf(brain.rh)
-            v.add_surf(brain.lh)
-            v._view.camera.azimuth = -120
+        fig = go.Figure(
+            data=traces,
+            layout=layout,
+            )
 
-        v._view.camera.elevation = 20
-        v.save(plots_dir / (r.subject + &#39;.png&#39;))
-        v.close()</code></pre>
+        divs = [to_div(fig), ]
+        to_html(divs, plot_dir / &#39;smooth&#39; / f&#39;{subject}_r2.html&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -81,8 +105,8 @@ def plot_surfaces():
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="grvx.plot.surfaces.plot_surfaces"><code class="name flex">
-<span>def <span class="ident">plot_surfaces</span></span>(<span>)</span>
+<dt id="grvx.viz.smooth.plot_smooth"><code class="name flex">
+<span>def <span class="ident">plot_smooth</span></span>(<span>plot_dir, parameters)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -90,39 +114,69 @@ def plot_surfaces():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_surfaces():
-    for results_path in results_dir.glob(&#39;*.tsv&#39;):
-        results = read_tsv(results_path)
+<pre><code class="python">def plot_smooth(plot_dir, parameters):
+    rsquared_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;nipype/grvx/corr_fmri_ecog_summary/output/rsquared&#39;
+    for one_tsv in rsquared_dir.glob(&#39;*.tsv&#39;):
+        results = read_tsv(one_tsv)
+        subject = file_Core(one_tsv).subject
 
-        r = file_Core(results_path)
+        traces = [
+            dict(
+                x=results[&#39;Kernel&#39;],
+                y=results[&#39;Rsquared&#39;],
+                marker=dict(
+                    color=&#39;black&#39;,
+                    ),
+                ),
+            ]
 
-        fs = Freesurfer(f&#39;/Fridge/users/giovanni/projects/grvx/derivatives/freesurfer/sub-{r.subject}&#39;)
-        brain = fs.read_brain()
+        layout = go.Layout(
+            xaxis=dict(
+                dtick=4,
+                range=(0, 20),
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            yaxis=dict(
+                dtick=0.1,
+                rangemode=&#39;tozero&#39;,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            )
 
-        electrodes_file = find_in_bids(Path(&#39;/Fridge/users/giovanni/projects/grvx/subjects/&#39;), subject=r.subject, acquisition=&#39;*alctmrregions&#39;, modality=&#39;electrodes&#39;)
-        electrodes = Electrodes(electrodes_file)
+        fig = go.Figure(
+            data=traces,
+            layout=layout,
+            )
+        divs = [to_div(fig), ]
 
-        labels = electrodes.electrodes.get(map_lambda=lambda x: x[&#39;name&#39;])
-        chan_xyz = array(electrodes.get_xyz())
-        elec = Channels(labels, chan_xyz - fs.surface_ras_shift)
+        traces = [
+            dict(
+                x=results[&#39;Kernel&#39;],
+                y=gradient(gradient(results[&#39;Rsquared&#39;])),
+                marker=dict(
+                    color=&#39;black&#39;,
+                    ),
+                ),
+            ]
 
-        colors = array([0, 0, 0]) * (results[&#39;pvalue&#39;] &lt;= pvalue).astype(float)[:, None]
-        colors += array([0.8, 0.8, 0.8]) * (results[&#39;pvalue&#39;] &gt; pvalue).astype(float)[:, None]
+        layout.update(dict(
+            yaxis=dict(
+                dtick=0.002,
+                range=(-0.005, 0.005),
+                ),
+            ))
 
-        v = Viz3()
-        v.add_chan(elec(lambda x: x.label in results[&#39;channel&#39;]), color=colors)
-        if median(chan_xyz[:, 0]) &gt; 0:
-            v.add_surf(brain.lh)
-            v.add_surf(brain.rh)
-            v._view.camera.azimuth = 120
-        else:
-            v.add_surf(brain.rh)
-            v.add_surf(brain.lh)
-            v._view.camera.azimuth = -120
+        fig = go.Figure(
+            data=traces,
+            layout=layout,
+            )
 
-        v._view.camera.elevation = 20
-        v.save(plots_dir / (r.subject + &#39;.png&#39;))
-        v.close()</code></pre>
+        divs = [to_div(fig), ]
+        to_html(divs, plot_dir / &#39;smooth&#39; / f&#39;{subject}_r2.html&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -138,12 +192,12 @@ def plot_surfaces():
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="grvx.plot" href="index.html">grvx.plot</a></code></li>
+<li><code><a title="grvx.viz" href="index.html">grvx.viz</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="grvx.plot.surfaces.plot_surfaces" href="#grvx.plot.surfaces.plot_surfaces">plot_surfaces</a></code></li>
+<li><code><a title="grvx.viz.smooth.plot_smooth" href="#grvx.viz.smooth.plot_smooth">plot_smooth</a></code></li>
 </ul>
 </li>
 </ul>

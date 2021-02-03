@@ -50,6 +50,15 @@ UPSAMPLE_RESOLUTION = 1
 DOWNSAMPLE_RESOLUTION = 4
 GRAYMATTER_THRESHOLD = 0.2
 
+# this cannot be in a function, otherwise nipype ignores it
+config.update_config({
+    &#39;execution&#39;: {
+        &#39;keep_inputs&#39;: &#39;false&#39;,
+        &#39;remove_unnecessary_outputs&#39;: &#39;false&#39;,
+        &#39;crashfile_format&#39;: &#39;text&#39;,
+        },
+    })
+
 
 def workflow_ieeg(parameters):
     node_read = Node(function_ieeg_read, name=&#39;read&#39;)
@@ -89,6 +98,7 @@ def workflow_fmri(parameters):
     node_bet.inputs.robust = True
 
     node_featdesign = Node(function_prepare_design, name=&#39;feat_design&#39;)
+    node_featdesign.inputs.active_conditions = parameters[&#39;fmri&#39;][&#39;read&#39;][&#39;active_conditions&#39;]
 
     node_feat = Node(FEAT(), name=&#39;feat&#39;)
 
@@ -176,8 +186,8 @@ def create_grvx_workflow(parameters):
     w_fmri = workflow_fmri(parameters)
     w_ieeg = workflow_ieeg(parameters)
 
-    w = Workflow(&#39;grvx&#39;)
-    w.base_dir = str(parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;nipype&#39;)
+    w = Workflow(&#39;workflow&#39;)
+    w.base_dir = str(parameters[&#39;paths&#39;][&#39;output&#39;])
 
     if parameters[&#39;fmri&#39;][&#39;graymatter&#39;]:
         w.connect(bids, &#39;subject&#39;, node_reconall, &#39;subject_id&#39;)  # we might use freesurfer for other stuff too
@@ -206,11 +216,6 @@ def create_grvx_workflow(parameters):
         &#39;logging&#39;: {
             &#39;log_directory&#39;: log_dir,
             &#39;log_to_file&#39;: True,
-            },
-        &#39;execution&#39;: {
-            &#39;crashdump_dir&#39;: log_dir,
-            &#39;keep_inputs&#39;: &#39;false&#39;,
-            &#39;remove_unnecessary_outputs&#39;: &#39;false&#39;,
             },
         })
 
@@ -258,8 +263,8 @@ def create_grvx_workflow(parameters):
     w_fmri = workflow_fmri(parameters)
     w_ieeg = workflow_ieeg(parameters)
 
-    w = Workflow(&#39;grvx&#39;)
-    w.base_dir = str(parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;nipype&#39;)
+    w = Workflow(&#39;workflow&#39;)
+    w.base_dir = str(parameters[&#39;paths&#39;][&#39;output&#39;])
 
     if parameters[&#39;fmri&#39;][&#39;graymatter&#39;]:
         w.connect(bids, &#39;subject&#39;, node_reconall, &#39;subject_id&#39;)  # we might use freesurfer for other stuff too
@@ -289,11 +294,6 @@ def create_grvx_workflow(parameters):
             &#39;log_directory&#39;: log_dir,
             &#39;log_to_file&#39;: True,
             },
-        &#39;execution&#39;: {
-            &#39;crashdump_dir&#39;: log_dir,
-            &#39;keep_inputs&#39;: &#39;false&#39;,
-            &#39;remove_unnecessary_outputs&#39;: &#39;false&#39;,
-            },
         })
 
     rmtree(log_dir, ignore_errors=True)
@@ -319,6 +319,7 @@ def create_grvx_workflow(parameters):
     node_bet.inputs.robust = True
 
     node_featdesign = Node(function_prepare_design, name=&#39;feat_design&#39;)
+    node_featdesign.inputs.active_conditions = parameters[&#39;fmri&#39;][&#39;read&#39;][&#39;active_conditions&#39;]
 
     node_feat = Node(FEAT(), name=&#39;feat&#39;)
 

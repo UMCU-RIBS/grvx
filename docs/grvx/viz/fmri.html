@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>grvx.plot API documentation</title>
+<title>grvx.viz.fmri API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,42 +17,68 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>grvx.plot</code></h1>
+<h1 class="title">Module <code>grvx.viz.fmri</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from subprocess import run
+
+def plot_fmri(PLOT_PATH):
+    output_png = PLOT_PATH / &#39;mri.png&#39;
+
+    cmd = [
+        &#39;freeview&#39;,
+        &#39;-v&#39;, &#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/fmri/_subject_bunnik/bet/sub-bunnik_ses-UMCU3Tdaym42_acq-wholebrain_T1w_brain.nii.gz&#39;,
+        &#39;-v&#39;, &#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/fmri/_subject_bunnik/fmri_compare/sub-bunnik_ses-UMCU3Tdaym42_task-motorHandRight_run-1_bold_compare.nii.gz:colormap=heat:heatscale=0,15:heatscaleoptions=truncate&#39;,
+        &#39;-f&#39;, &#39;/Fridge/users/giovanni/projects/freesurfer/sub-bunnik/surf/lh.pial:edgecolor=255,182,193&#39;,
+        &#39;-f&#39;, &#39;/Fridge/users/giovanni/projects/freesurfer/sub-bunnik/surf/rh.pial:edgecolor=255,182,193&#39;,
+        &#39;--layout&#39;, &#39;1&#39;,
+        &#39;--viewport&#39;, &#39;coronal&#39;,
+        &#39;--ras&#39;, &#39;-24.77&#39;, &#39;-2&#39;, &#39;15.24&#39;,
+        &#39;--screenshot&#39;, str(output_png), &#39;6&#39;,
+        ]
+
+    run(cmd)</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="grvx.plot.fmri" href="fmri.html">grvx.plot.fmri</a></code></dt>
+<dt id="grvx.viz.fmri.plot_fmri"><code class="name flex">
+<span>def <span class="ident">plot_fmri</span></span>(<span>PLOT_PATH)</span>
+</code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="grvx.plot.gaussian" href="gaussian.html">grvx.plot.gaussian</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="grvx.plot.histogram" href="histogram.html">grvx.plot.histogram</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="grvx.plot.scatter" href="scatter.html">grvx.plot.scatter</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="grvx.plot.smooth" href="smooth.html">grvx.plot.smooth</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="grvx.plot.surfaces" href="surfaces.html">grvx.plot.surfaces</a></code></dt>
-<dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_fmri(PLOT_PATH):
+    output_png = PLOT_PATH / &#39;mri.png&#39;
+
+    cmd = [
+        &#39;freeview&#39;,
+        &#39;-v&#39;, &#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/fmri/_subject_bunnik/bet/sub-bunnik_ses-UMCU3Tdaym42_acq-wholebrain_T1w_brain.nii.gz&#39;,
+        &#39;-v&#39;, &#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/fmri/_subject_bunnik/fmri_compare/sub-bunnik_ses-UMCU3Tdaym42_task-motorHandRight_run-1_bold_compare.nii.gz:colormap=heat:heatscale=0,15:heatscaleoptions=truncate&#39;,
+        &#39;-f&#39;, &#39;/Fridge/users/giovanni/projects/freesurfer/sub-bunnik/surf/lh.pial:edgecolor=255,182,193&#39;,
+        &#39;-f&#39;, &#39;/Fridge/users/giovanni/projects/freesurfer/sub-bunnik/surf/rh.pial:edgecolor=255,182,193&#39;,
+        &#39;--layout&#39;, &#39;1&#39;,
+        &#39;--viewport&#39;, &#39;coronal&#39;,
+        &#39;--ras&#39;, &#39;-24.77&#39;, &#39;-2&#39;, &#39;15.24&#39;,
+        &#39;--screenshot&#39;, str(output_png), &#39;6&#39;,
+        ]
+
+    run(cmd)</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -65,17 +91,12 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="grvx" href="../index.html">grvx</a></code></li>
+<li><code><a title="grvx.viz" href="index.html">grvx.viz</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="grvx.plot.fmri" href="fmri.html">grvx.plot.fmri</a></code></li>
-<li><code><a title="grvx.plot.gaussian" href="gaussian.html">grvx.plot.gaussian</a></code></li>
-<li><code><a title="grvx.plot.histogram" href="histogram.html">grvx.plot.histogram</a></code></li>
-<li><code><a title="grvx.plot.scatter" href="scatter.html">grvx.plot.scatter</a></code></li>
-<li><code><a title="grvx.plot.smooth" href="smooth.html">grvx.plot.smooth</a></code></li>
-<li><code><a title="grvx.plot.surfaces" href="surfaces.html">grvx.plot.surfaces</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="grvx.viz.fmri.plot_fmri" href="#grvx.viz.fmri.plot_fmri">plot_fmri</a></code></li>
 </ul>
 </li>
 </ul>

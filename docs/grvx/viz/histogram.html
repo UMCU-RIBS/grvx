@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>grvx.plotting API documentation</title>
+<title>grvx.viz.histogram API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,28 +17,94 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>grvx.plotting</code></h1>
+<h1 class="title">Module <code>grvx.viz.histogram</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .plot.histogram import plot_histogram
-from .plot.gaussian import plot_gaussian
-from .plot.fmri import plot_fmri
-from .plot.scatter import plot_scatter
-from .plot.smooth import plot_smooth
+<pre><code class="python">from bidso.utils import read_tsv
+import plotly.graph_objs as go
+from .utils import to_div, to_html
 
 
-def plot_results(parameters):
+COLOR = {
+    &#39;micromed&#39;: &#39;rgb(0, 0, 255)&#39;,
+    &#39;blackrock&#39;: &#39;rgb(255, 0, 0)&#39;,
+    }
 
-    wd = None
-    plot_fmri()
-    plot_gaussian(wd)
-    plot_histogram(wd)
-    plot_scatter(wd)
-    plot_smooth(wd)</code></pre>
+SHIFT = &#39;middle&#39;  # middle / whole
+
+
+def plot_histogram(plot_dir, parameters):
+
+    summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
+    summary = read_tsv(summary_tsv)
+
+    for value_type in (&#39;size_at_peak&#39;, &#39;r2_at_peak&#39;, &#39;size_at_concave&#39;):
+
+        if value_type in (&#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
+            bin_size = 1
+            dtick = 4
+            max_val = 20
+        elif value_type == &#39;r2_at_peak&#39;:
+            bin_size = .1
+            dtick = 0.2
+            max_val = 1
+
+        if SHIFT == &#39;middle&#39;:
+            xbins = dict(
+                start=bin_size / -2,
+                end=max_val + bin_size / 2,
+                size=bin_size,
+                )
+
+        else:
+            xbins = dict(
+                start=0,
+                end=max_val + bin_size,
+                size=bin_size,
+                )
+
+        traces = []
+        for acq in set(summary[&#39;acquisition&#39;]):
+
+            values = summary[summary[&#39;acquisition&#39;] == acq][value_type]
+            traces.append(
+                go.Histogram(
+                    x=values,
+                    xbins=xbins,
+                    name=acq,
+                    marker=dict(
+                        color=COLOR[acq],
+                        ),
+                ))
+
+        layout = go.Layout(
+            barmode=&#39;stack&#39;,
+            showlegend=False,
+            xaxis=dict(
+                range=(0, max_val + bin_size / 2),
+                dtick=dtick,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            yaxis=dict(
+                dtick=1,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            )
+
+        fig = go.Figure(
+            data=traces,
+            layout=layout,
+            )
+
+        to_html([to_div(fig), ], plot_dir / &#39;histogram&#39; / f&#39;histogram_{value_type}.html&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -48,8 +114,8 @@ def plot_results(parameters):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="grvx.plotting.plot_results"><code class="name flex">
-<span>def <span class="ident">plot_results</span></span>(<span>parameters)</span>
+<dt id="grvx.viz.histogram.plot_histogram"><code class="name flex">
+<span>def <span class="ident">plot_histogram</span></span>(<span>plot_dir, parameters)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -57,14 +123,74 @@ def plot_results(parameters):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_results(parameters):
+<pre><code class="python">def plot_histogram(plot_dir, parameters):
 
-    wd = None
-    plot_fmri()
-    plot_gaussian(wd)
-    plot_histogram(wd)
-    plot_scatter(wd)
-    plot_smooth(wd)</code></pre>
+    summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
+    summary = read_tsv(summary_tsv)
+
+    for value_type in (&#39;size_at_peak&#39;, &#39;r2_at_peak&#39;, &#39;size_at_concave&#39;):
+
+        if value_type in (&#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
+            bin_size = 1
+            dtick = 4
+            max_val = 20
+        elif value_type == &#39;r2_at_peak&#39;:
+            bin_size = .1
+            dtick = 0.2
+            max_val = 1
+
+        if SHIFT == &#39;middle&#39;:
+            xbins = dict(
+                start=bin_size / -2,
+                end=max_val + bin_size / 2,
+                size=bin_size,
+                )
+
+        else:
+            xbins = dict(
+                start=0,
+                end=max_val + bin_size,
+                size=bin_size,
+                )
+
+        traces = []
+        for acq in set(summary[&#39;acquisition&#39;]):
+
+            values = summary[summary[&#39;acquisition&#39;] == acq][value_type]
+            traces.append(
+                go.Histogram(
+                    x=values,
+                    xbins=xbins,
+                    name=acq,
+                    marker=dict(
+                        color=COLOR[acq],
+                        ),
+                ))
+
+        layout = go.Layout(
+            barmode=&#39;stack&#39;,
+            showlegend=False,
+            xaxis=dict(
+                range=(0, max_val + bin_size / 2),
+                dtick=dtick,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            yaxis=dict(
+                dtick=1,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            )
+
+        fig = go.Figure(
+            data=traces,
+            layout=layout,
+            )
+
+        to_html([to_div(fig), ], plot_dir / &#39;histogram&#39; / f&#39;histogram_{value_type}.html&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -80,12 +206,12 @@ def plot_results(parameters):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="grvx" href="index.html">grvx</a></code></li>
+<li><code><a title="grvx.viz" href="index.html">grvx.viz</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="grvx.plotting.plot_results" href="#grvx.plotting.plot_results">plot_results</a></code></li>
+<li><code><a title="grvx.viz.histogram.plot_histogram" href="#grvx.viz.histogram.plot_histogram">plot_histogram</a></code></li>
 </ul>
 </li>
 </ul>

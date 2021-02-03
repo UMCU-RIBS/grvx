@@ -33,7 +33,7 @@ from bidso.utils import replace_underscore, read_tsv, replace_extension
 DESIGN_TEMPLATE = Path(__file__).resolve().parents[1] / &#39;data/design_template.fsf&#39;
 
 
-def prepare_design(func, anat, output_dir):
+def prepare_design(func, anat, active_conditions, output_dir):
     &#34;&#34;&#34;You should set remove_unnecessary_outputs to False, otherwise it removes
     the events.tsv file
     &#34;&#34;&#34;
@@ -41,7 +41,9 @@ def prepare_design(func, anat, output_dir):
     task = Task(func)
 
     events_fsl = output_dir / task.events.filename.name
-    _write_events(task.events.filename, events_fsl)
+    _write_events(task.events.filename, active_conditions, events_fsl)
+
+    assert events_fsl.exists()
 
     # collect info
     img = niload(str(task.filename))
@@ -74,22 +76,11 @@ def prepare_design(func, anat, output_dir):
     return subj_design
 
 
-def _write_events(events_input, events_output):
-    &#34;&#34;&#34;
-    TODO
-    ----
-    EVENTS should be in PARAMETERS
-    &#34;&#34;&#34;
-    EVENTS = (
-        &#39;move&#39;,
-        &#39;verbgen&#39;,
-        &#39;music&#39;,
-        )
-
+def _write_events(events_input, conditions, events_output):
     tsv = read_tsv(events_input)
     with events_output.open(&#39;w&#39;) as f:
         for event in tsv:
-            if event[&#39;trial_type&#39;] in EVENTS:
+            if event[&#39;trial_type&#39;] in conditions:
                 f.write(f&#39;{event[&#34;onset&#34;]}\t{event[&#34;duration&#34;]}\t1\n&#39;)</code></pre>
 </details>
 </section>
@@ -101,7 +92,7 @@ def _write_events(events_input, events_output):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.nodes.fsl.feat.prepare_design"><code class="name flex">
-<span>def <span class="ident">prepare_design</span></span>(<span>func, anat, output_dir)</span>
+<span>def <span class="ident">prepare_design</span></span>(<span>func, anat, active_conditions, output_dir)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>You should set remove_unnecessary_outputs to False, otherwise it removes
@@ -110,7 +101,7 @@ the events.tsv file</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def prepare_design(func, anat, output_dir):
+<pre><code class="python">def prepare_design(func, anat, active_conditions, output_dir):
     &#34;&#34;&#34;You should set remove_unnecessary_outputs to False, otherwise it removes
     the events.tsv file
     &#34;&#34;&#34;
@@ -118,7 +109,9 @@ the events.tsv file</p></div>
     task = Task(func)
 
     events_fsl = output_dir / task.events.filename.name
-    _write_events(task.events.filename, events_fsl)
+    _write_events(task.events.filename, active_conditions, events_fsl)
+
+    assert events_fsl.exists()
 
     # collect info
     img = niload(str(task.filename))

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>grvx.plot.gaussian API documentation</title>
+<title>grvx.viz.gaussian API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>grvx.plot.gaussian</code></h1>
+<h1 class="title">Module <code>grvx.viz.gaussian</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -30,24 +30,11 @@ import plotly.graph_objs as go
 
 import colorlover as cl
 
+from .utils import to_html, to_div
 
-def plot_gaussian(wd):
+
+def plot_gaussian(plot_dir):
     x = arange(0, 30, .05)
-
-    layout = go.Layout(
-        xaxis=dict(
-            dtick=4,
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        yaxis=dict(
-            dtick=1,
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        )
 
     colorscale = cl.scales[&#39;9&#39;][&#39;seq&#39;][&#39;Blues&#39;]
     scales = cl.interp(colorscale, 30)
@@ -67,10 +54,23 @@ def plot_gaussian(wd):
 
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=go.Layout(
+            xaxis=dict(
+                dtick=4,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            yaxis=dict(
+                dtick=1,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            )
         )
 
-    export_plotly(fig, &#39;gaussian.svg&#39;, int(4.5 * 90), int(6 * 90), wd)</code></pre>
+    to_html([to_div(fig), ], plot_dir / &#39;gaussian.html&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -80,8 +80,8 @@ def plot_gaussian(wd):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="grvx.plot.gaussian.plot_gaussian"><code class="name flex">
-<span>def <span class="ident">plot_gaussian</span></span>(<span>wd)</span>
+<dt id="grvx.viz.gaussian.plot_gaussian"><code class="name flex">
+<span>def <span class="ident">plot_gaussian</span></span>(<span>plot_dir)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -89,23 +89,8 @@ def plot_gaussian(wd):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_gaussian(wd):
+<pre><code class="python">def plot_gaussian(plot_dir):
     x = arange(0, 30, .05)
-
-    layout = go.Layout(
-        xaxis=dict(
-            dtick=4,
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        yaxis=dict(
-            dtick=1,
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        )
 
     colorscale = cl.scales[&#39;9&#39;][&#39;seq&#39;][&#39;Blues&#39;]
     scales = cl.interp(colorscale, 30)
@@ -125,10 +110,23 @@ def plot_gaussian(wd):
 
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=go.Layout(
+            xaxis=dict(
+                dtick=4,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            yaxis=dict(
+                dtick=1,
+                tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            )
         )
 
-    export_plotly(fig, &#39;gaussian.svg&#39;, int(4.5 * 90), int(6 * 90), wd)</code></pre>
+    to_html([to_div(fig), ], plot_dir / &#39;gaussian.html&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -144,12 +142,12 @@ def plot_gaussian(wd):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="grvx.plot" href="index.html">grvx.plot</a></code></li>
+<li><code><a title="grvx.viz" href="index.html">grvx.viz</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="grvx.plot.gaussian.plot_gaussian" href="#grvx.plot.gaussian.plot_gaussian">plot_gaussian</a></code></li>
+<li><code><a title="grvx.viz.gaussian.plot_gaussian" href="#grvx.viz.gaussian.plot_gaussian">plot_gaussian</a></code></li>
 </ul>
 </li>
 </ul>
