@@ -1,48 +1,171 @@
-from wonambi.attr import Surf, Channels, Freesurfer
-from numpy import hstack, vstack, array, median
+from wonambi.attr import Freesurfer
 from bidso import Electrodes
-from bidso import file_Core
 from bidso.utils import read_tsv
-from bidso.find import find_in_bids
+from nibabel import load as nload
+import plotly.graph_objs as go
+from numpy import NaN, where, concatenate, mean
+from functools import partial
+from multiprocessing import Pool
 
-from pathlib import Path
-
-results_dir = Path('/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/ecog')
-plots_dir = Path('/Fridge/users/giovanni/projects/grvx/derivatives/plots/surfaces')
-
-pvalue = 0.05  # TODO: PARAMETERS
+from ..nodes.fmri.at_electrodes import compute_chan, ndindex, from_mrifile_to_chan, array
+from .utils import to_html, to_div
 
 
-def plot_surfaces():
-    for results_path in results_dir.glob('*.tsv'):
-        results = read_tsv(results_path)
+KERNEL = 8
 
-        r = file_Core(results_path)
 
-        fs = Freesurfer(f'/Fridge/users/giovanni/projects/grvx/derivatives/freesurfer/sub-{r.subject}')
-        brain = fs.read_brain()
+AXIS = dict(
+    title="",
+    visible=False,
+    zeroline=False,
+    showline=False,
+    showticklabels=False,
+    showgrid=False,
+    )
 
-        electrodes_file = find_in_bids(Path('/Fridge/users/giovanni/projects/grvx/subjects/'), subject=r.subject, acquisition='*alctmrregions', modality='electrodes')
-        electrodes = Electrodes(electrodes_file)
+def plot_surfaces(plot_dir, parameters):
 
-        labels = electrodes.electrodes.get(map_lambda=lambda x: x['name'])
-        chan_xyz = array(electrodes.get_xyz())
-        elec = Channels(labels, chan_xyz - fs.surface_ras_shift)
+    subjects = [x.name[4:] for x in parameters['paths']['input'].glob('sub-*')]
+    for subj in subjects:
+        try:
+            fig = plot_surf_subj(parameters, subj)
+            to_html([to_div(fig), ], plot_dir / 'surfaces' / f'{subj}_surface.html')
+            print(f'Plotted surface of {subj}')
+        except StopIteration:
+            print(f'Could not plot surfaces for {subj}')
 
-        colors = array([0, 0, 0]) * (results['pvalue'] <= pvalue).astype(float)[:, None]
-        colors += array([0.8, 0.8, 0.8]) * (results['pvalue'] > pvalue).astype(float)[:, None]
 
-        v = Viz3()
-        v.add_chan(elec(lambda x: x.label in results['channel']), color=colors)
-        if median(chan_xyz[:, 0]) > 0:
-            v.add_surf(brain.lh)
-            v.add_surf(brain.rh)
-            v._view.camera.azimuth = 120
-        else:
-            v.add_surf(brain.rh)
-            v.add_surf(brain.lh)
-            v._view.camera.azimuth = -120
+def plot_surf_subj(parameters, subject):
 
-        v._view.camera.elevation = 20
-        v.save(plots_dir / (r.subject + '.png'))
-        v.close()
+    fmri_dir = parameters['paths']['output'] / f'workflow/fmri/_subject_{subject}/fmri_compare'
+    compare_fmri_file = next(fmri_dir.glob(f'sub-{subject}_*bold_compare.nii.gz'))
+
+    ieeg_dir = parameters['paths']['output'] / f'workflow/ieeg/_subject_{subject}/ecog_compare'
+    compare_ieeg_file = next(ieeg_dir.glob(f'sub-{subject}_*_compare.tsv'))
+
+    elec_file = next(parameters['paths']['input'].glob(f'sub-{subject}/ses-*/ieeg/*_electrodes.tsv'))
+    freesurfer_dir = parameters['paths']['freesurfer_subjects_dir'] / f'sub-{subject}'
+
+    compare_ieeg = read_tsv(compare_ieeg_file)
+    fs = Freesurfer(freesurfer_dir)
+    electrodes = Electrodes(elec_file)
+
+    elec = electrodes.electrodes.tsv
+    all_elec = []
+    labels = []
+    for chan in compare_ieeg:
+        i_chan = where(elec['name'] == chan['channel'])[0]
+        all_elec.append(elec[i_chan])
+        labels.append(f"{chan['channel']} = {chan['measure']:0.3f}")
+
+    elec = concatenate(all_elec)
+
+    if mean(elec['x']) > 0:
+        right_or_left = 1
+        hemi = 'rh'
+    else:
+        right_or_left = -1
+        hemi = 'lh'
+
+    fs = Freesurfer(freesurfer_dir)
+    pial = getattr(fs.read_brain(), hemi)
+
+    img = nload(str(compare_fmri_file))
+    mri = img.get_fdata()
+    mri[mri == 0] = NaN
+
+    nd = array(list(ndindex(mri.shape)))
+    ndi = from_mrifile_to_chan(img, nd)
+
+    partial_compute_chan = partial(compute_chan, KERNEL=KERNEL, ndi=ndi, mri=mri, distance='gaussian')
+
+    vert = pial.vert + fs.surface_ras_shift
+
+    with Pool() as p:
+        fmri_vals = p.map(partial_compute_chan, vert)
+    fmri_vals = [x[0] for x in fmri_vals]
+
+    colorscale = 'balance'
+    colorlim = (-10, 10)
+
+    traces = [
+        go.Scatter3d(
+            x=elec['x'],
+            y=elec['y'],
+            z=elec['z'],
+            text=labels,
+            mode='markers',
+            hoverinfo='text',
+            marker=dict(
+                size=5,
+                color=compare_ieeg['measure'],
+                colorscale=colorscale,
+                showscale=True,
+                cmin=colorlim[0],
+                cmax=colorlim[1],
+                colorbar=dict(
+                    title='electrodes',
+                    titleside="top",
+                    ticks="outside",
+                    ticklabelposition="outside",
+                    x=0,
+                    ),
+            ),
+        ),
+        go.Mesh3d(
+            x=vert[:, 0],
+            y=vert[:, 1],
+            z=vert[:, 2],
+            i=pial.tri[:, 0],
+            j=pial.tri[:, 1],
+            k=pial.tri[:, 2],
+            intensity=fmri_vals,
+            cmax=3,
+            cmin=-3,
+            colorscale='Balance',
+            hoverinfo='skip',
+            flatshading=False,
+            colorbar=dict(
+                title='fmri',
+                titleside="top",
+                ticks="outside",
+                ticklabelposition="outside",
+                x=1,
+                ),
+            lighting=dict(
+                ambient=0.18,
+                diffuse=1,
+                fresnel=0.1,
+                specular=1,
+                roughness=0.1,
+                ),
+            lightposition=dict(
+                x=0,
+                y=0,
+                z=-1,
+                ),
+            ),
+        ]
+
+    fig = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            scene=dict(
+                xaxis=AXIS,
+                yaxis=AXIS,
+                zaxis=AXIS,
+                camera=dict(
+                    eye=dict(
+                        x=right_or_left,
+                        y=0,
+                        z=0,
+                    ),
+                    projection=dict(
+                        type='orthographic',
+                    ),
+                    ),
+                ),
+            ),
+        )
+
+    return fig

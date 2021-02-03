@@ -3,6 +3,7 @@ from .gaussian import plot_gaussian
 from .fmri import plot_fmri
 from .scatter import plot_scatter
 from .smooth import plot_smooth
+from .surfaces import plot_surfaces
 
 
 def plot_results(parameters):
@@ -15,5 +16,6 @@ def plot_results(parameters):
     plot_scatter(wd)
     """
     plot_gaussian(plot_dir)
+    plot_surfaces(plot_dir, parameters)
     plot_histogram(plot_dir, parameters)
     plot_smooth(plot_dir, parameters)
