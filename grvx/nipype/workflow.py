@@ -3,12 +3,17 @@ from nipype import Workflow, Node, MapNode, config, logging, JoinNode
 from nipype.interfaces.fsl import FEAT, BET, FLIRT, Threshold
 from nipype.interfaces.freesurfer import ReconAll
 from numpy import arange
+from datetime import datetime
+from json import dump as json_dump
+from json import JSONEncoder
+from pathlib import Path
 
 from ..nodes.ieeg import (
     function_ieeg_read,
     function_ieeg_preprocess,
     function_ieeg_powerspectrum,
     function_ieeg_compare,
+    function_ieeg_compare_allfreq,
     )
 from ..nodes.fsl import function_prepare_design
 from ..nodes.fmri import (
@@ -16,7 +21,11 @@ from ..nodes.fmri import (
     function_fmri_atelec,
     function_fmri_graymatter,
     )
-from ..nodes.corr import function_corr, function_corr_summary
+from ..nodes.corr import (
+    function_corr,
+    function_corr_allfreq,
+    function_corr_summary,
+    )
 
 from .bids import bids_node
 
@@ -51,21 +60,21 @@ def workflow_ieeg(parameters):
     node_frequency.inputs.duration = parameters['ieeg']['powerspectrum']['duration']
 
     node_compare = Node(function_ieeg_compare, name='ecog_compare')
-    # node_compare.inputs.frequency = parameters['ieeg']['ecog_compare']['frequency']
     node_compare.iterables = (
-        'frequency', [
-            [8, 12],
-            [65, 95],
-            ])
+        'frequency', parameters['ieeg']['ecog_compare']['frequency_bands'],
+        )
     node_compare.inputs.baseline = parameters['ieeg']['ecog_compare']['baseline']
     node_compare.inputs.method = parameters['ieeg']['ecog_compare']['method']
     node_compare.inputs.measure = parameters['ieeg']['ecog_compare']['measure']
+
+    node_compare_allfreq = Node(function_ieeg_compare_allfreq, name='ecog_compare_allfreq')
 
     w = Workflow('ieeg')
 
     w.connect(node_read, 'ieeg', node_preprocess, 'ieeg')
     w.connect(node_preprocess, 'ieeg', node_frequency, 'ieeg')
     w.connect(node_frequency, 'ieeg', node_compare, 'in_files')
+    w.connect(node_frequency, 'ieeg', node_compare_allfreq, 'in_files')
 
     return w
 
@@ -146,6 +155,11 @@ def workflow_fmri(parameters):
 
 def create_grvx_workflow(parameters):
 
+    parameters['timestamp'] = datetime.now().isoformat()
+    parameters_json = parameters['paths']['output'] / 'parameters.json'
+    with parameters_json.open('w') as f:
+        json_dump(parameters, f, indent=2, cls=JSONEncoder_path)
+
     bids = bids_node(parameters)
 
     node_reconall = Node(ReconAll(), name='freesurfer')
@@ -154,6 +168,10 @@ def create_grvx_workflow(parameters):
 
     node_corr = Node(function_corr, name='corr_fmri_ecog')
     node_corr.inputs.pvalue = parameters['corr']['pvalue']
+
+    node_corr_allfreq = Node(function_corr_allfreq, name='corr_fmri_ecog_allfreq')
+    node_corr_allfreq.inputs.pvalue = parameters['corr']['pvalue']
+    node_corr_allfreq.inputs.min_n_sign_elec = parameters['corr']['min_n_sign_elec']
 
     node_corr_summary = JoinNode(
         function_corr_summary,
@@ -184,6 +202,9 @@ def create_grvx_workflow(parameters):
     w.connect(w_ieeg, 'ecog_compare.tsv_compare', node_corr, 'ecog_file')
     w.connect(w_fmri, 'at_elec.fmri_vals', node_corr, 'fmri_file')
 
+    w.connect(w_ieeg, 'ecog_compare_allfreq.compare', node_corr_allfreq, 'ecog_file')
+    w.connect(w_fmri, 'at_elec.fmri_vals', node_corr_allfreq, 'fmri_file')
+
     w.connect(node_corr, 'out_file', node_corr_summary, 'in_files')
     w.connect(w_ieeg, 'ecog_compare.tsv_compare', node_corr_summary, 'ecog_files')
     w.connect(w_fmri, 'at_elec.fmri_vals', node_corr_summary, 'fmri_files')
@@ -203,3 +224,9 @@ def create_grvx_workflow(parameters):
     logging.update_logging(config)
 
     return w
+
+
+class JSONEncoder_path(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Path):
+            return str(obj)

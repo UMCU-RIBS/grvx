@@ -60,6 +60,17 @@ def wrapper_ieeg_compare(in_files, frequency, baseline=False, method='dh2012',
     return str(output)
 
 
+def wrapper_ieeg_compare_allfreq(in_files):
+    from pathlib import Path
+    from grvx.nodes.ieeg.compare import compare_ieeg_allfreq
+
+    output = compare_ieeg_allfreq(
+        Path(in_files[0]),
+        Path(in_files[1]),
+        Path('.').resolve())
+    return str(output)
+
+
 function_ieeg_read = Function(
     input_names=[
         'ieeg',
@@ -115,4 +126,14 @@ function_ieeg_compare = Function(
         'tsv_compare',
     ],
     function=wrapper_ieeg_compare,
+    )
+
+function_ieeg_compare_allfreq = Function(
+    input_names=[
+        'in_files',
+    ],
+    output_names=[
+        'compare',
+    ],
+    function=wrapper_ieeg_compare_allfreq,
     )

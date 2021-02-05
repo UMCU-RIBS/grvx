@@ -1,6 +1,6 @@
 from difflib import SequenceMatcher
-from pickle import load
-from numpy import ones, hstack, sign, array, NaN
+from pickle import load, dump
+from numpy import ones, hstack, sign, array, NaN, mean, var, sqrt
 from numpy import concatenate as np_concatenate
 from scipy.stats import ttest_ind, pearsonr
 
@@ -70,6 +70,44 @@ def compare_ieeg_freq(file_A, file_B, frequency, baseline, merge_method, measure
             f.write(f'{chan}\t{ecog_stats(trial=0, chan=chan)}\t{pvalues(trial=0, chan=chan)}\n')
 
     return compare_file
+
+
+def compare_ieeg_allfreq(file_A, file_B, output_dir):
+
+    ieeg_A = file_Core(file_A)
+    ieeg_B = file_Core(file_B)
+
+    with file_A.open('rb') as f:
+        dat_A = load(f)
+    with file_B.open('rb') as f:
+        dat_B = load(f)
+
+    freq_A = merge_allfreq(dat_A)
+    freq_B = merge_allfreq(dat_B)
+
+    ecog_stats = compute_zstat(freq_A, freq_B)
+
+    output = file_Core(
+        subject=ieeg_A.subject,
+        session=ieeg_A.session,
+        run=ieeg_A.run,
+        acquisition=ieeg_A.acquisition,
+        modality='compare',
+        extension='.pkl',
+        task=find_longest_match(ieeg_A.task, ieeg_B.task),
+        )
+    compare_file = output_dir / output.get_filename()
+    with compare_file.open('wb') as f:
+        dump(ecog_stats, f)
+
+    return compare_file
+
+
+def merge_allfreq(freq):
+    """Only method 3c"""
+    freq = concatenate(freq, axis='time')
+    out = math(freq, operator_name='dB')
+    return out
 
 
 def merge(freq, method, frequency):
@@ -176,7 +214,7 @@ def compute_percent(hfa_A, hfa_B):
     return data_perc
 
 
-def compute_zstat(hfa_A, hfa_B):
+def compute_zstat_old(hfa_A, hfa_B):
     """
     TODO
     ----
@@ -185,6 +223,24 @@ def compute_zstat(hfa_A, hfa_B):
     zstat = ttest_ind(hfa_A.data[0], hfa_B.data[0], axis=1, equal_var=False).statistic
 
     return Data(zstat, hfa_A.s_freq, chan=hfa_A.chan[0])
+
+
+def compute_zstat(freq_A, freq_B, aoi=1):
+    x_A = freq_A.data[0]
+    x_B = freq_B.data[0]
+
+    n_A = x_A.shape[aoi]
+    n_B = x_B.shape[aoi]
+    m = (mean(x_A, axis=aoi) - mean(x_B, axis=aoi))
+    Sp = sqrt(var(x_A, axis=aoi, ddof=1) / n_A + var(x_B, axis=aoi, ddof=1) / n_B)
+    zstat = m / Sp
+
+    if x_A.ndim == 2:
+        dat = Data(zstat, freq_A.s_freq, chan=freq_A.chan[0])
+    else:
+        dat = Data(zstat, freq_A.s_freq, chan=freq_A.chan[0], freq=freq_A.freq[0])
+
+    return dat
 
 
 def calc_dh2012_values(hfa_A, hfa_B, measure):
