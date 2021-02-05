@@ -26,9 +26,10 @@
 </summary>
 <pre><code class="python">from logging import getLogger
 
-from numpy import argmax, polyfit, isnan, NaN, isin
+from numpy import argmax, polyfit, isnan, NaN, isin, empty
 from numpy.testing import assert_array_equal
-from scipy.stats import linregress
+from scipy.stats import linregress, norm
+from pickle import load, dump
 
 from bidso.utils import read_tsv, replace_underscore
 
@@ -64,6 +65,47 @@ def compute_corr_ecog_fmri(fmri_file, ecog_file, output_dir, PVALUE):
     return results_tsv, fmri_file, ecog_file
 
 
+def compute_corr_ecog_fmri_allfreq(fmri_file, ecog_file, min_n_sign_elec, pvalue, output_dir):
+    output_dir.mkdir(exist_ok=True, parents=True)
+
+    with ecog_file.open(&#39;rb&#39;) as f:
+        ecog_stats = load(f)
+
+    fmri_vals = read_tsv(fmri_file)
+    fmri_idx = isin(fmri_vals[&#39;channel&#39;], (ecog_stats.chan[0]))
+    fmri_vals = fmri_vals[fmri_idx]
+    assert_array_equal(fmri_vals[&#39;channel&#39;], ecog_stats.chan[0])
+
+    threshold = norm.ppf(1 - pvalue / 2)
+
+    kernel_sizes = fmri_vals.dtype.names[1:]
+    n_freq = ecog_stats.freq[0].shape[0]
+    rsquared = empty((
+        n_freq,
+        len(kernel_sizes),
+        ))
+    slope = empty((
+        n_freq,
+        len(kernel_sizes),
+        ))
+    pvalue = empty((
+        n_freq,
+        len(kernel_sizes),
+        ))
+
+    for i_k, kernel in enumerate(kernel_sizes):
+        for i_f in range(n_freq):
+            x = ecog_stats.data[0][:, i_f]
+            y = fmri_vals[kernel]
+            rsquared[i_f, i_k], slope[i_f, i_k], pvalue[i_f, i_k] = compute_rsquared_pvalue(x, y, threshold, min_n_sign_elec)
+
+    out_file = output_dir / &#39;corr_ecog_fmri_allfreq.pkl&#39;
+    with out_file.open(&#39;wb&#39;) as f:
+        dump([rsquared, slope, pvalue], f)
+
+    return out_file
+
+
 def select_channels(fmri_vals, ecog_vals):
     &#34;&#34;&#34;make sure we&#39;re using the same channels and in the same order
     &#34;&#34;&#34;
@@ -79,6 +121,14 @@ def compute_rsquared(x, y, p_val, PVALUE):
 
     lr = linregress(x[mask], y[mask])
     return lr.rvalue ** 2, lr.slope, lr.intercept
+
+
+def compute_rsquared_pvalue(x, y, threshold, min_n_sign_elec):
+    mask = ~isnan(x) &amp; ~isnan(y) &amp; (abs(x) &gt;= threshold)
+    if sum(mask) &lt; min_n_sign_elec:
+        return NaN, NaN, 1
+    lr = linregress(x[mask], y[mask])
+    return lr.rvalue ** 2, lr.slope, lr.pvalue
 
 
 def read_shape(one_tsv):
@@ -133,6 +183,56 @@ def read_shape(one_tsv):
     return results_tsv, fmri_file, ecog_file</code></pre>
 </details>
 </dd>
+<dt id="grvx.nodes.corr.corrfmri.compute_corr_ecog_fmri_allfreq"><code class="name flex">
+<span>def <span class="ident">compute_corr_ecog_fmri_allfreq</span></span>(<span>fmri_file, ecog_file, min_n_sign_elec, pvalue, output_dir)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_corr_ecog_fmri_allfreq(fmri_file, ecog_file, min_n_sign_elec, pvalue, output_dir):
+    output_dir.mkdir(exist_ok=True, parents=True)
+
+    with ecog_file.open(&#39;rb&#39;) as f:
+        ecog_stats = load(f)
+
+    fmri_vals = read_tsv(fmri_file)
+    fmri_idx = isin(fmri_vals[&#39;channel&#39;], (ecog_stats.chan[0]))
+    fmri_vals = fmri_vals[fmri_idx]
+    assert_array_equal(fmri_vals[&#39;channel&#39;], ecog_stats.chan[0])
+
+    threshold = norm.ppf(1 - pvalue / 2)
+
+    kernel_sizes = fmri_vals.dtype.names[1:]
+    n_freq = ecog_stats.freq[0].shape[0]
+    rsquared = empty((
+        n_freq,
+        len(kernel_sizes),
+        ))
+    slope = empty((
+        n_freq,
+        len(kernel_sizes),
+        ))
+    pvalue = empty((
+        n_freq,
+        len(kernel_sizes),
+        ))
+
+    for i_k, kernel in enumerate(kernel_sizes):
+        for i_f in range(n_freq):
+            x = ecog_stats.data[0][:, i_f]
+            y = fmri_vals[kernel]
+            rsquared[i_f, i_k], slope[i_f, i_k], pvalue[i_f, i_k] = compute_rsquared_pvalue(x, y, threshold, min_n_sign_elec)
+
+    out_file = output_dir / &#39;corr_ecog_fmri_allfreq.pkl&#39;
+    with out_file.open(&#39;wb&#39;) as f:
+        dump([rsquared, slope, pvalue], f)
+
+    return out_file</code></pre>
+</details>
+</dd>
 <dt id="grvx.nodes.corr.corrfmri.compute_rsquared"><code class="name flex">
 <span>def <span class="ident">compute_rsquared</span></span>(<span>x, y, p_val, PVALUE)</span>
 </code></dt>
@@ -147,6 +247,23 @@ def read_shape(one_tsv):
 
     lr = linregress(x[mask], y[mask])
     return lr.rvalue ** 2, lr.slope, lr.intercept</code></pre>
+</details>
+</dd>
+<dt id="grvx.nodes.corr.corrfmri.compute_rsquared_pvalue"><code class="name flex">
+<span>def <span class="ident">compute_rsquared_pvalue</span></span>(<span>x, y, threshold, min_n_sign_elec)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_rsquared_pvalue(x, y, threshold, min_n_sign_elec):
+    mask = ~isnan(x) &amp; ~isnan(y) &amp; (abs(x) &gt;= threshold)
+    if sum(mask) &lt; min_n_sign_elec:
+        return NaN, NaN, 1
+    lr = linregress(x[mask], y[mask])
+    return lr.rvalue ** 2, lr.slope, lr.pvalue</code></pre>
 </details>
 </dd>
 <dt id="grvx.nodes.corr.corrfmri.read_shape"><code class="name flex">
@@ -204,7 +321,9 @@ def read_shape(one_tsv):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="grvx.nodes.corr.corrfmri.compute_corr_ecog_fmri" href="#grvx.nodes.corr.corrfmri.compute_corr_ecog_fmri">compute_corr_ecog_fmri</a></code></li>
+<li><code><a title="grvx.nodes.corr.corrfmri.compute_corr_ecog_fmri_allfreq" href="#grvx.nodes.corr.corrfmri.compute_corr_ecog_fmri_allfreq">compute_corr_ecog_fmri_allfreq</a></code></li>
 <li><code><a title="grvx.nodes.corr.corrfmri.compute_rsquared" href="#grvx.nodes.corr.corrfmri.compute_rsquared">compute_rsquared</a></code></li>
+<li><code><a title="grvx.nodes.corr.corrfmri.compute_rsquared_pvalue" href="#grvx.nodes.corr.corrfmri.compute_rsquared_pvalue">compute_rsquared_pvalue</a></code></li>
 <li><code><a title="grvx.nodes.corr.corrfmri.read_shape" href="#grvx.nodes.corr.corrfmri.read_shape">read_shape</a></code></li>
 <li><code><a title="grvx.nodes.corr.corrfmri.select_channels" href="#grvx.nodes.corr.corrfmri.select_channels">select_channels</a></code></li>
 </ul>

@@ -29,12 +29,17 @@ from nipype import Workflow, Node, MapNode, config, logging, JoinNode
 from nipype.interfaces.fsl import FEAT, BET, FLIRT, Threshold
 from nipype.interfaces.freesurfer import ReconAll
 from numpy import arange
+from datetime import datetime
+from json import dump as json_dump
+from json import JSONEncoder
+from pathlib import Path
 
 from ..nodes.ieeg import (
     function_ieeg_read,
     function_ieeg_preprocess,
     function_ieeg_powerspectrum,
     function_ieeg_compare,
+    function_ieeg_compare_allfreq,
     )
 from ..nodes.fsl import function_prepare_design
 from ..nodes.fmri import (
@@ -42,7 +47,11 @@ from ..nodes.fmri import (
     function_fmri_atelec,
     function_fmri_graymatter,
     )
-from ..nodes.corr import function_corr, function_corr_summary
+from ..nodes.corr import (
+    function_corr,
+    function_corr_allfreq,
+    function_corr_summary,
+    )
 
 from .bids import bids_node
 
@@ -74,19 +83,25 @@ def workflow_ieeg(parameters):
     node_frequency = MapNode(function_ieeg_powerspectrum, name=&#39;powerspectrum&#39;, iterfield=[&#39;ieeg&#39;, ])
     node_frequency.inputs.method = parameters[&#39;ieeg&#39;][&#39;powerspectrum&#39;][&#39;method&#39;]
     node_frequency.inputs.taper = parameters[&#39;ieeg&#39;][&#39;powerspectrum&#39;][&#39;taper&#39;]
+    node_frequency.inputs.halfbandwidth = parameters[&#39;ieeg&#39;][&#39;powerspectrum&#39;][&#39;halfbandwidth&#39;]
     node_frequency.inputs.duration = parameters[&#39;ieeg&#39;][&#39;powerspectrum&#39;][&#39;duration&#39;]
 
     node_compare = Node(function_ieeg_compare, name=&#39;ecog_compare&#39;)
-    node_compare.inputs.frequency = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency&#39;]
+    node_compare.iterables = (
+        &#39;frequency&#39;, parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;],
+        )
     node_compare.inputs.baseline = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;baseline&#39;]
     node_compare.inputs.method = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;method&#39;]
     node_compare.inputs.measure = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;measure&#39;]
+
+    node_compare_allfreq = Node(function_ieeg_compare_allfreq, name=&#39;ecog_compare_allfreq&#39;)
 
     w = Workflow(&#39;ieeg&#39;)
 
     w.connect(node_read, &#39;ieeg&#39;, node_preprocess, &#39;ieeg&#39;)
     w.connect(node_preprocess, &#39;ieeg&#39;, node_frequency, &#39;ieeg&#39;)
     w.connect(node_frequency, &#39;ieeg&#39;, node_compare, &#39;in_files&#39;)
+    w.connect(node_frequency, &#39;ieeg&#39;, node_compare_allfreq, &#39;in_files&#39;)
 
     return w
 
@@ -167,6 +182,11 @@ def workflow_fmri(parameters):
 
 def create_grvx_workflow(parameters):
 
+    parameters[&#39;timestamp&#39;] = datetime.now().isoformat()
+    parameters_json = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;parameters.json&#39;
+    with parameters_json.open(&#39;w&#39;) as f:
+        json_dump(parameters, f, indent=2, cls=JSONEncoder_path)
+
     bids = bids_node(parameters)
 
     node_reconall = Node(ReconAll(), name=&#39;freesurfer&#39;)
@@ -175,6 +195,10 @@ def create_grvx_workflow(parameters):
 
     node_corr = Node(function_corr, name=&#39;corr_fmri_ecog&#39;)
     node_corr.inputs.pvalue = parameters[&#39;corr&#39;][&#39;pvalue&#39;]
+
+    node_corr_allfreq = Node(function_corr_allfreq, name=&#39;corr_fmri_ecog_allfreq&#39;)
+    node_corr_allfreq.inputs.pvalue = parameters[&#39;corr&#39;][&#39;pvalue&#39;]
+    node_corr_allfreq.inputs.min_n_sign_elec = parameters[&#39;corr&#39;][&#39;min_n_sign_elec&#39;]
 
     node_corr_summary = JoinNode(
         function_corr_summary,
@@ -205,6 +229,9 @@ def create_grvx_workflow(parameters):
     w.connect(w_ieeg, &#39;ecog_compare.tsv_compare&#39;, node_corr, &#39;ecog_file&#39;)
     w.connect(w_fmri, &#39;at_elec.fmri_vals&#39;, node_corr, &#39;fmri_file&#39;)
 
+    w.connect(w_ieeg, &#39;ecog_compare_allfreq.compare&#39;, node_corr_allfreq, &#39;ecog_file&#39;)
+    w.connect(w_fmri, &#39;at_elec.fmri_vals&#39;, node_corr_allfreq, &#39;fmri_file&#39;)
+
     w.connect(node_corr, &#39;out_file&#39;, node_corr_summary, &#39;in_files&#39;)
     w.connect(w_ieeg, &#39;ecog_compare.tsv_compare&#39;, node_corr_summary, &#39;ecog_files&#39;)
     w.connect(w_fmri, &#39;at_elec.fmri_vals&#39;, node_corr_summary, &#39;fmri_files&#39;)
@@ -223,7 +250,13 @@ def create_grvx_workflow(parameters):
     log_dir.mkdir()
     logging.update_logging(config)
 
-    return w</code></pre>
+    return w
+
+
+class JSONEncoder_path(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Path):
+            return str(obj)</code></pre>
 </details>
 </section>
 <section>
@@ -244,6 +277,11 @@ def create_grvx_workflow(parameters):
 </summary>
 <pre><code class="python">def create_grvx_workflow(parameters):
 
+    parameters[&#39;timestamp&#39;] = datetime.now().isoformat()
+    parameters_json = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;parameters.json&#39;
+    with parameters_json.open(&#39;w&#39;) as f:
+        json_dump(parameters, f, indent=2, cls=JSONEncoder_path)
+
     bids = bids_node(parameters)
 
     node_reconall = Node(ReconAll(), name=&#39;freesurfer&#39;)
@@ -252,6 +290,10 @@ def create_grvx_workflow(parameters):
 
     node_corr = Node(function_corr, name=&#39;corr_fmri_ecog&#39;)
     node_corr.inputs.pvalue = parameters[&#39;corr&#39;][&#39;pvalue&#39;]
+
+    node_corr_allfreq = Node(function_corr_allfreq, name=&#39;corr_fmri_ecog_allfreq&#39;)
+    node_corr_allfreq.inputs.pvalue = parameters[&#39;corr&#39;][&#39;pvalue&#39;]
+    node_corr_allfreq.inputs.min_n_sign_elec = parameters[&#39;corr&#39;][&#39;min_n_sign_elec&#39;]
 
     node_corr_summary = JoinNode(
         function_corr_summary,
@@ -281,6 +323,9 @@ def create_grvx_workflow(parameters):
 
     w.connect(w_ieeg, &#39;ecog_compare.tsv_compare&#39;, node_corr, &#39;ecog_file&#39;)
     w.connect(w_fmri, &#39;at_elec.fmri_vals&#39;, node_corr, &#39;fmri_file&#39;)
+
+    w.connect(w_ieeg, &#39;ecog_compare_allfreq.compare&#39;, node_corr_allfreq, &#39;ecog_file&#39;)
+    w.connect(w_fmri, &#39;at_elec.fmri_vals&#39;, node_corr_allfreq, &#39;fmri_file&#39;)
 
     w.connect(node_corr, &#39;out_file&#39;, node_corr_summary, &#39;in_files&#39;)
     w.connect(w_ieeg, &#39;ecog_compare.tsv_compare&#39;, node_corr_summary, &#39;ecog_files&#39;)
@@ -409,19 +454,25 @@ def create_grvx_workflow(parameters):
     node_frequency = MapNode(function_ieeg_powerspectrum, name=&#39;powerspectrum&#39;, iterfield=[&#39;ieeg&#39;, ])
     node_frequency.inputs.method = parameters[&#39;ieeg&#39;][&#39;powerspectrum&#39;][&#39;method&#39;]
     node_frequency.inputs.taper = parameters[&#39;ieeg&#39;][&#39;powerspectrum&#39;][&#39;taper&#39;]
+    node_frequency.inputs.halfbandwidth = parameters[&#39;ieeg&#39;][&#39;powerspectrum&#39;][&#39;halfbandwidth&#39;]
     node_frequency.inputs.duration = parameters[&#39;ieeg&#39;][&#39;powerspectrum&#39;][&#39;duration&#39;]
 
     node_compare = Node(function_ieeg_compare, name=&#39;ecog_compare&#39;)
-    node_compare.inputs.frequency = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency&#39;]
+    node_compare.iterables = (
+        &#39;frequency&#39;, parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;],
+        )
     node_compare.inputs.baseline = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;baseline&#39;]
     node_compare.inputs.method = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;method&#39;]
     node_compare.inputs.measure = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;measure&#39;]
+
+    node_compare_allfreq = Node(function_ieeg_compare_allfreq, name=&#39;ecog_compare_allfreq&#39;)
 
     w = Workflow(&#39;ieeg&#39;)
 
     w.connect(node_read, &#39;ieeg&#39;, node_preprocess, &#39;ieeg&#39;)
     w.connect(node_preprocess, &#39;ieeg&#39;, node_frequency, &#39;ieeg&#39;)
     w.connect(node_frequency, &#39;ieeg&#39;, node_compare, &#39;in_files&#39;)
+    w.connect(node_frequency, &#39;ieeg&#39;, node_compare_allfreq, &#39;in_files&#39;)
 
     return w</code></pre>
 </details>
@@ -429,6 +480,134 @@ def create_grvx_workflow(parameters):
 </dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="grvx.nipype.workflow.JSONEncoder_path"><code class="flex name class">
+<span>class <span class="ident">JSONEncoder_path</span></span>
+<span>(</span><span>*, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, sort_keys=False, indent=None, separators=None, default=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extensible JSON <a href="http://json.org">http://json.org</a> encoder for Python data structures.</p>
+<p>Supports the following objects and types by default:</p>
+<p>+-------------------+---------------+
+| Python
+| JSON
+|
++===================+===============+
+| dict
+| object
+|
++-------------------+---------------+
+| list, tuple
+| array
+|
++-------------------+---------------+
+| str
+| string
+|
++-------------------+---------------+
+| int, float
+| number
+|
++-------------------+---------------+
+| True
+| true
+|
++-------------------+---------------+
+| False
+| false
+|
++-------------------+---------------+
+| None
+| null
+|
++-------------------+---------------+</p>
+<p>To extend this to recognize other objects, subclass and implement a
+<code>.default()</code> method with another method that returns a serializable
+object for <code>o</code> if possible, otherwise it should call the superclass
+implementation (to raise <code>TypeError</code>).</p>
+<p>Constructor for JSONEncoder, with sensible defaults.</p>
+<p>If skipkeys is false, then it is a TypeError to attempt
+encoding of keys that are not str, int, float or None.
+If
+skipkeys is True, such items are simply skipped.</p>
+<p>If ensure_ascii is true, the output is guaranteed to be str
+objects with all incoming non-ASCII characters escaped.
+If
+ensure_ascii is false, the output can contain non-ASCII characters.</p>
+<p>If check_circular is true, then lists, dicts, and custom encoded
+objects will be checked for circular references during encoding to
+prevent an infinite recursion (which would cause an OverflowError).
+Otherwise, no such check takes place.</p>
+<p>If allow_nan is true, then NaN, Infinity, and -Infinity will be
+encoded as such.
+This behavior is not JSON specification compliant,
+but is consistent with most JavaScript based encoders and decoders.
+Otherwise, it will be a ValueError to encode such floats.</p>
+<p>If sort_keys is true, then the output of dictionaries will be
+sorted by key; this is useful for regression tests to ensure
+that JSON serializations can be compared on a day-to-day basis.</p>
+<p>If indent is a non-negative integer, then JSON array
+elements and object members will be pretty-printed with that
+indent level.
+An indent level of 0 will only insert newlines.
+None is the most compact representation.</p>
+<p>If specified, separators should be an (item_separator, key_separator)
+tuple.
+The default is (', ', ': ') if <em>indent</em> is <code>None</code> and
+(',', ': ') otherwise.
+To get the most compact JSON representation,
+you should specify (',', ':') to eliminate whitespace.</p>
+<p>If specified, default is a function that gets called for objects
+that can't otherwise be serialized.
+It should return a JSON encodable
+version of the object or raise a <code>TypeError</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class JSONEncoder_path(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Path):
+            return str(obj)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>json.encoder.JSONEncoder</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="grvx.nipype.workflow.JSONEncoder_path.default"><code class="name flex">
+<span>def <span class="ident">default</span></span>(<span>self, obj)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Implement this method in a subclass such that it returns
+a serializable object for <code>o</code>, or calls the base implementation
+(to raise a <code>TypeError</code>).</p>
+<p>For example, to support arbitrary iterators, you could
+implement default like this::</p>
+<pre><code>def default(self, o):
+    try:
+        iterable = iter(o)
+    except TypeError:
+        pass
+    else:
+        return list(iterable)
+    # Let the base class default method raise the TypeError
+    return JSONEncoder.default(self, o)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def default(self, obj):
+    if isinstance(obj, Path):
+        return str(obj)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -447,6 +626,16 @@ def create_grvx_workflow(parameters):
 <li><code><a title="grvx.nipype.workflow.create_grvx_workflow" href="#grvx.nipype.workflow.create_grvx_workflow">create_grvx_workflow</a></code></li>
 <li><code><a title="grvx.nipype.workflow.workflow_fmri" href="#grvx.nipype.workflow.workflow_fmri">workflow_fmri</a></code></li>
 <li><code><a title="grvx.nipype.workflow.workflow_ieeg" href="#grvx.nipype.workflow.workflow_ieeg">workflow_ieeg</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="grvx.nipype.workflow.JSONEncoder_path" href="#grvx.nipype.workflow.JSONEncoder_path">JSONEncoder_path</a></code></h4>
+<ul class="">
+<li><code><a title="grvx.nipype.workflow.JSONEncoder_path.default" href="#grvx.nipype.workflow.JSONEncoder_path.default">default</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

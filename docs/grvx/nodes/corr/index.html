@@ -40,6 +40,21 @@ def wrapper_corr(fmri_file, ecog_file, output_dir=&#39;./corr_values&#39;, pvalu
     return str(results_tsv), str(fmri_file), str(ecog_file)
 
 
+def wrapper_corr_allfreq(fmri_file, ecog_file, min_n_sign_elec, pvalue=0.05, output_dir=&#39;./corr_values&#39;):
+    from pathlib import Path
+    from grvx.nodes.corr.corrfmri import compute_corr_ecog_fmri_allfreq
+
+    results_pkl  = compute_corr_ecog_fmri_allfreq(
+        Path(fmri_file).resolve(),
+        Path(ecog_file).resolve(),
+        min_n_sign_elec,
+        pvalue,
+        Path(output_dir).resolve(),
+        )
+
+    return str(results_pkl)
+
+
 def wrapper_summary(in_files, ecog_files, fmri_files, output_dir=&#39;./output&#39;):
     from pathlib import Path
     from grvx.nodes.corr.summary import collect_corr
@@ -60,6 +75,21 @@ function_corr = Function(
         &#39;ecog_file&#39;,
     ],
     function=wrapper_corr,
+    )
+
+
+function_corr_allfreq = Function(
+    input_names=[
+        &#39;fmri_file&#39;,
+        &#39;ecog_file&#39;,
+        &#39;min_n_sign_elec&#39;,
+        &#39;pvalue&#39;,
+        &#39;output_dir&#39;,
+    ],
+    output_names=[
+        &#39;out_file&#39;,
+    ],
+    function=wrapper_corr_allfreq,
     )
 
 
@@ -113,6 +143,30 @@ function_corr_summary = Function(
     return str(results_tsv), str(fmri_file), str(ecog_file)</code></pre>
 </details>
 </dd>
+<dt id="grvx.nodes.corr.wrapper_corr_allfreq"><code class="name flex">
+<span>def <span class="ident">wrapper_corr_allfreq</span></span>(<span>fmri_file, ecog_file, min_n_sign_elec, pvalue=0.05, output_dir='./corr_values')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wrapper_corr_allfreq(fmri_file, ecog_file, min_n_sign_elec, pvalue=0.05, output_dir=&#39;./corr_values&#39;):
+    from pathlib import Path
+    from grvx.nodes.corr.corrfmri import compute_corr_ecog_fmri_allfreq
+
+    results_pkl  = compute_corr_ecog_fmri_allfreq(
+        Path(fmri_file).resolve(),
+        Path(ecog_file).resolve(),
+        min_n_sign_elec,
+        pvalue,
+        Path(output_dir).resolve(),
+        )
+
+    return str(results_pkl)</code></pre>
+</details>
+</dd>
 <dt id="grvx.nodes.corr.wrapper_summary"><code class="name flex">
 <span>def <span class="ident">wrapper_summary</span></span>(<span>in_files, ecog_files, fmri_files, output_dir='./output')</span>
 </code></dt>
@@ -154,6 +208,7 @@ function_corr_summary = Function(
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="grvx.nodes.corr.wrapper_corr" href="#grvx.nodes.corr.wrapper_corr">wrapper_corr</a></code></li>
+<li><code><a title="grvx.nodes.corr.wrapper_corr_allfreq" href="#grvx.nodes.corr.wrapper_corr_allfreq">wrapper_corr_allfreq</a></code></li>
 <li><code><a title="grvx.nodes.corr.wrapper_summary" href="#grvx.nodes.corr.wrapper_summary">wrapper_summary</a></code></li>
 </ul>
 </li>

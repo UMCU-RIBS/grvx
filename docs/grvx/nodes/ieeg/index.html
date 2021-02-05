@@ -57,7 +57,7 @@ def wrapper_preprocess(ieeg, reref, duration, offset):
     return str(output)
 
 
-def wrapper_powerspectrum(ieeg, method, taper, duration):
+def wrapper_powerspectrum(ieeg, method, taper, duration, halfbandwidth):
     from pathlib import Path
     from grvx.nodes.ieeg.psd import compute_powerspectrum
 
@@ -66,6 +66,7 @@ def wrapper_powerspectrum(ieeg, method, taper, duration):
         method,
         taper,
         duration,
+        halfbandwidth,
         Path(&#39;.&#39;).resolve())
     return str(output)
 
@@ -82,6 +83,17 @@ def wrapper_ieeg_compare(in_files, frequency, baseline=False, method=&#39;dh2012
         baseline,
         method,
         measure,
+        Path(&#39;.&#39;).resolve())
+    return str(output)
+
+
+def wrapper_ieeg_compare_allfreq(in_files):
+    from pathlib import Path
+    from grvx.nodes.ieeg.compare import compare_ieeg_allfreq
+
+    output = compare_ieeg_allfreq(
+        Path(in_files[0]),
+        Path(in_files[1]),
         Path(&#39;.&#39;).resolve())
     return str(output)
 
@@ -121,6 +133,7 @@ function_ieeg_powerspectrum = Function(
         &#39;method&#39;,
         &#39;taper&#39;,
         &#39;duration&#39;,
+        &#39;halfbandwidth&#39;,
     ],
     output_names=[
         &#39;ieeg&#39;,
@@ -141,6 +154,16 @@ function_ieeg_compare = Function(
         &#39;tsv_compare&#39;,
     ],
     function=wrapper_ieeg_compare,
+    )
+
+function_ieeg_compare_allfreq = Function(
+    input_names=[
+        &#39;in_files&#39;,
+    ],
+    output_names=[
+        &#39;compare&#39;,
+    ],
+    function=wrapper_ieeg_compare_allfreq,
     )</code></pre>
 </details>
 </section>
@@ -164,10 +187,6 @@ function_ieeg_compare = Function(
 <div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="grvx.nodes.ieeg.read" href="read.html">grvx.nodes.ieeg.read</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="grvx.nodes.ieeg.utils" href="utils.html">grvx.nodes.ieeg.utils</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -203,8 +222,8 @@ function_ieeg_compare = Function(
     return str(output)</code></pre>
 </details>
 </dd>
-<dt id="grvx.nodes.ieeg.wrapper_powerspectrum"><code class="name flex">
-<span>def <span class="ident">wrapper_powerspectrum</span></span>(<span>ieeg, method, taper, duration)</span>
+<dt id="grvx.nodes.ieeg.wrapper_ieeg_compare_allfreq"><code class="name flex">
+<span>def <span class="ident">wrapper_ieeg_compare_allfreq</span></span>(<span>in_files)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -212,7 +231,27 @@ function_ieeg_compare = Function(
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def wrapper_powerspectrum(ieeg, method, taper, duration):
+<pre><code class="python">def wrapper_ieeg_compare_allfreq(in_files):
+    from pathlib import Path
+    from grvx.nodes.ieeg.compare import compare_ieeg_allfreq
+
+    output = compare_ieeg_allfreq(
+        Path(in_files[0]),
+        Path(in_files[1]),
+        Path(&#39;.&#39;).resolve())
+    return str(output)</code></pre>
+</details>
+</dd>
+<dt id="grvx.nodes.ieeg.wrapper_powerspectrum"><code class="name flex">
+<span>def <span class="ident">wrapper_powerspectrum</span></span>(<span>ieeg, method, taper, duration, halfbandwidth)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wrapper_powerspectrum(ieeg, method, taper, duration, halfbandwidth):
     from pathlib import Path
     from grvx.nodes.ieeg.psd import compute_powerspectrum
 
@@ -221,6 +260,7 @@ function_ieeg_compare = Function(
         method,
         taper,
         duration,
+        halfbandwidth,
         Path(&#39;.&#39;).resolve())
     return str(output)</code></pre>
 </details>
@@ -297,12 +337,12 @@ function_ieeg_compare = Function(
 <li><code><a title="grvx.nodes.ieeg.preprocessing" href="preprocessing.html">grvx.nodes.ieeg.preprocessing</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.psd" href="psd.html">grvx.nodes.ieeg.psd</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.read" href="read.html">grvx.nodes.ieeg.read</a></code></li>
-<li><code><a title="grvx.nodes.ieeg.utils" href="utils.html">grvx.nodes.ieeg.utils</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="grvx.nodes.ieeg.wrapper_ieeg_compare" href="#grvx.nodes.ieeg.wrapper_ieeg_compare">wrapper_ieeg_compare</a></code></li>
+<li><code><a title="grvx.nodes.ieeg.wrapper_ieeg_compare_allfreq" href="#grvx.nodes.ieeg.wrapper_ieeg_compare_allfreq">wrapper_ieeg_compare_allfreq</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.wrapper_powerspectrum" href="#grvx.nodes.ieeg.wrapper_powerspectrum">wrapper_powerspectrum</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.wrapper_preprocess" href="#grvx.nodes.ieeg.wrapper_preprocess">wrapper_preprocess</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.wrapper_read_ieeg_block" href="#grvx.nodes.ieeg.wrapper_read_ieeg_block">wrapper_read_ieeg_block</a></code></li>

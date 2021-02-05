@@ -35,10 +35,10 @@ from bidso.utils import replace_extension
 
 lg = getLogger(__name__)
 
-HALFBANDWIDTH = 2
+HALFBANDWIDTH = 8
 
 
-def compute_powerspectrum(ieeg_file, method, taper, duration, output_dir):
+def compute_powerspectrum(ieeg_file, method, taper, duration, halfbandwidth, output_dir):
     &#34;&#34;&#34;
     compute psd
 
@@ -56,7 +56,7 @@ def compute_powerspectrum(ieeg_file, method, taper, duration, output_dir):
         dat = load(f)
 
     if method == &#39;spectrogram&#39;:
-        freq = compute_frequency(dat, taper, duration)
+        freq = compute_frequency(dat, taper, duration, halfbandwidth)
     elif method == &#39;dh2012&#39;:
         freq = compute_welch_dh2012(dat, duration)
     else:
@@ -69,7 +69,7 @@ def compute_powerspectrum(ieeg_file, method, taper, duration, output_dir):
     return output_file
 
 
-def compute_frequency(dat, taper, duration):
+def compute_frequency(dat, taper, duration, halfbandwidth):
     &#34;&#34;&#34;Remove epochs which have very high activity in high-freq range, then
     average over time (only high-freq range) and ALL the frequencies.&#34;&#34;&#34;
 
@@ -78,7 +78,7 @@ def compute_frequency(dat, taper, duration):
         method=&#39;spectrogram&#39;,
         taper=taper,
         duration=duration,
-        halfbandwidth=HALFBANDWIDTH,
+        halfbandwidth=halfbandwidth,
         )
 
     return dat
@@ -114,7 +114,7 @@ def compute_welch_dh2012(data, duration):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.nodes.ieeg.psd.compute_frequency"><code class="name flex">
-<span>def <span class="ident">compute_frequency</span></span>(<span>dat, taper, duration)</span>
+<span>def <span class="ident">compute_frequency</span></span>(<span>dat, taper, duration, halfbandwidth)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Remove epochs which have very high activity in high-freq range, then
@@ -123,7 +123,7 @@ average over time (only high-freq range) and ALL the frequencies.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_frequency(dat, taper, duration):
+<pre><code class="python">def compute_frequency(dat, taper, duration, halfbandwidth):
     &#34;&#34;&#34;Remove epochs which have very high activity in high-freq range, then
     average over time (only high-freq range) and ALL the frequencies.&#34;&#34;&#34;
 
@@ -132,14 +132,14 @@ average over time (only high-freq range) and ALL the frequencies.</p></div>
         method=&#39;spectrogram&#39;,
         taper=taper,
         duration=duration,
-        halfbandwidth=HALFBANDWIDTH,
+        halfbandwidth=halfbandwidth,
         )
 
     return dat</code></pre>
 </details>
 </dd>
 <dt id="grvx.nodes.ieeg.psd.compute_powerspectrum"><code class="name flex">
-<span>def <span class="ident">compute_powerspectrum</span></span>(<span>ieeg_file, method, taper, duration, output_dir)</span>
+<span>def <span class="ident">compute_powerspectrum</span></span>(<span>ieeg_file, method, taper, duration, halfbandwidth, output_dir)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>compute psd</p>
@@ -156,7 +156,7 @@ average over time (only high-freq range) and ALL the frequencies.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_powerspectrum(ieeg_file, method, taper, duration, output_dir):
+<pre><code class="python">def compute_powerspectrum(ieeg_file, method, taper, duration, halfbandwidth, output_dir):
     &#34;&#34;&#34;
     compute psd
 
@@ -174,7 +174,7 @@ average over time (only high-freq range) and ALL the frequencies.</p></div>
         dat = load(f)
 
     if method == &#39;spectrogram&#39;:
-        freq = compute_frequency(dat, taper, duration)
+        freq = compute_frequency(dat, taper, duration, halfbandwidth)
     elif method == &#39;dh2012&#39;:
         freq = compute_welch_dh2012(dat, duration)
     else:

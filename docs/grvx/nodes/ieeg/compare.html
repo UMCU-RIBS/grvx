@@ -25,8 +25,8 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from difflib import SequenceMatcher
-from pickle import load
-from numpy import ones, hstack, sign, array, NaN
+from pickle import load, dump
+from numpy import ones, hstack, sign, array, NaN, mean, var, sqrt
 from numpy import concatenate as np_concatenate
 from scipy.stats import ttest_ind, pearsonr
 
@@ -96,6 +96,44 @@ def compare_ieeg_freq(file_A, file_B, frequency, baseline, merge_method, measure
             f.write(f&#39;{chan}\t{ecog_stats(trial=0, chan=chan)}\t{pvalues(trial=0, chan=chan)}\n&#39;)
 
     return compare_file
+
+
+def compare_ieeg_allfreq(file_A, file_B, output_dir):
+
+    ieeg_A = file_Core(file_A)
+    ieeg_B = file_Core(file_B)
+
+    with file_A.open(&#39;rb&#39;) as f:
+        dat_A = load(f)
+    with file_B.open(&#39;rb&#39;) as f:
+        dat_B = load(f)
+
+    freq_A = merge_allfreq(dat_A)
+    freq_B = merge_allfreq(dat_B)
+
+    ecog_stats = compute_zstat(freq_A, freq_B)
+
+    output = file_Core(
+        subject=ieeg_A.subject,
+        session=ieeg_A.session,
+        run=ieeg_A.run,
+        acquisition=ieeg_A.acquisition,
+        modality=&#39;compare&#39;,
+        extension=&#39;.pkl&#39;,
+        task=find_longest_match(ieeg_A.task, ieeg_B.task),
+        )
+    compare_file = output_dir / output.get_filename()
+    with compare_file.open(&#39;wb&#39;) as f:
+        dump(ecog_stats, f)
+
+    return compare_file
+
+
+def merge_allfreq(freq):
+    &#34;&#34;&#34;Only method 3c&#34;&#34;&#34;
+    freq = concatenate(freq, axis=&#39;time&#39;)
+    out = math(freq, operator_name=&#39;dB&#39;)
+    return out
 
 
 def merge(freq, method, frequency):
@@ -202,7 +240,7 @@ def compute_percent(hfa_A, hfa_B):
     return data_perc
 
 
-def compute_zstat(hfa_A, hfa_B):
+def compute_zstat_old(hfa_A, hfa_B):
     &#34;&#34;&#34;
     TODO
     ----
@@ -211,6 +249,24 @@ def compute_zstat(hfa_A, hfa_B):
     zstat = ttest_ind(hfa_A.data[0], hfa_B.data[0], axis=1, equal_var=False).statistic
 
     return Data(zstat, hfa_A.s_freq, chan=hfa_A.chan[0])
+
+
+def compute_zstat(freq_A, freq_B, aoi=1):
+    x_A = freq_A.data[0]
+    x_B = freq_B.data[0]
+
+    n_A = x_A.shape[aoi]
+    n_B = x_B.shape[aoi]
+    m = (mean(x_A, axis=aoi) - mean(x_B, axis=aoi))
+    Sp = sqrt(var(x_A, axis=aoi, ddof=1) / n_A + var(x_B, axis=aoi, ddof=1) / n_B)
+    zstat = m / Sp
+
+    if x_A.ndim == 2:
+        dat = Data(zstat, freq_A.s_freq, chan=freq_A.chan[0])
+    else:
+        dat = Data(zstat, freq_A.s_freq, chan=freq_A.chan[0], freq=freq_A.freq[0])
+
+    return dat
 
 
 def calc_dh2012_values(hfa_A, hfa_B, measure):
@@ -292,6 +348,46 @@ def find_longest_match(taskA, taskB):
             val.append(p)
 
     return Data(array(val), hfa_A.s_freq, chan=hfa_A.chan[0])</code></pre>
+</details>
+</dd>
+<dt id="grvx.nodes.ieeg.compare.compare_ieeg_allfreq"><code class="name flex">
+<span>def <span class="ident">compare_ieeg_allfreq</span></span>(<span>file_A, file_B, output_dir)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_ieeg_allfreq(file_A, file_B, output_dir):
+
+    ieeg_A = file_Core(file_A)
+    ieeg_B = file_Core(file_B)
+
+    with file_A.open(&#39;rb&#39;) as f:
+        dat_A = load(f)
+    with file_B.open(&#39;rb&#39;) as f:
+        dat_B = load(f)
+
+    freq_A = merge_allfreq(dat_A)
+    freq_B = merge_allfreq(dat_B)
+
+    ecog_stats = compute_zstat(freq_A, freq_B)
+
+    output = file_Core(
+        subject=ieeg_A.subject,
+        session=ieeg_A.session,
+        run=ieeg_A.run,
+        acquisition=ieeg_A.acquisition,
+        modality=&#39;compare&#39;,
+        extension=&#39;.pkl&#39;,
+        task=find_longest_match(ieeg_A.task, ieeg_B.task),
+        )
+    compare_file = output_dir / output.get_filename()
+    with compare_file.open(&#39;wb&#39;) as f:
+        dump(ecog_stats, f)
+
+    return compare_file</code></pre>
 </details>
 </dd>
 <dt id="grvx.nodes.ieeg.compare.compare_ieeg_freq"><code class="name flex">
@@ -407,7 +503,34 @@ def find_longest_match(taskA, taskB):
 </details>
 </dd>
 <dt id="grvx.nodes.ieeg.compare.compute_zstat"><code class="name flex">
-<span>def <span class="ident">compute_zstat</span></span>(<span>hfa_A, hfa_B)</span>
+<span>def <span class="ident">compute_zstat</span></span>(<span>freq_A, freq_B, aoi=1)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_zstat(freq_A, freq_B, aoi=1):
+    x_A = freq_A.data[0]
+    x_B = freq_B.data[0]
+
+    n_A = x_A.shape[aoi]
+    n_B = x_B.shape[aoi]
+    m = (mean(x_A, axis=aoi) - mean(x_B, axis=aoi))
+    Sp = sqrt(var(x_A, axis=aoi, ddof=1) / n_A + var(x_B, axis=aoi, ddof=1) / n_B)
+    zstat = m / Sp
+
+    if x_A.ndim == 2:
+        dat = Data(zstat, freq_A.s_freq, chan=freq_A.chan[0])
+    else:
+        dat = Data(zstat, freq_A.s_freq, chan=freq_A.chan[0], freq=freq_A.freq[0])
+
+    return dat</code></pre>
+</details>
+</dd>
+<dt id="grvx.nodes.ieeg.compare.compute_zstat_old"><code class="name flex">
+<span>def <span class="ident">compute_zstat_old</span></span>(<span>hfa_A, hfa_B)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="todo">Todo</h2>
@@ -416,7 +539,7 @@ def find_longest_match(taskA, taskB):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_zstat(hfa_A, hfa_B):
+<pre><code class="python">def compute_zstat_old(hfa_A, hfa_B):
     &#34;&#34;&#34;
     TODO
     ----
@@ -561,6 +684,22 @@ def find_longest_match(taskA, taskB):
     return out</code></pre>
 </details>
 </dd>
+<dt id="grvx.nodes.ieeg.compare.merge_allfreq"><code class="name flex">
+<span>def <span class="ident">merge_allfreq</span></span>(<span>freq)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Only method 3c</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def merge_allfreq(freq):
+    &#34;&#34;&#34;Only method 3c&#34;&#34;&#34;
+    freq = concatenate(freq, axis=&#39;time&#39;)
+    out = math(freq, operator_name=&#39;dB&#39;)
+    return out</code></pre>
+</details>
+</dd>
 <dt id="grvx.nodes.ieeg.compare.merge_datasets"><code class="name flex">
 <span>def <span class="ident">merge_datasets</span></span>(<span>dat1, dat2)</span>
 </code></dt>
@@ -596,15 +735,18 @@ def find_longest_match(taskA, taskB):
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="grvx.nodes.ieeg.compare.calc_dh2012_values" href="#grvx.nodes.ieeg.compare.calc_dh2012_values">calc_dh2012_values</a></code></li>
+<li><code><a title="grvx.nodes.ieeg.compare.compare_ieeg_allfreq" href="#grvx.nodes.ieeg.compare.compare_ieeg_allfreq">compare_ieeg_allfreq</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.compare.compare_ieeg_freq" href="#grvx.nodes.ieeg.compare.compare_ieeg_freq">compare_ieeg_freq</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.compare.compute_diff" href="#grvx.nodes.ieeg.compare.compute_diff">compute_diff</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.compare.compute_percent" href="#grvx.nodes.ieeg.compare.compute_percent">compute_percent</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.compare.compute_zstat" href="#grvx.nodes.ieeg.compare.compute_zstat">compute_zstat</a></code></li>
+<li><code><a title="grvx.nodes.ieeg.compare.compute_zstat_old" href="#grvx.nodes.ieeg.compare.compute_zstat_old">compute_zstat_old</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.compare.correct_baseline" href="#grvx.nodes.ieeg.compare.correct_baseline">correct_baseline</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.compare.find_longest_match" href="#grvx.nodes.ieeg.compare.find_longest_match">find_longest_match</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.compare.merge" href="#grvx.nodes.ieeg.compare.merge">merge</a></code></li>
+<li><code><a title="grvx.nodes.ieeg.compare.merge_allfreq" href="#grvx.nodes.ieeg.compare.merge_allfreq">merge_allfreq</a></code></li>
 <li><code><a title="grvx.nodes.ieeg.compare.merge_datasets" href="#grvx.nodes.ieeg.compare.merge_datasets">merge_datasets</a></code></li>
 </ul>
 </li>

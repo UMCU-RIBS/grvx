@@ -12,7 +12,7 @@ lg = getLogger(__name__)
 HALFBANDWIDTH = 8
 
 
-def compute_powerspectrum(ieeg_file, method, taper, duration, output_dir):
+def compute_powerspectrum(ieeg_file, method, taper, duration, halfbandwidth, output_dir):
     """
     compute psd
 
@@ -30,7 +30,7 @@ def compute_powerspectrum(ieeg_file, method, taper, duration, output_dir):
         dat = load(f)
 
     if method == 'spectrogram':
-        freq = compute_frequency(dat, taper, duration)
+        freq = compute_frequency(dat, taper, duration, halfbandwidth)
     elif method == 'dh2012':
         freq = compute_welch_dh2012(dat, duration)
     else:
@@ -43,7 +43,7 @@ def compute_powerspectrum(ieeg_file, method, taper, duration, output_dir):
     return output_file
 
 
-def compute_frequency(dat, taper, duration):
+def compute_frequency(dat, taper, duration, halfbandwidth):
     """Remove epochs which have very high activity in high-freq range, then
     average over time (only high-freq range) and ALL the frequencies."""
 
@@ -52,7 +52,7 @@ def compute_frequency(dat, taper, duration):
         method='spectrogram',
         taper=taper,
         duration=duration,
-        halfbandwidth=HALFBANDWIDTH,
+        halfbandwidth=halfbandwidth,
         )
 
     return dat

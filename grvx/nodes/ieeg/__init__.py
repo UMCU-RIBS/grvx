@@ -31,7 +31,7 @@ def wrapper_preprocess(ieeg, reref, duration, offset):
     return str(output)
 
 
-def wrapper_powerspectrum(ieeg, method, taper, duration):
+def wrapper_powerspectrum(ieeg, method, taper, duration, halfbandwidth):
     from pathlib import Path
     from grvx.nodes.ieeg.psd import compute_powerspectrum
 
@@ -40,6 +40,7 @@ def wrapper_powerspectrum(ieeg, method, taper, duration):
         method,
         taper,
         duration,
+        halfbandwidth,
         Path('.').resolve())
     return str(output)
 
@@ -106,6 +107,7 @@ function_ieeg_powerspectrum = Function(
         'method',
         'taper',
         'duration',
+        'halfbandwidth',
     ],
     output_names=[
         'ieeg',

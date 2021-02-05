@@ -57,6 +57,7 @@ def workflow_ieeg(parameters):
     node_frequency = MapNode(function_ieeg_powerspectrum, name='powerspectrum', iterfield=['ieeg', ])
     node_frequency.inputs.method = parameters['ieeg']['powerspectrum']['method']
     node_frequency.inputs.taper = parameters['ieeg']['powerspectrum']['taper']
+    node_frequency.inputs.halfbandwidth = parameters['ieeg']['powerspectrum']['halfbandwidth']
     node_frequency.inputs.duration = parameters['ieeg']['powerspectrum']['duration']
 
     node_compare = Node(function_ieeg_compare, name='ecog_compare')
