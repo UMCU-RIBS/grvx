@@ -8,7 +8,7 @@ from .utils import to_html, to_div
 
 
 def plot_smooth(plot_dir, parameters):
-    rsquared_dir = parameters['paths']['output'] / 'nipype/grvx/corr_fmri_ecog_summary/output/rsquared'
+    rsquared_dir = parameters['paths']['output'] / 'workflow/corr_fmri_ecog_summary/output/rsquared'
     for one_tsv in rsquared_dir.glob('*.tsv'):
         results = read_tsv(one_tsv)
         subject = file_Core(one_tsv).subject
@@ -68,5 +68,5 @@ def plot_smooth(plot_dir, parameters):
             layout=layout,
             )
 
-        divs = [to_div(fig), ]
+        divs.append(to_div(fig))
         to_html(divs, plot_dir / 'smooth' / f'{subject}_r2.html')

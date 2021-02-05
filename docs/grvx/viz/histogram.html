@@ -39,7 +39,7 @@ SHIFT = &#39;middle&#39;  # middle / whole
 
 def plot_histogram(plot_dir, parameters):
 
-    summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
+    summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
     summary = read_tsv(summary_tsv)
 
     for value_type in (&#39;size_at_peak&#39;, &#39;r2_at_peak&#39;, &#39;size_at_concave&#39;):
@@ -125,7 +125,7 @@ def plot_histogram(plot_dir, parameters):
 </summary>
 <pre><code class="python">def plot_histogram(plot_dir, parameters):
 
-    summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
+    summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
     summary = read_tsv(summary_tsv)
 
     for value_type in (&#39;size_at_peak&#39;, &#39;r2_at_peak&#39;, &#39;size_at_concave&#39;):

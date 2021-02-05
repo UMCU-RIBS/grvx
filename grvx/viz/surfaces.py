@@ -8,10 +8,7 @@ from functools import partial
 from multiprocessing import Pool
 
 from ..nodes.fmri.at_electrodes import compute_chan, ndindex, from_mrifile_to_chan, array
-from .utils import to_html, to_div
-
-
-KERNEL = 8
+from .utils import to_div
 
 
 AXIS = dict(
@@ -23,19 +20,8 @@ AXIS = dict(
     showgrid=False,
     )
 
-def plot_surfaces(plot_dir, parameters):
 
-    subjects = [x.name[4:] for x in parameters['paths']['input'].glob('sub-*')]
-    for subj in subjects:
-        try:
-            fig = plot_surf_subj(parameters, subj)
-            to_html([to_div(fig), ], plot_dir / 'surfaces' / f'{subj}_surface.html')
-            print(f'Plotted surface of {subj}')
-        except StopIteration:
-            print(f'Could not plot surfaces for {subj}')
-
-
-def plot_surf_subj(parameters, subject):
+def plot_surface(parameters, subject):
 
     fmri_dir = parameters['paths']['output'] / f'workflow/fmri/_subject_{subject}/fmri_compare'
     compare_fmri_file = next(fmri_dir.glob(f'sub-{subject}_*bold_compare.nii.gz'))
@@ -77,7 +63,8 @@ def plot_surf_subj(parameters, subject):
     nd = array(list(ndindex(mri.shape)))
     ndi = from_mrifile_to_chan(img, nd)
 
-    partial_compute_chan = partial(compute_chan, KERNEL=KERNEL, ndi=ndi, mri=mri, distance='gaussian')
+    kernel = parameters['plot']['surface']['kernel']
+    partial_compute_chan = partial(compute_chan, KERNEL=kernel, ndi=ndi, mri=mri, distance='gaussian')
 
     vert = pial.vert + fs.surface_ras_shift
 
@@ -168,4 +155,4 @@ def plot_surf_subj(parameters, subject):
             ),
         )
 
-    return fig
+    return to_div(fig)

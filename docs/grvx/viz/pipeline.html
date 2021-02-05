@@ -29,12 +29,22 @@ from .gaussian import plot_gaussian
 from .fmri import plot_fmri
 from .scatter import plot_scatter
 from .smooth import plot_smooth
+from .surfaces import plot_surface
 
 
 def plot_results(parameters):
 
     plot_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;plots&#39;
     plot_dir.mkdir(exist_ok=True, parents=True)
+
+    subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+
+    divs = {}
+    for subj in subjects:
+        divs_subj = []
+        divs_subj.append(
+            plot_surface(parameters, subject))
+        break
 
     &#34;&#34;&#34;
     plot_fmri()
@@ -65,6 +75,15 @@ def plot_results(parameters):
 
     plot_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;plots&#39;
     plot_dir.mkdir(exist_ok=True, parents=True)
+
+    subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+
+    divs = {}
+    for subj in subjects:
+        divs_subj = []
+        divs_subj.append(
+            plot_surface(parameters, subject))
+        break
 
     &#34;&#34;&#34;
     plot_fmri()
