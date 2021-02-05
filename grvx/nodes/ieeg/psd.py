@@ -9,7 +9,7 @@ from bidso.utils import replace_extension
 
 lg = getLogger(__name__)
 
-HALFBANDWIDTH = 2
+HALFBANDWIDTH = 8
 
 
 def compute_powerspectrum(ieeg_file, method, taper, duration, output_dir):
