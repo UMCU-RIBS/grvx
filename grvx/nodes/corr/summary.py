@@ -33,7 +33,7 @@ def _compute_summary(in_files, output_dir):
 
     with summary_file.open('w') as f:
 
-        f.write(f'subject\tsession\ttask\tacquisition\tsize_at_peak\tr2_at_peak\tslope_at_peak\tintercept_at_peak\tsize_at_concave\tr2_at_concave\tdiff_r2\n')
+        f.write('subject\tsession\ttask\tacquisition\tsize_at_peak\tr2_at_peak\tslope_at_peak\tintercept_at_peak\tsize_at_concave\tr2_at_concave\tdiff_r2\n')
 
         for corr_file in in_files:
 

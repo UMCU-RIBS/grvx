@@ -73,7 +73,6 @@ def plot_surface(parameters, subject):
     fmri_vals = [x[0] for x in fmri_vals]
 
     colorscale = 'balance'
-    colorlim = (-10, 10)
 
     traces = [
         go.Scatter3d(
@@ -88,8 +87,7 @@ def plot_surface(parameters, subject):
                 color=compare_ieeg['measure'],
                 colorscale=colorscale,
                 showscale=True,
-                cmin=colorlim[0],
-                cmax=colorlim[1],
+                cmid=0,
                 colorbar=dict(
                     title='electrodes',
                     titleside="top",
@@ -107,8 +105,7 @@ def plot_surface(parameters, subject):
             j=pial.tri[:, 1],
             k=pial.tri[:, 2],
             intensity=fmri_vals,
-            cmax=3,
-            cmin=-3,
+            cmid=0,
             colorscale='Balance',
             hoverinfo='skip',
             flatshading=False,

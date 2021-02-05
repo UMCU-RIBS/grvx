@@ -26,7 +26,7 @@
 </summary>
 <pre><code class="python">from bidso.utils import read_tsv
 import plotly.graph_objs as go
-from .utils import to_div, to_html
+from .utils import to_div
 
 
 COLOR = {
@@ -37,12 +37,13 @@ COLOR = {
 SHIFT = &#39;middle&#39;  # middle / whole
 
 
-def plot_histogram(plot_dir, parameters):
+def plot_histogram(parameters):
 
     summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
     summary = read_tsv(summary_tsv)
 
-    for value_type in (&#39;size_at_peak&#39;, &#39;r2_at_peak&#39;, &#39;size_at_concave&#39;):
+    divs = []
+    for value_type in (&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
 
         if value_type in (&#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
             bin_size = 1
@@ -104,7 +105,9 @@ def plot_histogram(plot_dir, parameters):
             layout=layout,
             )
 
-        to_html([to_div(fig), ], plot_dir / &#39;histogram&#39; / f&#39;histogram_{value_type}.html&#39;)</code></pre>
+        divs.append(to_div(fig))
+
+    return divs</code></pre>
 </details>
 </section>
 <section>
@@ -115,7 +118,7 @@ def plot_histogram(plot_dir, parameters):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.viz.histogram.plot_histogram"><code class="name flex">
-<span>def <span class="ident">plot_histogram</span></span>(<span>plot_dir, parameters)</span>
+<span>def <span class="ident">plot_histogram</span></span>(<span>parameters)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -123,12 +126,13 @@ def plot_histogram(plot_dir, parameters):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_histogram(plot_dir, parameters):
+<pre><code class="python">def plot_histogram(parameters):
 
     summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
     summary = read_tsv(summary_tsv)
 
-    for value_type in (&#39;size_at_peak&#39;, &#39;r2_at_peak&#39;, &#39;size_at_concave&#39;):
+    divs = []
+    for value_type in (&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
 
         if value_type in (&#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
             bin_size = 1
@@ -190,7 +194,9 @@ def plot_histogram(plot_dir, parameters):
             layout=layout,
             )
 
-        to_html([to_div(fig), ], plot_dir / &#39;histogram&#39; / f&#39;histogram_{value_type}.html&#39;)</code></pre>
+        divs.append(to_div(fig))
+
+    return divs</code></pre>
 </details>
 </dd>
 </dl>

@@ -2,71 +2,64 @@ from numpy import gradient
 import plotly.graph_objs as go
 
 from bidso.utils import read_tsv
-from bidso import file_Core
 
-from .utils import to_html, to_div
+from .utils import to_div
 
 
-def plot_smooth(plot_dir, parameters):
-    rsquared_dir = parameters['paths']['output'] / 'workflow/corr_fmri_ecog_summary/output/rsquared'
-    for one_tsv in rsquared_dir.glob('*.tsv'):
-        results = read_tsv(one_tsv)
-        subject = file_Core(one_tsv).subject
+def plot_smooth(parameters, subject):
+    corr_dir = parameters['paths']['output'] / f'workflow/_subject_{subject}/corr_fmri_ecog/corr_values/'
+    corr_file = next(corr_dir.glob(f'sub-{subject}_*_r2.tsv'))
 
-        traces = [
-            dict(
-                x=results['Kernel'],
-                y=results['Rsquared'],
-                marker=dict(
-                    color='black',
-                    ),
+    results = read_tsv(corr_file)
+
+    traces = [
+        dict(
+            x=results['Kernel'],
+            y=results['Rsquared'],
+            marker=dict(
+                color='black',
                 ),
-            ]
+            ),
+        ]
 
-        layout = go.Layout(
-            xaxis=dict(
-                dtick=4,
-                range=(0, 20),
-                tickfont=dict(
-                    size=8,
-                    ),
+    layout = go.Layout(
+        xaxis=dict(
+            dtick=4,
+            range=(0, 20),
+            ),
+        yaxis=dict(
+            dtick=0.02,
+            rangemode='tozero',
+            ),
+        )
+
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
+        )
+    divs = [to_div(fig), ]
+
+    traces = [
+        dict(
+            x=results['Kernel'],
+            y=gradient(gradient(results['Rsquared'])),
+            marker=dict(
+                color='black',
                 ),
-            yaxis=dict(
-                dtick=0.1,
-                rangemode='tozero',
-                tickfont=dict(
-                    size=8,
-                    ),
-                ),
-            )
+            ),
+        ]
 
-        fig = go.Figure(
-            data=traces,
-            layout=layout,
-            )
-        divs = [to_div(fig), ]
+    layout.update(dict(
+        yaxis=dict(
+            dtick=0.002,
+            range=(-0.005, 0.005),
+            ),
+        ))
 
-        traces = [
-            dict(
-                x=results['Kernel'],
-                y=gradient(gradient(results['Rsquared'])),
-                marker=dict(
-                    color='black',
-                    ),
-                ),
-            ]
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
+        )
 
-        layout.update(dict(
-            yaxis=dict(
-                dtick=0.002,
-                range=(-0.005, 0.005),
-                ),
-            ))
-
-        fig = go.Figure(
-            data=traces,
-            layout=layout,
-            )
-
-        divs.append(to_div(fig))
-        to_html(divs, plot_dir / 'smooth' / f'{subject}_r2.html')
+    divs.append(to_div(fig))
+    return divs

@@ -51,7 +51,12 @@ def workflow_ieeg(parameters):
     node_frequency.inputs.duration = parameters['ieeg']['powerspectrum']['duration']
 
     node_compare = Node(function_ieeg_compare, name='ecog_compare')
-    node_compare.inputs.frequency = parameters['ieeg']['ecog_compare']['frequency']
+    # node_compare.inputs.frequency = parameters['ieeg']['ecog_compare']['frequency']
+    node_compare.iterables = (
+        'frequency', [
+            [8, 12],
+            [65, 95],
+            ])
     node_compare.inputs.baseline = parameters['ieeg']['ecog_compare']['baseline']
     node_compare.inputs.method = parameters['ieeg']['ecog_compare']['method']
     node_compare.inputs.measure = parameters['ieeg']['ecog_compare']['measure']

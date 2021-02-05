@@ -68,7 +68,7 @@
   - `input`:
   - `freesurfer_subjects_dir`:
   - `output`:
-- **`plot`**
-  - **`surface`**:
-    - **`kernel`**: size of the kernel to use to compute smoothing for the surface plot of BOLD data
+- `plot`
+  - `surface`:
+    - `kernel`: size of the kernel to use to compute smoothing for the surface plot of BOLD data
 

@@ -28,74 +28,73 @@
 import plotly.graph_objs as go
 
 from bidso.utils import read_tsv
-from bidso import file_Core
 
-from .utils import to_html, to_div
+from .utils import to_div
 
 
-def plot_smooth(plot_dir, parameters):
-    rsquared_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow/corr_fmri_ecog_summary/output/rsquared&#39;
-    for one_tsv in rsquared_dir.glob(&#39;*.tsv&#39;):
-        results = read_tsv(one_tsv)
-        subject = file_Core(one_tsv).subject
+def plot_smooth(parameters, subject):
+    corr_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/_subject_{subject}/corr_fmri_ecog/corr_values/&#39;
+    corr_file = next(corr_dir.glob(f&#39;sub-{subject}_*_r2.tsv&#39;))
 
-        traces = [
-            dict(
-                x=results[&#39;Kernel&#39;],
-                y=results[&#39;Rsquared&#39;],
-                marker=dict(
-                    color=&#39;black&#39;,
-                    ),
+    results = read_tsv(corr_file)
+
+    traces = [
+        dict(
+            x=results[&#39;Kernel&#39;],
+            y=results[&#39;Rsquared&#39;],
+            marker=dict(
+                color=&#39;black&#39;,
                 ),
-            ]
+            ),
+        ]
 
-        layout = go.Layout(
-            xaxis=dict(
-                dtick=4,
-                range=(0, 20),
-                tickfont=dict(
-                    size=8,
-                    ),
+    layout = go.Layout(
+        xaxis=dict(
+            dtick=4,
+            range=(0, 20),
+            tickfont=dict(
+                size=8,
                 ),
-            yaxis=dict(
-                dtick=0.1,
-                rangemode=&#39;tozero&#39;,
-                tickfont=dict(
-                    size=8,
-                    ),
+            ),
+        yaxis=dict(
+            dtick=0.1,
+            rangemode=&#39;tozero&#39;,
+            tickfont=dict(
+                size=8,
                 ),
-            )
+            ),
+        )
 
-        fig = go.Figure(
-            data=traces,
-            layout=layout,
-            )
-        divs = [to_div(fig), ]
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
+        )
+    divs = [to_div(fig), ]
 
-        traces = [
-            dict(
-                x=results[&#39;Kernel&#39;],
-                y=gradient(gradient(results[&#39;Rsquared&#39;])),
-                marker=dict(
-                    color=&#39;black&#39;,
-                    ),
+    traces = [
+        dict(
+            x=results[&#39;Kernel&#39;],
+            y=gradient(gradient(results[&#39;Rsquared&#39;])),
+            marker=dict(
+                color=&#39;black&#39;,
                 ),
-            ]
+            ),
+        ]
 
-        layout.update(dict(
-            yaxis=dict(
-                dtick=0.002,
-                range=(-0.005, 0.005),
-                ),
-            ))
+    layout.update(dict(
+        yaxis=dict(
+            dtick=0.002,
+            range=(-0.005, 0.005),
+            ),
+        ))
 
-        fig = go.Figure(
-            data=traces,
-            layout=layout,
-            )
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
+        )
 
-        divs.append(to_div(fig))
-        to_html(divs, plot_dir / &#39;smooth&#39; / f&#39;{subject}_r2.html&#39;)</code></pre>
+    divs.append(to_div(fig))
+    return divs</code></pre>
 </details>
 </section>
 <section>
@@ -106,7 +105,7 @@ def plot_smooth(plot_dir, parameters):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.viz.smooth.plot_smooth"><code class="name flex">
-<span>def <span class="ident">plot_smooth</span></span>(<span>plot_dir, parameters)</span>
+<span>def <span class="ident">plot_smooth</span></span>(<span>parameters, subject)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -114,69 +113,69 @@ def plot_smooth(plot_dir, parameters):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_smooth(plot_dir, parameters):
-    rsquared_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow/corr_fmri_ecog_summary/output/rsquared&#39;
-    for one_tsv in rsquared_dir.glob(&#39;*.tsv&#39;):
-        results = read_tsv(one_tsv)
-        subject = file_Core(one_tsv).subject
+<pre><code class="python">def plot_smooth(parameters, subject):
+    corr_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/_subject_{subject}/corr_fmri_ecog/corr_values/&#39;
+    corr_file = next(corr_dir.glob(f&#39;sub-{subject}_*_r2.tsv&#39;))
 
-        traces = [
-            dict(
-                x=results[&#39;Kernel&#39;],
-                y=results[&#39;Rsquared&#39;],
-                marker=dict(
-                    color=&#39;black&#39;,
-                    ),
+    results = read_tsv(corr_file)
+
+    traces = [
+        dict(
+            x=results[&#39;Kernel&#39;],
+            y=results[&#39;Rsquared&#39;],
+            marker=dict(
+                color=&#39;black&#39;,
                 ),
-            ]
+            ),
+        ]
 
-        layout = go.Layout(
-            xaxis=dict(
-                dtick=4,
-                range=(0, 20),
-                tickfont=dict(
-                    size=8,
-                    ),
+    layout = go.Layout(
+        xaxis=dict(
+            dtick=4,
+            range=(0, 20),
+            tickfont=dict(
+                size=8,
                 ),
-            yaxis=dict(
-                dtick=0.1,
-                rangemode=&#39;tozero&#39;,
-                tickfont=dict(
-                    size=8,
-                    ),
+            ),
+        yaxis=dict(
+            dtick=0.1,
+            rangemode=&#39;tozero&#39;,
+            tickfont=dict(
+                size=8,
                 ),
-            )
+            ),
+        )
 
-        fig = go.Figure(
-            data=traces,
-            layout=layout,
-            )
-        divs = [to_div(fig), ]
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
+        )
+    divs = [to_div(fig), ]
 
-        traces = [
-            dict(
-                x=results[&#39;Kernel&#39;],
-                y=gradient(gradient(results[&#39;Rsquared&#39;])),
-                marker=dict(
-                    color=&#39;black&#39;,
-                    ),
+    traces = [
+        dict(
+            x=results[&#39;Kernel&#39;],
+            y=gradient(gradient(results[&#39;Rsquared&#39;])),
+            marker=dict(
+                color=&#39;black&#39;,
                 ),
-            ]
+            ),
+        ]
 
-        layout.update(dict(
-            yaxis=dict(
-                dtick=0.002,
-                range=(-0.005, 0.005),
-                ),
-            ))
+    layout.update(dict(
+        yaxis=dict(
+            dtick=0.002,
+            range=(-0.005, 0.005),
+            ),
+        ))
 
-        fig = go.Figure(
-            data=traces,
-            layout=layout,
-            )
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
+        )
 
-        divs.append(to_div(fig))
-        to_html(divs, plot_dir / &#39;smooth&#39; / f&#39;{subject}_r2.html&#39;)</code></pre>
+    divs.append(to_div(fig))
+    return divs</code></pre>
 </details>
 </dd>
 </dl>

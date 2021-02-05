@@ -30,10 +30,10 @@ import plotly.graph_objs as go
 
 import colorlover as cl
 
-from .utils import to_html, to_div
+from .utils import to_div
 
 
-def plot_gaussian(plot_dir):
+def plot_gaussian():
     x = arange(0, 30, .05)
 
     colorscale = cl.scales[&#39;9&#39;][&#39;seq&#39;][&#39;Blues&#39;]
@@ -70,7 +70,7 @@ def plot_gaussian(plot_dir):
             )
         )
 
-    to_html([to_div(fig), ], plot_dir / &#39;gaussian.html&#39;)</code></pre>
+    return to_div(fig)</code></pre>
 </details>
 </section>
 <section>
@@ -81,7 +81,7 @@ def plot_gaussian(plot_dir):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.viz.gaussian.plot_gaussian"><code class="name flex">
-<span>def <span class="ident">plot_gaussian</span></span>(<span>plot_dir)</span>
+<span>def <span class="ident">plot_gaussian</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -89,7 +89,7 @@ def plot_gaussian(plot_dir):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_gaussian(plot_dir):
+<pre><code class="python">def plot_gaussian():
     x = arange(0, 30, .05)
 
     colorscale = cl.scales[&#39;9&#39;][&#39;seq&#39;][&#39;Blues&#39;]
@@ -126,7 +126,7 @@ def plot_gaussian(plot_dir):
             )
         )
 
-    to_html([to_div(fig), ], plot_dir / &#39;gaussian.html&#39;)</code></pre>
+    return to_div(fig)</code></pre>
 </details>
 </dd>
 </dl>

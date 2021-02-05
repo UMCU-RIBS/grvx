@@ -25,47 +25,54 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from bidso.utils import read_tsv
+from numpy import argmax
 import plotly.graph_objs as go
-from pathlib import Path
 
+from .utils import to_div
 from ..nodes.corr.corrfmri import select_channels
 
-pvalue = 0.05  # TODO: PARAMETERS
 
+def plot_scatter(parameters, subject):
 
-def plot_scatter():
-    summary = read_tsv(Path(&#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;))
-    ecog_file = Path(&#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/ecog/sub-delft_ses-UMCUECOGday01_task-motorHandLeft_run-1_acq-clinical_compare.tsv&#39;)
-    fmri_file = Path(&#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/fmri/sub-delft_ses-UMCU3Tdaym13_task-motorHandLeft_run-1_bold_compare.tsv&#39;)
+    pvalue = parameters[&#39;corr&#39;][&#39;pvalue&#39;]
+
+    fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/fmri/_subject_{subject}/at_elec&#39;
+    fmri_file = next(fmri_dir.glob(f&#39;sub-{subject}_*_compare.tsv&#39;))
+
+    ieeg_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/ieeg/_subject_{subject}/ecog_compare&#39;
+    ecog_file = next(ieeg_dir.glob(f&#39;sub-{subject}_*_compare.tsv&#39;))
+
+    corr_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/_subject_{subject}/corr_fmri_ecog/corr_values/&#39;
+    corr_file = next(corr_dir.glob(f&#39;sub-{subject}_*_r2.tsv&#39;))
 
     fmri_tsv = read_tsv(fmri_file)
     ecog_tsv = read_tsv(ecog_file)
     fmri_tsv = select_channels(fmri_tsv, ecog_tsv)
-
-    kernel = str(summary[summary[&#39;subject&#39;] == &#39;delft&#39;][&#39;size_at_peak&#39;].item())
-    slope = summary[summary[&#39;subject&#39;] == &#39;delft&#39;][&#39;slope_at_peak&#39;]
-    intercept = summary[summary[&#39;subject&#39;] == &#39;delft&#39;][&#39;intercept_at_peak&#39;]
+    corr_tsv = read_tsv(corr_file)
+    kernel, r2_max, slope, intercept = corr_tsv[argmax(corr_tsv[&#39;Rsquared&#39;])]
 
     x_ecog = ecog_tsv[&#39;measure&#39;]
-    y_fmri = fmri_tsv[kernel]
+    y_fmri = fmri_tsv[str(kernel)]
 
     traces = [
         go.Scatter(
-            name=&#39;not significant&#39;,
+            text=ecog_tsv[&#39;channel&#39;][ecog_tsv[&#39;pvalue&#39;] &gt; pvalue],
             x=x_ecog[ecog_tsv[&#39;pvalue&#39;] &gt; pvalue],
             y=y_fmri[ecog_tsv[&#39;pvalue&#39;] &gt; pvalue],
             mode=&#39;markers&#39;,
-            marker=go.Marker(
+            name=&#39;&#39;,
+            marker=dict(
                 symbol=&#39;circle&#39;,
                 color=&#39;rgb(204, 204, 204)&#39;,
                 )
             ),
         go.Scatter(
-            name=&#39;significant&#39;,
+            text=ecog_tsv[&#39;channel&#39;][ecog_tsv[&#39;pvalue&#39;] &lt;= pvalue],
             x=x_ecog[ecog_tsv[&#39;pvalue&#39;] &lt;= pvalue],
             y=y_fmri[ecog_tsv[&#39;pvalue&#39;] &lt;= pvalue],
             mode=&#39;markers&#39;,
-            marker=go.Marker(
+            name=&#39;&#39;,
+            marker=dict(
                 symbol=&#39;circle&#39;,
                 color=&#39;rgb(0, 0, 0)&#39;,
                 )
@@ -74,32 +81,20 @@ def plot_scatter():
             x=x_ecog,
             y=slope * x_ecog + intercept,
             mode=&#39;lines&#39;,
-            marker=go.Marker(
+            marker=dict(
                 color=&#39;black&#39;
                 ),
             ),
         ]
 
-    layout = go.Layout(
-        showlegend=False,
-        xaxis=dict(
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        yaxis=dict(
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        )
-
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=go.Layout(
+            showlegend=False,
+        ),
         )
 
-    return fig</code></pre>
+    return to_div(fig)</code></pre>
 </details>
 </section>
 <section>
@@ -110,7 +105,7 @@ def plot_scatter():
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.viz.scatter.plot_scatter"><code class="name flex">
-<span>def <span class="ident">plot_scatter</span></span>(<span>)</span>
+<span>def <span class="ident">plot_scatter</span></span>(<span>parameters, subject)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -118,39 +113,47 @@ def plot_scatter():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_scatter():
-    summary = read_tsv(Path(&#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;))
-    ecog_file = Path(&#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/ecog/sub-delft_ses-UMCUECOGday01_task-motorHandLeft_run-1_acq-clinical_compare.tsv&#39;)
-    fmri_file = Path(&#39;/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/fmri/sub-delft_ses-UMCU3Tdaym13_task-motorHandLeft_run-1_bold_compare.tsv&#39;)
+<pre><code class="python">def plot_scatter(parameters, subject):
+
+    pvalue = parameters[&#39;corr&#39;][&#39;pvalue&#39;]
+
+    fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/fmri/_subject_{subject}/at_elec&#39;
+    fmri_file = next(fmri_dir.glob(f&#39;sub-{subject}_*_compare.tsv&#39;))
+
+    ieeg_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/ieeg/_subject_{subject}/ecog_compare&#39;
+    ecog_file = next(ieeg_dir.glob(f&#39;sub-{subject}_*_compare.tsv&#39;))
+
+    corr_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/_subject_{subject}/corr_fmri_ecog/corr_values/&#39;
+    corr_file = next(corr_dir.glob(f&#39;sub-{subject}_*_r2.tsv&#39;))
 
     fmri_tsv = read_tsv(fmri_file)
     ecog_tsv = read_tsv(ecog_file)
     fmri_tsv = select_channels(fmri_tsv, ecog_tsv)
-
-    kernel = str(summary[summary[&#39;subject&#39;] == &#39;delft&#39;][&#39;size_at_peak&#39;].item())
-    slope = summary[summary[&#39;subject&#39;] == &#39;delft&#39;][&#39;slope_at_peak&#39;]
-    intercept = summary[summary[&#39;subject&#39;] == &#39;delft&#39;][&#39;intercept_at_peak&#39;]
+    corr_tsv = read_tsv(corr_file)
+    kernel, r2_max, slope, intercept = corr_tsv[argmax(corr_tsv[&#39;Rsquared&#39;])]
 
     x_ecog = ecog_tsv[&#39;measure&#39;]
-    y_fmri = fmri_tsv[kernel]
+    y_fmri = fmri_tsv[str(kernel)]
 
     traces = [
         go.Scatter(
-            name=&#39;not significant&#39;,
+            text=ecog_tsv[&#39;channel&#39;][ecog_tsv[&#39;pvalue&#39;] &gt; pvalue],
             x=x_ecog[ecog_tsv[&#39;pvalue&#39;] &gt; pvalue],
             y=y_fmri[ecog_tsv[&#39;pvalue&#39;] &gt; pvalue],
             mode=&#39;markers&#39;,
-            marker=go.Marker(
+            name=&#39;&#39;,
+            marker=dict(
                 symbol=&#39;circle&#39;,
                 color=&#39;rgb(204, 204, 204)&#39;,
                 )
             ),
         go.Scatter(
-            name=&#39;significant&#39;,
+            text=ecog_tsv[&#39;channel&#39;][ecog_tsv[&#39;pvalue&#39;] &lt;= pvalue],
             x=x_ecog[ecog_tsv[&#39;pvalue&#39;] &lt;= pvalue],
             y=y_fmri[ecog_tsv[&#39;pvalue&#39;] &lt;= pvalue],
             mode=&#39;markers&#39;,
-            marker=go.Marker(
+            name=&#39;&#39;,
+            marker=dict(
                 symbol=&#39;circle&#39;,
                 color=&#39;rgb(0, 0, 0)&#39;,
                 )
@@ -159,32 +162,20 @@ def plot_scatter():
             x=x_ecog,
             y=slope * x_ecog + intercept,
             mode=&#39;lines&#39;,
-            marker=go.Marker(
+            marker=dict(
                 color=&#39;black&#39;
                 ),
             ),
         ]
 
-    layout = go.Layout(
-        showlegend=False,
-        xaxis=dict(
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        yaxis=dict(
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        )
-
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=go.Layout(
+            showlegend=False,
+        ),
         )
 
-    return fig</code></pre>
+    return to_div(fig)</code></pre>
 </details>
 </dd>
 </dl>

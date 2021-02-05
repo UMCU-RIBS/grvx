@@ -1,6 +1,6 @@
 from bidso.utils import read_tsv
 import plotly.graph_objs as go
-from .utils import to_div, to_html
+from .utils import to_div
 
 
 COLOR = {
@@ -11,12 +11,13 @@ COLOR = {
 SHIFT = 'middle'  # middle / whole
 
 
-def plot_histogram(plot_dir, parameters):
+def plot_histogram(parameters):
 
     summary_tsv = parameters['paths']['output'] / 'workflow/corr_fmri_ecog_summary/output/summary_per_subject.tsv'
     summary = read_tsv(summary_tsv)
 
-    for value_type in ('size_at_peak', 'r2_at_peak', 'size_at_concave'):
+    divs = []
+    for value_type in ('r2_at_peak', 'size_at_peak', 'size_at_concave'):
 
         if value_type in ('size_at_peak', 'size_at_concave'):
             bin_size = 1
@@ -61,15 +62,9 @@ def plot_histogram(plot_dir, parameters):
             xaxis=dict(
                 range=(0, max_val + bin_size / 2),
                 dtick=dtick,
-                tickfont=dict(
-                    size=8,
-                    ),
                 ),
             yaxis=dict(
                 dtick=1,
-                tickfont=dict(
-                    size=8,
-                    ),
                 ),
             )
 
@@ -78,4 +73,7 @@ def plot_histogram(plot_dir, parameters):
             layout=layout,
             )
 
-        to_html([to_div(fig), ], plot_dir / 'histogram' / f'histogram_{value_type}.html')
+        divs.append(to_div(fig))
+
+    return divs
+

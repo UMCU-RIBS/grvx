@@ -4,10 +4,10 @@ import plotly.graph_objs as go
 
 import colorlover as cl
 
-from .utils import to_html, to_div
+from .utils import to_div
 
 
-def plot_gaussian(plot_dir):
+def plot_gaussian():
     x = arange(0, 30, .05)
 
     colorscale = cl.scales['9']['seq']['Blues']
@@ -44,4 +44,4 @@ def plot_gaussian(plot_dir):
             )
         )
 
-    to_html([to_div(fig), ], plot_dir / 'gaussian.html')
+    return to_div(fig)

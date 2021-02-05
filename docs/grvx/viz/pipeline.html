@@ -30,29 +30,45 @@ from .fmri import plot_fmri
 from .scatter import plot_scatter
 from .smooth import plot_smooth
 from .surfaces import plot_surface
+from .utils import to_html
+
+from shutil import rmtree
 
 
 def plot_results(parameters):
 
     plot_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;plots&#39;
+    try:
+        rmtree(plot_dir)
+    except OSError:
+        pass
     plot_dir.mkdir(exist_ok=True, parents=True)
+
+    div = plot_gaussian()
+    to_html([div, ], plot_dir / &#39;gaussian.html&#39;)
+
+    divs = plot_histogram(parameters)
+    to_html(divs, plot_dir / &#39;histogram.html&#39;)
 
     subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
 
-    divs = {}
-    for subj in subjects:
-        divs_subj = []
-        divs_subj.append(
+    for subject in subjects:
+        print(subject)
+        divs = []
+        divs.extend(
+            plot_smooth(parameters, subject))
+
+        divs.append(
+            plot_scatter(parameters, subject))
+
+        divs.append(
             plot_surface(parameters, subject))
-        break
+
+        to_html(divs, plot_dir / f&#39;{subject}.html&#39;)
 
     &#34;&#34;&#34;
     plot_fmri()
-    plot_scatter(wd)
-    &#34;&#34;&#34;
-    plot_gaussian(plot_dir)
-    plot_histogram(plot_dir, parameters)
-    plot_smooth(plot_dir, parameters)</code></pre>
+    &#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -74,24 +90,37 @@ def plot_results(parameters):
 <pre><code class="python">def plot_results(parameters):
 
     plot_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;plots&#39;
+    try:
+        rmtree(plot_dir)
+    except OSError:
+        pass
     plot_dir.mkdir(exist_ok=True, parents=True)
+
+    div = plot_gaussian()
+    to_html([div, ], plot_dir / &#39;gaussian.html&#39;)
+
+    divs = plot_histogram(parameters)
+    to_html(divs, plot_dir / &#39;histogram.html&#39;)
 
     subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
 
-    divs = {}
-    for subj in subjects:
-        divs_subj = []
-        divs_subj.append(
+    for subject in subjects:
+        print(subject)
+        divs = []
+        divs.extend(
+            plot_smooth(parameters, subject))
+
+        divs.append(
+            plot_scatter(parameters, subject))
+
+        divs.append(
             plot_surface(parameters, subject))
-        break
+
+        to_html(divs, plot_dir / f&#39;{subject}.html&#39;)
 
     &#34;&#34;&#34;
     plot_fmri()
-    plot_scatter(wd)
-    &#34;&#34;&#34;
-    plot_gaussian(plot_dir)
-    plot_histogram(plot_dir, parameters)
-    plot_smooth(plot_dir, parameters)</code></pre>
+    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 </dl>

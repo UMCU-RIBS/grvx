@@ -1,45 +1,52 @@
 from bidso.utils import read_tsv
+from numpy import argmax
 import plotly.graph_objs as go
-from pathlib import Path
 
+from .utils import to_div
 from ..nodes.corr.corrfmri import select_channels
 
-pvalue = 0.05  # TODO: PARAMETERS
 
+def plot_scatter(parameters, subject):
 
-def plot_scatter():
-    summary = read_tsv(Path('/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/summary_per_subject.tsv'))
-    ecog_file = Path('/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/ecog/sub-delft_ses-UMCUECOGday01_task-motorHandLeft_run-1_acq-clinical_compare.tsv')
-    fmri_file = Path('/Fridge/users/giovanni/projects/grvx/derivatives/nipype/grvx/corr_fmri_ecog_summary/output/fmri/sub-delft_ses-UMCU3Tdaym13_task-motorHandLeft_run-1_bold_compare.tsv')
+    pvalue = parameters['corr']['pvalue']
+
+    fmri_dir = parameters['paths']['output'] / f'workflow/fmri/_subject_{subject}/at_elec'
+    fmri_file = next(fmri_dir.glob(f'sub-{subject}_*_compare.tsv'))
+
+    ieeg_dir = parameters['paths']['output'] / f'workflow/ieeg/_subject_{subject}/ecog_compare'
+    ecog_file = next(ieeg_dir.glob(f'sub-{subject}_*_compare.tsv'))
+
+    corr_dir = parameters['paths']['output'] / f'workflow/_subject_{subject}/corr_fmri_ecog/corr_values/'
+    corr_file = next(corr_dir.glob(f'sub-{subject}_*_r2.tsv'))
 
     fmri_tsv = read_tsv(fmri_file)
     ecog_tsv = read_tsv(ecog_file)
     fmri_tsv = select_channels(fmri_tsv, ecog_tsv)
-
-    kernel = str(summary[summary['subject'] == 'delft']['size_at_peak'].item())
-    slope = summary[summary['subject'] == 'delft']['slope_at_peak']
-    intercept = summary[summary['subject'] == 'delft']['intercept_at_peak']
+    corr_tsv = read_tsv(corr_file)
+    kernel, r2_max, slope, intercept = corr_tsv[argmax(corr_tsv['Rsquared'])]
 
     x_ecog = ecog_tsv['measure']
-    y_fmri = fmri_tsv[kernel]
+    y_fmri = fmri_tsv[str(kernel)]
 
     traces = [
         go.Scatter(
-            name='not significant',
+            text=ecog_tsv['channel'][ecog_tsv['pvalue'] > pvalue],
             x=x_ecog[ecog_tsv['pvalue'] > pvalue],
             y=y_fmri[ecog_tsv['pvalue'] > pvalue],
             mode='markers',
-            marker=go.Marker(
+            name='',
+            marker=dict(
                 symbol='circle',
                 color='rgb(204, 204, 204)',
                 )
             ),
         go.Scatter(
-            name='significant',
+            text=ecog_tsv['channel'][ecog_tsv['pvalue'] <= pvalue],
             x=x_ecog[ecog_tsv['pvalue'] <= pvalue],
             y=y_fmri[ecog_tsv['pvalue'] <= pvalue],
             mode='markers',
-            marker=go.Marker(
+            name='',
+            marker=dict(
                 symbol='circle',
                 color='rgb(0, 0, 0)',
                 )
@@ -48,29 +55,17 @@ def plot_scatter():
             x=x_ecog,
             y=slope * x_ecog + intercept,
             mode='lines',
-            marker=go.Marker(
+            marker=dict(
                 color='black'
                 ),
             ),
         ]
 
-    layout = go.Layout(
-        showlegend=False,
-        xaxis=dict(
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        yaxis=dict(
-            tickfont=dict(
-                size=8,
-                ),
-            ),
-        )
-
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=go.Layout(
+            showlegend=False,
+        ),
         )
 
-    return fig
+    return to_div(fig)
