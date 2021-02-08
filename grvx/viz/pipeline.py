@@ -23,6 +23,7 @@ def plot_results(parameters):
     div = plot_gaussian()
     to_html([div, ], plot_dir / 'gaussian.html')
 
+    surf = {}
     for frequency_band in parameters['ieeg']['ecog_compare']['frequency_bands']:
 
         freq_name = f'frequency_{frequency_band[0]}_{frequency_band[1]}'
@@ -30,20 +31,19 @@ def plot_results(parameters):
         to_html(divs, plot_dir / freq_name / 'histogram.html')
 
         for subject in subjects:
-            print(subject)
             divs = []
 
             div = plot_smooth(parameters, frequency_band, subject)
             if div is not None:
                 divs.extend(div)
 
-            """
-            divs.append(
-                plot_scatter(parameters, frequency_band, subject))
+            div = plot_scatter(parameters, frequency_band, subject)
+            if div is not None:
+                divs.append(div)
 
-            divs.append(
-                plot_surface(parameters, subject))
-            """
+            div = plot_surface(parameters, frequency_band, subject, surf)
+            if div is not None:
+                divs.append(div)
 
             to_html(divs, plot_dir / freq_name / f'{subject}.html')
 

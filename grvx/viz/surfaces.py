@@ -9,6 +9,7 @@ from multiprocessing import Pool
 
 from ..nodes.fmri.at_electrodes import compute_chan, ndindex, from_mrifile_to_chan, array
 from .utils import to_div
+from .paths import get_path
 
 
 AXIS = dict(
@@ -21,18 +22,17 @@ AXIS = dict(
     )
 
 
-def plot_surface(parameters, subject):
+def plot_surface(parameters, frequency_band, subject, surf):
 
-    fmri_dir = parameters['paths']['output'] / f'workflow/fmri/_subject_{subject}/fmri_compare'
-    compare_fmri_file = next(fmri_dir.glob(f'sub-{subject}_*bold_compare.nii.gz'))
+    elec_file = get_path(parameters, 'elec', subject=subject)
+    ieeg_file = get_path(parameters, 'ieeg_tsv', frequency_band=frequency_band, subject=subject)
+    fmri_file = get_path(parameters, 'fmri_nii', subject=subject)
+    if elec_file is None or ieeg_file is None or fmri_file is None:
+        return
 
-    ieeg_dir = parameters['paths']['output'] / f'workflow/ieeg/_subject_{subject}/ecog_compare'
-    compare_ieeg_file = next(ieeg_dir.glob(f'sub-{subject}_*_compare.tsv'))
-
-    elec_file = next(parameters['paths']['input'].glob(f'sub-{subject}/ses-*/ieeg/*_electrodes.tsv'))
     freesurfer_dir = parameters['paths']['freesurfer_subjects_dir'] / f'sub-{subject}'
 
-    compare_ieeg = read_tsv(compare_ieeg_file)
+    compare_ieeg = read_tsv(ieeg_file)
     fs = Freesurfer(freesurfer_dir)
     electrodes = Electrodes(elec_file)
 
@@ -56,21 +56,14 @@ def plot_surface(parameters, subject):
     fs = Freesurfer(freesurfer_dir)
     pial = getattr(fs.read_brain(), hemi)
 
-    img = nload(str(compare_fmri_file))
-    mri = img.get_fdata()
-    mri[mri == 0] = NaN
-
-    nd = array(list(ndindex(mri.shape)))
-    ndi = from_mrifile_to_chan(img, nd)
-
-    kernel = parameters['plot']['surface']['kernel']
-    partial_compute_chan = partial(compute_chan, KERNEL=kernel, ndi=ndi, mri=mri, distance='gaussian')
-
     vert = pial.vert + fs.surface_ras_shift
 
-    with Pool() as p:
-        fmri_vals = p.map(partial_compute_chan, vert)
-    fmri_vals = [x[0] for x in fmri_vals]
+    if subject in surf:
+        fmri_vals = surf[subject]
+    else:
+        print(f'Computing surf for {subject}')
+        fmri_vals = project_mri_to_surf(fmri_file, vert, parameters['plot']['surface']['kernel'])
+        surf[subject] = fmri_vals
 
     colorscale = 'balance'
 
@@ -153,3 +146,20 @@ def plot_surface(parameters, subject):
         )
 
     return to_div(fig)
+
+
+def project_mri_to_surf(fmri_file, vert, kernel):
+    img = nload(str(fmri_file))
+    mri = img.get_fdata()
+    mri[mri == 0] = NaN
+
+    nd = array(list(ndindex(mri.shape)))
+    ndi = from_mrifile_to_chan(img, nd)
+
+    partial_compute_chan = partial(compute_chan, KERNEL=kernel, ndi=ndi, mri=mri, distance='gaussian')
+
+    with Pool() as p:
+        fmri_vals = p.map(partial_compute_chan, vert)
+    fmri_vals = [x[0] for x in fmri_vals]
+
+    return fmri_vals

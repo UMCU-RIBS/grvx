@@ -9,7 +9,7 @@ from .paths import get_path
 
 def plot_smooth(parameters, frequency_band, subject):
 
-    corr_file = get_path(parameters, 'corr', frequency_band=frequency_band, subject=subject)
+    corr_file = get_path(parameters, 'corr_tsv', frequency_band=frequency_band, subject=subject)
     if corr_file is None:
         return
 

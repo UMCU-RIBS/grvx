@@ -3,21 +3,19 @@ from numpy import argmax
 import plotly.graph_objs as go
 
 from .utils import to_div
+from .paths import get_path
 from ..nodes.corr.corrfmri import select_channels
 
 
-def plot_scatter(parameters, subject):
+def plot_scatter(parameters, frequency_band, subject):
 
     pvalue = parameters['corr']['pvalue']
 
-    fmri_dir = parameters['paths']['output'] / f'workflow/fmri/_subject_{subject}/at_elec'
-    fmri_file = next(fmri_dir.glob(f'sub-{subject}_*_compare.tsv'))
-
-    ieeg_dir = parameters['paths']['output'] / f'workflow/ieeg/_subject_{subject}/ecog_compare'
-    ecog_file = next(ieeg_dir.glob(f'sub-{subject}_*_compare.tsv'))
-
-    corr_dir = parameters['paths']['output'] / f'workflow/_subject_{subject}/corr_fmri_ecog/corr_values/'
-    corr_file = next(corr_dir.glob(f'sub-{subject}_*_r2.tsv'))
+    ecog_file = get_path(parameters, 'ieeg_tsv', frequency_band=frequency_band, subject=subject)
+    fmri_file = get_path(parameters, 'fmri_tsv', subject=subject)
+    corr_file = get_path(parameters, 'corr_tsv', frequency_band=frequency_band, subject=subject)
+    if ecog_file is None or fmri_file is None or corr_file is None:
+        return
 
     fmri_tsv = read_tsv(fmri_file)
     ecog_tsv = read_tsv(ecog_file)
