@@ -18,27 +18,34 @@ def plot_results(parameters):
         pass
     plot_dir.mkdir(exist_ok=True, parents=True)
 
+    subjects = [x.stem[4:] for x in parameters['paths']['input'].glob('sub-*')]
+
     div = plot_gaussian()
     to_html([div, ], plot_dir / 'gaussian.html')
 
-    divs = plot_histogram(parameters)
-    to_html(divs, plot_dir / 'histogram.html')
+    for frequency_band in parameters['ieeg']['ecog_compare']['frequency_bands']:
 
-    subjects = [x.stem[4:] for x in parameters['paths']['input'].glob('sub-*')]
+        freq_name = f'frequency_{frequency_band[0]}_{frequency_band[1]}'
+        divs = plot_histogram(parameters, frequency_band)
+        to_html(divs, plot_dir / freq_name / 'histogram.html')
 
-    for subject in subjects:
-        print(subject)
-        divs = []
-        divs.extend(
-            plot_smooth(parameters, subject))
+        for subject in subjects:
+            print(subject)
+            divs = []
 
-        divs.append(
-            plot_scatter(parameters, subject))
+            div = plot_smooth(parameters, frequency_band, subject)
+            if div is not None:
+                divs.extend(div)
 
-        divs.append(
-            plot_surface(parameters, subject))
+            """
+            divs.append(
+                plot_scatter(parameters, frequency_band, subject))
 
-        to_html(divs, plot_dir / f'{subject}.html')
+            divs.append(
+                plot_surface(parameters, subject))
+            """
+
+            to_html(divs, plot_dir / freq_name / f'{subject}.html')
 
     """
     plot_fmri()

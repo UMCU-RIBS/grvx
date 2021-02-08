@@ -4,11 +4,14 @@ import plotly.graph_objs as go
 from bidso.utils import read_tsv
 
 from .utils import to_div
+from .paths import get_path
 
 
-def plot_smooth(parameters, subject):
-    corr_dir = parameters['paths']['output'] / f'workflow/_subject_{subject}/corr_fmri_ecog/corr_values/'
-    corr_file = next(corr_dir.glob(f'sub-{subject}_*_r2.tsv'))
+def plot_smooth(parameters, frequency_band, subject):
+
+    corr_file = get_path(parameters, 'corr', frequency_band=frequency_band, subject=subject)
+    if corr_file is None:
+        return
 
     results = read_tsv(corr_file)
 

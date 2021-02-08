@@ -1,6 +1,7 @@
 from bidso.utils import read_tsv
 import plotly.graph_objs as go
 from .utils import to_div
+from .paths import get_path
 
 
 COLOR = {
@@ -11,9 +12,12 @@ COLOR = {
 SHIFT = 'middle'  # middle / whole
 
 
-def plot_histogram(parameters):
+def plot_histogram(parameters, frequency_band):
 
-    summary_tsv = parameters['paths']['output'] / 'workflow/corr_fmri_ecog_summary/output/summary_per_subject.tsv'
+    summary_tsv = get_path(parameters, 'summary_tsv', frequency_band=frequency_band)
+    if summary_tsv is None:
+        return
+
     summary = read_tsv(summary_tsv)
 
     divs = []

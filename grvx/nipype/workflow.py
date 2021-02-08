@@ -156,6 +156,8 @@ def workflow_fmri(parameters):
 
 def create_grvx_workflow(parameters):
 
+    parameters['paths']['output'].mkdir(exist_ok=True, parents=True)
+
     parameters['timestamp'] = datetime.now().isoformat()
     parameters_json = parameters['paths']['output'] / 'parameters.json'
     with parameters_json.open('w') as f:

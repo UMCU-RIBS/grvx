@@ -52,11 +52,10 @@ def command():
 
     with parameters_path.open() as f:
         parameters = load(f)
-    for k in parameters['paths']:
-        parameters['paths'][k] = Path(parameters['paths'][k]).resolve()
-
     if parameters['paths']['freesurfer_subjects_dir'] is None:
         parameters['paths']['freesurfer_subjects_dir'] = Path(environ['SUBJECTS_DIR'])
+    for k in parameters['paths']:
+        parameters['paths'][k] = Path(parameters['paths'][k]).resolve()
 
     if args.analysis:
 
