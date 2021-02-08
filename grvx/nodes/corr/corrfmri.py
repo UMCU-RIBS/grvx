@@ -73,9 +73,14 @@ def compute_corr_ecog_fmri_allfreq(fmri_file, ecog_file, min_n_sign_elec, pvalue
             y = fmri_vals[kernel]
             rsquared[i_f, i_k], slope[i_f, i_k], pvalue[i_f, i_k] = compute_rsquared_pvalue(x, y, threshold, min_n_sign_elec)
 
+    axes = {
+        'kernels': kernel_sizes,
+        'freq': ecog_stats.freq[0],
+        }
+
     out_file = output_dir / 'corr_ecog_fmri_allfreq.pkl'
     with out_file.open('wb') as f:
-        dump([rsquared, slope, pvalue], f)
+        dump([rsquared, slope, pvalue, axes], f)
 
     return out_file
 

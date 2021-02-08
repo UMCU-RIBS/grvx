@@ -5,6 +5,7 @@ from .scatter import plot_scatter
 from .smooth import plot_smooth
 from .surfaces import plot_surface
 from .utils import to_html
+from .allfreq import plot_allfreq
 
 from shutil import rmtree
 
@@ -22,6 +23,11 @@ def plot_results(parameters):
 
     div = plot_gaussian()
     to_html([div, ], plot_dir / 'gaussian.html')
+
+    for subject in subjects:
+        divs = plot_allfreq(parameters, subject)
+        if divs is not None:
+            to_html(divs, plot_dir / 'allfreq' / f'{subject}.html')
 
     surf = {}
     for frequency_band in parameters['ieeg']['ecog_compare']['frequency_bands']:

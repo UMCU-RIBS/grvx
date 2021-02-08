@@ -53,6 +53,9 @@ def get_path(parameters, index, **kwargs):
             print(f'Cound not find r2 in {x_dir}')
             return
 
+    elif index == 'allfreq':
+        x = out / subj_dir / 'corr_fmri_ecog_allfreq' / 'corr_values' / 'corr_ecog_fmri_allfreq.pkl'
+
     if x.exists():
         return x
 
