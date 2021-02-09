@@ -6,6 +6,7 @@ from .smooth import plot_smooth
 from .surfaces import plot_surface
 from .utils import to_html
 from .allfreq import plot_allfreq
+from .compare_freq import plot_freq_comparison
 
 from shutil import rmtree
 
@@ -23,6 +24,9 @@ def plot_results(parameters):
 
     div = plot_gaussian()
     to_html([div, ], plot_dir / 'gaussian.html')
+
+    divs = plot_freq_comparison(parameters)
+    to_html(divs, plot_dir / 'compare_frequencies.html')
 
     for subject in subjects:
         divs = plot_allfreq(parameters, subject)
