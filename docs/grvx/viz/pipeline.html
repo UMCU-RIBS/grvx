@@ -31,6 +31,8 @@ from .scatter import plot_scatter
 from .smooth import plot_smooth
 from .surfaces import plot_surface
 from .utils import to_html
+from .allfreq import plot_allfreq
+from .compare_freq import plot_freq_comparison
 
 from shutil import rmtree
 
@@ -44,27 +46,43 @@ def plot_results(parameters):
         pass
     plot_dir.mkdir(exist_ok=True, parents=True)
 
+    subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+    # subjects = set(subjects) - {&#39;ommen&#39;, &#39;vledder&#39;, &#39;arnhem&#39;, &#39;boxtel&#39;}
+
     div = plot_gaussian()
     to_html([div, ], plot_dir / &#39;gaussian.html&#39;)
 
-    divs = plot_histogram(parameters)
-    to_html(divs, plot_dir / &#39;histogram.html&#39;)
-
-    subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+    divs = plot_freq_comparison(parameters)
+    to_html(divs, plot_dir / &#39;compare_frequencies.html&#39;)
 
     for subject in subjects:
-        print(subject)
-        divs = []
-        divs.extend(
-            plot_smooth(parameters, subject))
+        divs = plot_allfreq(parameters, subject)
+        if divs is not None:
+            to_html(divs, plot_dir / &#39;allfreq&#39; / f&#39;{subject}.html&#39;)
 
-        divs.append(
-            plot_scatter(parameters, subject))
+    surf = {}
+    for frequency_band in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
 
-        divs.append(
-            plot_surface(parameters, subject))
+        freq_name = f&#39;frequency_{frequency_band[0]}_{frequency_band[1]}&#39;
+        divs = plot_histogram(parameters, frequency_band)
+        to_html(divs, plot_dir / freq_name / &#39;histogram.html&#39;)
 
-        to_html(divs, plot_dir / f&#39;{subject}.html&#39;)
+        for subject in subjects:
+            divs = []
+
+            div = plot_smooth(parameters, frequency_band, subject)
+            if div is not None:
+                divs.extend(div)
+
+            div = plot_scatter(parameters, frequency_band, subject)
+            if div is not None:
+                divs.append(div)
+
+            div = plot_surface(parameters, frequency_band, subject, surf)
+            if div is not None:
+                divs.append(div)
+
+            to_html(divs, plot_dir / freq_name / f&#39;{subject}.html&#39;)
 
     &#34;&#34;&#34;
     plot_fmri()
@@ -96,27 +114,43 @@ def plot_results(parameters):
         pass
     plot_dir.mkdir(exist_ok=True, parents=True)
 
+    subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+    # subjects = set(subjects) - {&#39;ommen&#39;, &#39;vledder&#39;, &#39;arnhem&#39;, &#39;boxtel&#39;}
+
     div = plot_gaussian()
     to_html([div, ], plot_dir / &#39;gaussian.html&#39;)
 
-    divs = plot_histogram(parameters)
-    to_html(divs, plot_dir / &#39;histogram.html&#39;)
-
-    subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+    divs = plot_freq_comparison(parameters)
+    to_html(divs, plot_dir / &#39;compare_frequencies.html&#39;)
 
     for subject in subjects:
-        print(subject)
-        divs = []
-        divs.extend(
-            plot_smooth(parameters, subject))
+        divs = plot_allfreq(parameters, subject)
+        if divs is not None:
+            to_html(divs, plot_dir / &#39;allfreq&#39; / f&#39;{subject}.html&#39;)
 
-        divs.append(
-            plot_scatter(parameters, subject))
+    surf = {}
+    for frequency_band in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
 
-        divs.append(
-            plot_surface(parameters, subject))
+        freq_name = f&#39;frequency_{frequency_band[0]}_{frequency_band[1]}&#39;
+        divs = plot_histogram(parameters, frequency_band)
+        to_html(divs, plot_dir / freq_name / &#39;histogram.html&#39;)
 
-        to_html(divs, plot_dir / f&#39;{subject}.html&#39;)
+        for subject in subjects:
+            divs = []
+
+            div = plot_smooth(parameters, frequency_band, subject)
+            if div is not None:
+                divs.extend(div)
+
+            div = plot_scatter(parameters, frequency_band, subject)
+            if div is not None:
+                divs.append(div)
+
+            div = plot_surface(parameters, frequency_band, subject, surf)
+            if div is not None:
+                divs.append(div)
+
+            to_html(divs, plot_dir / freq_name / f&#39;{subject}.html&#39;)
 
     &#34;&#34;&#34;
     plot_fmri()

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>grvx.viz.smooth API documentation</title>
+<title>grvx.viz.allfreq API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,80 +17,88 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>grvx.viz.smooth</code></h1>
+<h1 class="title">Module <code>grvx.viz.allfreq</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import gradient
-import plotly.graph_objs as go
-
-from bidso.utils import read_tsv
+<pre><code class="python">from numpy import log10
+from pickle import load
+import plotly.graph_objects as go
 
 from .utils import to_div
 from .paths import get_path
 
 
-def plot_smooth(parameters, frequency_band, subject):
+def plot_allfreq(parameters, subject):
 
-    corr_file = get_path(parameters, &#39;corr_tsv&#39;, frequency_band=frequency_band, subject=subject)
-    if corr_file is None:
+    allfreq_file = get_path(parameters, &#39;allfreq&#39;, subject=subject)
+    if allfreq_file is None:
         return
 
-    results = read_tsv(corr_file)
+    with allfreq_file.open(&#39;rb&#39;) as f:
+        rsquared, slope, pvalue, axes = load(f)
 
-    traces = [
-        dict(
-            x=results[&#39;Kernel&#39;],
-            y=results[&#39;Rsquared&#39;],
-            marker=dict(
-                color=&#39;black&#39;,
-                ),
-            ),
-        ]
+    sign = pvalue &lt; 0.05
+    rsquared[~sign] = 0
+    slope[~sign] = 0
 
     layout = go.Layout(
-        xaxis=dict(
-            dtick=4,
-            range=(0, 20),
-            ),
         yaxis=dict(
-            dtick=0.02,
-            rangemode=&#39;tozero&#39;,
-            ),
+            range=(0, 100)
+            )
         )
 
+    traces = [
+        go.Heatmap(
+            x=axes[&#39;kernels&#39;],
+            y=axes[&#39;freq&#39;],
+            z=-log10(pvalue),
+            colorscale=&#39;Hot&#39;,
+            zmin=0,
+            zmax=4,
+        )
+    ]
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=layout
         )
     divs = [to_div(fig), ]
 
     traces = [
-        dict(
-            x=results[&#39;Kernel&#39;],
-            y=gradient(gradient(results[&#39;Rsquared&#39;])),
-            marker=dict(
-                color=&#39;black&#39;,
-                ),
-            ),
+        go.Heatmap(
+            x=axes[&#39;kernels&#39;],
+            y=axes[&#39;freq&#39;],
+            z=rsquared,
+            colorscale=&#39;Hot&#39;,
+            zmin=0,
+            zmax=1,
+        )
         ]
-
-    layout.update(dict(
-        yaxis=dict(
-            dtick=0.002,
-            range=(-0.005, 0.005),
-            ),
-        ))
-
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=layout
         )
-
     divs.append(to_div(fig))
+
+    traces = [
+        go.Heatmap(
+            x=axes[&#39;kernels&#39;],
+            y=axes[&#39;freq&#39;],
+            z=slope,
+            colorscale=&#39;balance&#39;,
+            zmin=-0.5,
+            zmax=0.5,
+        )
+        ]
+    fig = go.Figure(
+        data=traces,
+        layout=layout
+        )
+    divs.append(to_div(fig))
+
     return divs</code></pre>
 </details>
 </section>
@@ -101,8 +109,8 @@ def plot_smooth(parameters, frequency_band, subject):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="grvx.viz.smooth.plot_smooth"><code class="name flex">
-<span>def <span class="ident">plot_smooth</span></span>(<span>parameters, frequency_band, subject)</span>
+<dt id="grvx.viz.allfreq.plot_allfreq"><code class="name flex">
+<span>def <span class="ident">plot_allfreq</span></span>(<span>parameters, subject)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -110,64 +118,73 @@ def plot_smooth(parameters, frequency_band, subject):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_smooth(parameters, frequency_band, subject):
+<pre><code class="python">def plot_allfreq(parameters, subject):
 
-    corr_file = get_path(parameters, &#39;corr_tsv&#39;, frequency_band=frequency_band, subject=subject)
-    if corr_file is None:
+    allfreq_file = get_path(parameters, &#39;allfreq&#39;, subject=subject)
+    if allfreq_file is None:
         return
 
-    results = read_tsv(corr_file)
+    with allfreq_file.open(&#39;rb&#39;) as f:
+        rsquared, slope, pvalue, axes = load(f)
 
-    traces = [
-        dict(
-            x=results[&#39;Kernel&#39;],
-            y=results[&#39;Rsquared&#39;],
-            marker=dict(
-                color=&#39;black&#39;,
-                ),
-            ),
-        ]
+    sign = pvalue &lt; 0.05
+    rsquared[~sign] = 0
+    slope[~sign] = 0
 
     layout = go.Layout(
-        xaxis=dict(
-            dtick=4,
-            range=(0, 20),
-            ),
         yaxis=dict(
-            dtick=0.02,
-            rangemode=&#39;tozero&#39;,
-            ),
+            range=(0, 100)
+            )
         )
 
+    traces = [
+        go.Heatmap(
+            x=axes[&#39;kernels&#39;],
+            y=axes[&#39;freq&#39;],
+            z=-log10(pvalue),
+            colorscale=&#39;Hot&#39;,
+            zmin=0,
+            zmax=4,
+        )
+    ]
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=layout
         )
     divs = [to_div(fig), ]
 
     traces = [
-        dict(
-            x=results[&#39;Kernel&#39;],
-            y=gradient(gradient(results[&#39;Rsquared&#39;])),
-            marker=dict(
-                color=&#39;black&#39;,
-                ),
-            ),
+        go.Heatmap(
+            x=axes[&#39;kernels&#39;],
+            y=axes[&#39;freq&#39;],
+            z=rsquared,
+            colorscale=&#39;Hot&#39;,
+            zmin=0,
+            zmax=1,
+        )
         ]
-
-    layout.update(dict(
-        yaxis=dict(
-            dtick=0.002,
-            range=(-0.005, 0.005),
-            ),
-        ))
-
     fig = go.Figure(
         data=traces,
-        layout=layout,
+        layout=layout
         )
-
     divs.append(to_div(fig))
+
+    traces = [
+        go.Heatmap(
+            x=axes[&#39;kernels&#39;],
+            y=axes[&#39;freq&#39;],
+            z=slope,
+            colorscale=&#39;balance&#39;,
+            zmin=-0.5,
+            zmax=0.5,
+        )
+        ]
+    fig = go.Figure(
+        data=traces,
+        layout=layout
+        )
+    divs.append(to_div(fig))
+
     return divs</code></pre>
 </details>
 </dd>
@@ -189,7 +206,7 @@ def plot_smooth(parameters, frequency_band, subject):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="grvx.viz.smooth.plot_smooth" href="#grvx.viz.smooth.plot_smooth">plot_smooth</a></code></li>
+<li><code><a title="grvx.viz.allfreq.plot_allfreq" href="#grvx.viz.allfreq.plot_allfreq">plot_allfreq</a></code></li>
 </ul>
 </li>
 </ul>

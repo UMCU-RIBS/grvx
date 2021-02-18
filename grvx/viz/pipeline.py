@@ -21,6 +21,7 @@ def plot_results(parameters):
     plot_dir.mkdir(exist_ok=True, parents=True)
 
     subjects = [x.stem[4:] for x in parameters['paths']['input'].glob('sub-*')]
+    # subjects = set(subjects) - {'ommen', 'vledder', 'arnhem', 'boxtel'}
 
     div = plot_gaussian()
     to_html([div, ], plot_dir / 'gaussian.html')

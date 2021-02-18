@@ -29,21 +29,19 @@ from numpy import argmax
 import plotly.graph_objs as go
 
 from .utils import to_div
+from .paths import get_path
 from ..nodes.corr.corrfmri import select_channels
 
 
-def plot_scatter(parameters, subject):
+def plot_scatter(parameters, frequency_band, subject):
 
     pvalue = parameters[&#39;corr&#39;][&#39;pvalue&#39;]
 
-    fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/fmri/_subject_{subject}/at_elec&#39;
-    fmri_file = next(fmri_dir.glob(f&#39;sub-{subject}_*_compare.tsv&#39;))
-
-    ieeg_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/ieeg/_subject_{subject}/ecog_compare&#39;
-    ecog_file = next(ieeg_dir.glob(f&#39;sub-{subject}_*_compare.tsv&#39;))
-
-    corr_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/_subject_{subject}/corr_fmri_ecog/corr_values/&#39;
-    corr_file = next(corr_dir.glob(f&#39;sub-{subject}_*_r2.tsv&#39;))
+    ecog_file = get_path(parameters, &#39;ieeg_tsv&#39;, frequency_band=frequency_band, subject=subject)
+    fmri_file = get_path(parameters, &#39;fmri_tsv&#39;, subject=subject)
+    corr_file = get_path(parameters, &#39;corr_tsv&#39;, frequency_band=frequency_band, subject=subject)
+    if ecog_file is None or fmri_file is None or corr_file is None:
+        return
 
     fmri_tsv = read_tsv(fmri_file)
     ecog_tsv = read_tsv(ecog_file)
@@ -105,7 +103,7 @@ def plot_scatter(parameters, subject):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.viz.scatter.plot_scatter"><code class="name flex">
-<span>def <span class="ident">plot_scatter</span></span>(<span>parameters, subject)</span>
+<span>def <span class="ident">plot_scatter</span></span>(<span>parameters, frequency_band, subject)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -113,18 +111,15 @@ def plot_scatter(parameters, subject):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_scatter(parameters, subject):
+<pre><code class="python">def plot_scatter(parameters, frequency_band, subject):
 
     pvalue = parameters[&#39;corr&#39;][&#39;pvalue&#39;]
 
-    fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/fmri/_subject_{subject}/at_elec&#39;
-    fmri_file = next(fmri_dir.glob(f&#39;sub-{subject}_*_compare.tsv&#39;))
-
-    ieeg_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/ieeg/_subject_{subject}/ecog_compare&#39;
-    ecog_file = next(ieeg_dir.glob(f&#39;sub-{subject}_*_compare.tsv&#39;))
-
-    corr_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / f&#39;workflow/_subject_{subject}/corr_fmri_ecog/corr_values/&#39;
-    corr_file = next(corr_dir.glob(f&#39;sub-{subject}_*_r2.tsv&#39;))
+    ecog_file = get_path(parameters, &#39;ieeg_tsv&#39;, frequency_band=frequency_band, subject=subject)
+    fmri_file = get_path(parameters, &#39;fmri_tsv&#39;, subject=subject)
+    corr_file = get_path(parameters, &#39;corr_tsv&#39;, frequency_band=frequency_band, subject=subject)
+    if ecog_file is None or fmri_file is None or corr_file is None:
+        return
 
     fmri_tsv = read_tsv(fmri_file)
     ecog_tsv = read_tsv(ecog_file)

@@ -99,9 +99,14 @@ def compute_corr_ecog_fmri_allfreq(fmri_file, ecog_file, min_n_sign_elec, pvalue
             y = fmri_vals[kernel]
             rsquared[i_f, i_k], slope[i_f, i_k], pvalue[i_f, i_k] = compute_rsquared_pvalue(x, y, threshold, min_n_sign_elec)
 
+    axes = {
+        &#39;kernels&#39;: kernel_sizes,
+        &#39;freq&#39;: ecog_stats.freq[0],
+        }
+
     out_file = output_dir / &#39;corr_ecog_fmri_allfreq.pkl&#39;
     with out_file.open(&#39;wb&#39;) as f:
-        dump([rsquared, slope, pvalue], f)
+        dump([rsquared, slope, pvalue, axes], f)
 
     return out_file
 
@@ -226,9 +231,14 @@ def read_shape(one_tsv):
             y = fmri_vals[kernel]
             rsquared[i_f, i_k], slope[i_f, i_k], pvalue[i_f, i_k] = compute_rsquared_pvalue(x, y, threshold, min_n_sign_elec)
 
+    axes = {
+        &#39;kernels&#39;: kernel_sizes,
+        &#39;freq&#39;: ecog_stats.freq[0],
+        }
+
     out_file = output_dir / &#39;corr_ecog_fmri_allfreq.pkl&#39;
     with out_file.open(&#39;wb&#39;) as f:
-        dump([rsquared, slope, pvalue], f)
+        dump([rsquared, slope, pvalue, axes], f)
 
     return out_file</code></pre>
 </details>

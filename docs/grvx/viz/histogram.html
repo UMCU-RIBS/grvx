@@ -27,6 +27,7 @@
 <pre><code class="python">from bidso.utils import read_tsv
 import plotly.graph_objs as go
 from .utils import to_div
+from .paths import get_path
 
 
 COLOR = {
@@ -37,9 +38,12 @@ COLOR = {
 SHIFT = &#39;middle&#39;  # middle / whole
 
 
-def plot_histogram(parameters):
+def plot_histogram(parameters, frequency_band):
 
-    summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
+    summary_tsv = get_path(parameters, &#39;summary_tsv&#39;, frequency_band=frequency_band)
+    if summary_tsv is None:
+        return
+
     summary = read_tsv(summary_tsv)
 
     divs = []
@@ -112,7 +116,7 @@ def plot_histogram(parameters):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grvx.viz.histogram.plot_histogram"><code class="name flex">
-<span>def <span class="ident">plot_histogram</span></span>(<span>parameters)</span>
+<span>def <span class="ident">plot_histogram</span></span>(<span>parameters, frequency_band)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -120,9 +124,12 @@ def plot_histogram(parameters):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_histogram(parameters):
+<pre><code class="python">def plot_histogram(parameters, frequency_band):
 
-    summary_tsv = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow/corr_fmri_ecog_summary/output/summary_per_subject.tsv&#39;
+    summary_tsv = get_path(parameters, &#39;summary_tsv&#39;, frequency_band=frequency_band)
+    if summary_tsv is None:
+        return
+
     summary = read_tsv(summary_tsv)
 
     divs = []
