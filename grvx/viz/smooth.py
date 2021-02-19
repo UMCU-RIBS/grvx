@@ -28,7 +28,10 @@ def plot_smooth(parameters, frequency_band, subject):
     layout = go.Layout(
         xaxis=dict(
             dtick=4,
-            range=(0, 20),
+            range=(
+                0,
+                parameters['fmri']['at_elec']['kernel_end']
+                ),
             ),
         yaxis=dict(
             dtick=0.02,
