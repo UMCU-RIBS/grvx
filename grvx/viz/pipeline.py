@@ -26,7 +26,8 @@ def plot_results(parameters):
     fig = plot_gaussian()
     to_html([to_div(fig), ], plot_dir / 'gaussian.html')
 
-    divs = plot_freq_comparison(parameters)
+    figs = plot_freq_comparison(parameters)
+    divs = [to_div(fig) for fig in figs]
     to_html(divs, plot_dir / 'compare_frequencies.html')
 
     for subject in subjects:

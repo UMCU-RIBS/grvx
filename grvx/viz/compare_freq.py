@@ -5,7 +5,6 @@ from bidso.utils import read_tsv
 import plotly.graph_objs as go
 
 from .paths import get_path
-from .utils import to_div
 
 axis_label = lambda freq: f'Frequency {freq[0]} - {freq[1]} Hz'
 
@@ -32,7 +31,7 @@ def plot_freq_comparison(parameters):
         )
     ]
 
-    divs = []
+    figs = []
     fig = go.Figure(
         data=traces,
         layout=go.Layout(
@@ -47,23 +46,24 @@ def plot_freq_comparison(parameters):
                     ),
                 tick0=0,
                 dtick=0.1,
-                range=[0, max_r],
+                range=[0, max_r + 0.1],
                 ),
             yaxis=dict(
                 title=dict(
                     text=axis_label(freqB),
                     ),
-                scaleanchor="x",
-                scaleratio=1,
+                tick0=0,
+                dtick=0.1,
+                range=[0, max_r + 0.1],
                 ),
             shapes=[
                 dict(
                     type='line',
                     layer='below',
                     x0=0,
-                    x1=max_r,
+                    x1=max_r + 0.1,
                     y0=0,
-                    y1=max_r,
+                    y1=max_r + 0.1,
                     line=dict(
                         color='gray',
                     )
@@ -71,11 +71,11 @@ def plot_freq_comparison(parameters):
             ]
         )
         )
-    divs.append(to_div(fig))
+    figs.append(fig)
 
     for param in ('size_at_peak', 'size_at_concave'):
         fig = _plot_compare_size(actA, actB, param, parameters, freqA, freqB)
-        divs.append(to_div(fig))
+        figs.append(fig)
 
     param = 'slope_at_peak'
     min_r = min(r_[actA[param], actB[param]])
@@ -109,16 +109,16 @@ def plot_freq_comparison(parameters):
                     text=axis_label(freqA),
                     ),
                 tick0=0,
-                dtick=0.1,
-                range=[min_r, max_r],
+                dtick=0.2,
+                range=[min_r - 0.1, max_r + 0.1],
                 ),
             yaxis=dict(
                 title=dict(
                     text=axis_label(freqB),
                     ),
                 tick0=0,
-                dtick=0.1,
-                range=[min_r, max_r],
+                dtick=0.2,
+                range=[min_r - 0.1, max_r + 0.1],
                 scaleanchor="x",
                 scaleratio=1,
                 ),
@@ -126,20 +126,46 @@ def plot_freq_comparison(parameters):
                 dict(
                     type='line',
                     layer='below',
-                    x1=-min_r,
-                    x0=-max_r,
-                    y1=min_r,
-                    y0=max_r,
+                    x1=-min_r - 0.1,
+                    x0=-max_r - 0.1,
+                    y1=min_r + 0.1,
+                    y0=max_r + 0.1,
                     line=dict(
                         color='gray',
                     )
-                )
+                ),
+                dict(
+                    type='line',
+                    layer='below',
+                    x0=0,
+                    x1=1,
+                    y0=0,
+                    y1=0,
+                    xref='paper',
+                    line=dict(
+                        width=2,
+                        color='gray',
+                    )
+                ),
+                dict(
+                    type='line',
+                    layer='below',
+                    x0=0,
+                    x1=0,
+                    y0=0,
+                    y1=1,
+                    yref='paper',
+                    line=dict(
+                        width=2,
+                        color='gray',
+                    )
+                ),
             ]
         )
         )
-    divs.append(to_div(fig))
+    figs.append(fig)
 
-    return divs
+    return figs
 
 
 def _plot_compare_size(actA, actB, param, parameters, freqA, freqB):
@@ -172,7 +198,7 @@ def _plot_compare_size(actA, actB, param, parameters, freqA, freqB):
                     ),
                 tick0=0,
                 dtick=5,
-                range=[0, parameters['fmri']['at_elec']['kernel_end']],
+                range=[0, parameters['fmri']['at_elec']['kernel_end'] + 1],
                 ),
             yaxis=dict(
                 title=dict(
@@ -180,7 +206,7 @@ def _plot_compare_size(actA, actB, param, parameters, freqA, freqB):
                     ),
                 tick0=0,
                 dtick=5,
-                range=[0, parameters['fmri']['at_elec']['kernel_end']],
+                range=[0, parameters['fmri']['at_elec']['kernel_end'] + 1],
                 scaleanchor="x",
                 scaleratio=1,
                 ),
@@ -189,9 +215,9 @@ def _plot_compare_size(actA, actB, param, parameters, freqA, freqB):
                     type='line',
                     layer='below',
                     x0=0,
-                    x1=parameters['fmri']['at_elec']['kernel_end'],
+                    x1=parameters['fmri']['at_elec']['kernel_end'] + 1,
                     y0=0,
-                    y1=parameters['fmri']['at_elec']['kernel_end'],
+                    y1=parameters['fmri']['at_elec']['kernel_end'] + 1,
                     line=dict(
                         color='gray',
                     )

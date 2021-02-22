@@ -5,6 +5,7 @@ from .scatter import plot_scatter
 from .smooth import plot_smooth, plot_gradient
 from .histogram import plot_histogram
 from .utils import merge
+from .compare_freq import plot_freq_comparison
 
 LIGHT_COLOR = 'lightGray'
 
@@ -62,23 +63,40 @@ def plot_results(parameters):
     fig.update_layout(merge(LAYOUT, layout))
     fig.write_image(str(plot_dir / 'gaussian.svg'))
 
-    fig = paper_plot_scatter(parameters)
-    fig.write_image(str(plot_dir / 'scatter.svg'))
+    freqA = parameters['ieeg']['ecog_compare']['frequency_bands'][parameters['plot']['compare']['freqA']]
+    freqB = parameters['ieeg']['ecog_compare']['frequency_bands'][parameters['plot']['compare']['freqB']]
 
-    fig = paper_plot_smooth(parameters)
-    fig.write_image(str(plot_dir / 'smooth.svg'))
+    for freq in (freqA, freqB):
 
-    fig = paper_plot_gradient(parameters)
-    fig.write_image(str(plot_dir / 'gradient.svg'))
+        freq_dir = plot_dir / f"frequency_{freq[0]}_{freq[1]}"
+        freq_dir.mkdir(exist_ok=True, parents=True)
 
-    figs = paper_plot_histogram(parameters)
-    for i, value_type in enumerate(('r2_at_peak', 'size_at_peak', 'size_at_concave')):
-        figs[i].write_image(str(plot_dir / f'{value_type}.svg'))
+        fig = paper_plot_scatter(parameters, freq)
+        fig.write_image(str(freq_dir / 'scatter.svg'))
+
+        fig = paper_plot_smooth(parameters, freq)
+        fig.write_image(str(freq_dir / 'smooth.svg'))
+
+        fig = paper_plot_gradient(parameters, freq)
+        fig.write_image(str(freq_dir / 'gradient.svg'))
+
+        figs = paper_plot_histogram(parameters, freq)
+        for fig, value_type in zip(figs, ('r2_at_peak', 'size_at_peak', 'size_at_concave')):
+            fig.write_image(str(freq_dir / f'{value_type}.svg'))
+
+    figs = paper_plot_freq_comparison(parameters)
+    names = (
+        'comparefreq_r2_at_peak',
+        'comparefreq_size_at_peak',
+        'comparefreq_size_at_concave',
+        )
+    for fig, name in zip(figs, names):
+        fig.write_image(str(plot_dir / f'{name}.svg'))
 
 
-def paper_plot_scatter(parameters):
+def paper_plot_scatter(parameters, freq):
 
-    fig = plot_scatter(parameters, [65, 95], parameters['plot']['subject'])
+    fig = plot_scatter(parameters, freq, parameters['plot']['subject'])
 
     layout = dict(
         width=500,
@@ -135,8 +153,8 @@ def paper_plot_scatter(parameters):
     return fig
 
 
-def paper_plot_smooth(parameters):
-    fig = plot_smooth(parameters, [65, 95], parameters['plot']['subject'])
+def paper_plot_smooth(parameters, freq):
+    fig = plot_smooth(parameters, freq, parameters['plot']['subject'])
 
     layout = dict(
         width=500,
@@ -161,8 +179,8 @@ def paper_plot_smooth(parameters):
     return fig
 
 
-def paper_plot_gradient(parameters):
-    fig = plot_gradient(parameters, [65, 95], parameters['plot']['subject'])
+def paper_plot_gradient(parameters, freq):
+    fig = plot_gradient(parameters, freq, parameters['plot']['subject'])
 
     layout = dict(
         width=500,
@@ -185,8 +203,8 @@ def paper_plot_gradient(parameters):
     return fig
 
 
-def paper_plot_histogram(parameters):
-    figs = plot_histogram(parameters, [65, 95])
+def paper_plot_histogram(parameters, freq):
+    figs = plot_histogram(parameters, freq)
 
     layout = dict(
         width=500,
@@ -220,5 +238,32 @@ def paper_plot_histogram(parameters):
     for i, xaxis in enumerate(XAXIS):
         xaxis_title = dict(xaxis=dict(title=dict(text=xaxis)))
         figs[i] = figs[i].update_layout(merge(layout, xaxis_title))
+
+    return figs
+
+
+def paper_plot_freq_comparison(parameters):
+    figs = plot_freq_comparison(parameters)
+
+    layout = dict(
+        title=dict(
+            text='',
+            ),
+        width=300,
+        height=300,
+        )
+
+    layout = merge(LAYOUT, layout)
+    figs = [fig.update_layout(layout) for fig in figs]
+
+    figs[3] = figs[3].update_layout(
+        dict(
+            xaxis=dict(
+                showgrid=False,
+            ),
+            yaxis=dict(
+                showgrid=False,
+            ),
+        ))
 
     return figs
