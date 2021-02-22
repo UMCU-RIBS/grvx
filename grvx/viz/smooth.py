@@ -3,7 +3,6 @@ import plotly.graph_objs as go
 
 from bidso.utils import read_tsv
 
-from .utils import to_div
 from .paths import get_path
 
 
@@ -43,7 +42,16 @@ def plot_smooth(parameters, frequency_band, subject):
         data=traces,
         layout=layout,
         )
-    divs = [to_div(fig), ]
+    return fig
+
+
+def plot_gradient(parameters, frequency_band, subject):
+
+    corr_file = get_path(parameters, 'corr_tsv', frequency_band=frequency_band, subject=subject)
+    if corr_file is None:
+        return
+
+    results = read_tsv(corr_file)
 
     traces = [
         dict(
@@ -55,17 +63,23 @@ def plot_smooth(parameters, frequency_band, subject):
             ),
         ]
 
-    layout.update(dict(
+    layout = go.Layout(
+        xaxis=dict(
+            dtick=4,
+            range=(
+                0,
+                parameters['fmri']['at_elec']['kernel_end']
+                ),
+            ),
         yaxis=dict(
             dtick=0.002,
             range=(-0.005, 0.005),
             ),
-        ))
+        )
 
     fig = go.Figure(
         data=traces,
         layout=layout,
         )
 
-    divs.append(to_div(fig))
-    return divs
+    return fig

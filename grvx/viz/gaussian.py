@@ -4,13 +4,11 @@ import plotly.graph_objs as go
 
 import colorlover as cl
 
-from .utils import to_div
-
 
 def plot_gaussian():
     x = arange(0, 30, .05)
 
-    colorscale = cl.scales['9']['seq']['Blues']
+    colorscale = cl.scales['9']['seq']['PuBuGn']
     scales = cl.interp(colorscale, 30)
 
     traces = []
@@ -30,18 +28,36 @@ def plot_gaussian():
         data=traces,
         layout=go.Layout(
             xaxis=dict(
+                linecolor='black',
+                gridcolor='black',
                 dtick=4,
                 tickfont=dict(
                     size=8,
                     ),
                 ),
             yaxis=dict(
-                dtick=1,
+                linecolor='black',
+                gridcolor='black',
+                tickmode='array',
+                tickvals=[0, 1],
+                ticktext=[0, 'MAX'],
                 tickfont=dict(
+                    size=8,
+                    ),
+                ),
+            legend=dict(
+                title=dict(
+                    text='kernel σ',
+                    font=dict(
+                        size=10,
+                        ),
+                    ),
+                itemwidth=30,
+                font=dict(
                     size=8,
                     ),
                 ),
             )
         )
 
-    return to_div(fig)
+    return fig

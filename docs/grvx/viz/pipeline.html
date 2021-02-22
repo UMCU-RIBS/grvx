@@ -28,9 +28,9 @@
 from .gaussian import plot_gaussian
 from .fmri import plot_fmri
 from .scatter import plot_scatter
-from .smooth import plot_smooth
+from .smooth import plot_smooth, plot_gradient
 from .surfaces import plot_surface
-from .utils import to_html
+from .utils import to_html, to_div
 from .allfreq import plot_allfreq
 from .compare_freq import plot_freq_comparison
 
@@ -49,8 +49,8 @@ def plot_results(parameters):
     subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
     # subjects = set(subjects) - {&#39;ommen&#39;, &#39;vledder&#39;, &#39;arnhem&#39;, &#39;boxtel&#39;}
 
-    div = plot_gaussian()
-    to_html([div, ], plot_dir / &#39;gaussian.html&#39;)
+    fig = plot_gaussian()
+    to_html([to_div(fig), ], plot_dir / &#39;gaussian.html&#39;)
 
     divs = plot_freq_comparison(parameters)
     to_html(divs, plot_dir / &#39;compare_frequencies.html&#39;)
@@ -64,19 +64,24 @@ def plot_results(parameters):
     for frequency_band in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
 
         freq_name = f&#39;frequency_{frequency_band[0]}_{frequency_band[1]}&#39;
-        divs = plot_histogram(parameters, frequency_band)
+        figs = plot_histogram(parameters, frequency_band)
+        divs = [to_div(fig) for fig in figs]
         to_html(divs, plot_dir / freq_name / &#39;histogram.html&#39;)
 
         for subject in subjects:
             divs = []
 
-            div = plot_smooth(parameters, frequency_band, subject)
-            if div is not None:
-                divs.extend(div)
+            fig = plot_scatter(parameters, frequency_band, subject)
+            if fig is not None:
+                divs.append(fig)
 
-            div = plot_scatter(parameters, frequency_band, subject)
-            if div is not None:
-                divs.append(div)
+            fig = plot_smooth(parameters, frequency_band, subject)
+            if fig is not None:
+                divs.append(to_div(fig))
+
+            fig = plot_gradient(parameters, frequency_band, subject)
+            if fig is not None:
+                divs.append(to_div(fig))
 
             div = plot_surface(parameters, frequency_band, subject, surf)
             if div is not None:
@@ -117,8 +122,8 @@ def plot_results(parameters):
     subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
     # subjects = set(subjects) - {&#39;ommen&#39;, &#39;vledder&#39;, &#39;arnhem&#39;, &#39;boxtel&#39;}
 
-    div = plot_gaussian()
-    to_html([div, ], plot_dir / &#39;gaussian.html&#39;)
+    fig = plot_gaussian()
+    to_html([to_div(fig), ], plot_dir / &#39;gaussian.html&#39;)
 
     divs = plot_freq_comparison(parameters)
     to_html(divs, plot_dir / &#39;compare_frequencies.html&#39;)
@@ -132,19 +137,24 @@ def plot_results(parameters):
     for frequency_band in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
 
         freq_name = f&#39;frequency_{frequency_band[0]}_{frequency_band[1]}&#39;
-        divs = plot_histogram(parameters, frequency_band)
+        figs = plot_histogram(parameters, frequency_band)
+        divs = [to_div(fig) for fig in figs]
         to_html(divs, plot_dir / freq_name / &#39;histogram.html&#39;)
 
         for subject in subjects:
             divs = []
 
-            div = plot_smooth(parameters, frequency_band, subject)
-            if div is not None:
-                divs.extend(div)
+            fig = plot_scatter(parameters, frequency_band, subject)
+            if fig is not None:
+                divs.append(fig)
 
-            div = plot_scatter(parameters, frequency_band, subject)
-            if div is not None:
-                divs.append(div)
+            fig = plot_smooth(parameters, frequency_band, subject)
+            if fig is not None:
+                divs.append(to_div(fig))
+
+            fig = plot_gradient(parameters, frequency_band, subject)
+            if fig is not None:
+                divs.append(to_div(fig))
 
             div = plot_surface(parameters, frequency_band, subject, surf)
             if div is not None:

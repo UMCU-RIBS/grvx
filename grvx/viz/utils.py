@@ -1,5 +1,7 @@
 from logging import getLogger
+import collections
 
+from copy import deepcopy
 from plotly.offline import plot, get_plotlyjs
 
 lg = getLogger(__name__)
@@ -70,3 +72,19 @@ def to_png(fig, png_name):
     png_name.parent.mkdir(exist_ok=True, parents=True)
     with png_name.open('wb') as f:
         f.write(fig.to_image('png'))
+
+
+def merge(dict1, dict2):
+    """Return a new dictionary by merging two dictionaries recursively.
+
+    https://stackoverflow.com/a/43228384
+    """
+    result = deepcopy(dict1)
+
+    for key, value in dict2.items():
+        if isinstance(value, collections.Mapping):
+            result[key] = merge(result.get(key, {}), value)
+        else:
+            result[key] = deepcopy(dict2[key])
+
+    return result

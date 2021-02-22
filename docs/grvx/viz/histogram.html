@@ -24,16 +24,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from bidso.utils import read_tsv
-import plotly.graph_objs as go
-from .utils import to_div
+<pre><code class="python">import plotly.graph_objs as go
 from .paths import get_path
+from bidso.utils import read_tsv
 
-
-COLOR = {
-    &#39;micromed&#39;: &#39;rgb(0, 0, 255)&#39;,
-    &#39;blackrock&#39;: &#39;rgb(255, 0, 0)&#39;,
-    }
 
 SHIFT = &#39;middle&#39;  # middle / whole
 
@@ -46,13 +40,14 @@ def plot_histogram(parameters, frequency_band):
 
     summary = read_tsv(summary_tsv)
 
-    divs = []
+    figs = []
     for value_type in (&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
 
         if value_type in (&#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
             bin_size = 1
             dtick = 4
-            max_val = 20
+            max_val = parameters[&#39;fmri&#39;][&#39;at_elec&#39;][&#39;kernel_end&#39;]
+
         elif value_type == &#39;r2_at_peak&#39;:
             bin_size = .1
             dtick = 0.2
@@ -72,19 +67,16 @@ def plot_histogram(parameters, frequency_band):
                 size=bin_size,
                 )
 
-        traces = []
-        for acq in set(summary[&#39;acquisition&#39;]):
-
-            values = summary[summary[&#39;acquisition&#39;] == acq][value_type]
-            traces.append(
-                go.Histogram(
-                    x=values,
-                    xbins=xbins,
-                    name=acq,
-                    marker=dict(
-                        color=COLOR[acq],
-                        ),
-                ))
+        values = summary[value_type]
+        traces = [
+            go.Histogram(
+                x=values,
+                xbins=xbins,
+                marker=dict(
+                    color=&#39;black&#39;,
+                    ),
+                ),
+            ]
 
         layout = go.Layout(
             barmode=&#39;stack&#39;,
@@ -103,9 +95,9 @@ def plot_histogram(parameters, frequency_band):
             layout=layout,
             )
 
-        divs.append(to_div(fig))
+        figs.append(fig)
 
-    return divs</code></pre>
+    return figs</code></pre>
 </details>
 </section>
 <section>
@@ -132,13 +124,14 @@ def plot_histogram(parameters, frequency_band):
 
     summary = read_tsv(summary_tsv)
 
-    divs = []
+    figs = []
     for value_type in (&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
 
         if value_type in (&#39;size_at_peak&#39;, &#39;size_at_concave&#39;):
             bin_size = 1
             dtick = 4
-            max_val = 20
+            max_val = parameters[&#39;fmri&#39;][&#39;at_elec&#39;][&#39;kernel_end&#39;]
+
         elif value_type == &#39;r2_at_peak&#39;:
             bin_size = .1
             dtick = 0.2
@@ -158,19 +151,16 @@ def plot_histogram(parameters, frequency_band):
                 size=bin_size,
                 )
 
-        traces = []
-        for acq in set(summary[&#39;acquisition&#39;]):
-
-            values = summary[summary[&#39;acquisition&#39;] == acq][value_type]
-            traces.append(
-                go.Histogram(
-                    x=values,
-                    xbins=xbins,
-                    name=acq,
-                    marker=dict(
-                        color=COLOR[acq],
-                        ),
-                ))
+        values = summary[value_type]
+        traces = [
+            go.Histogram(
+                x=values,
+                xbins=xbins,
+                marker=dict(
+                    color=&#39;black&#39;,
+                    ),
+                ),
+            ]
 
         layout = go.Layout(
             barmode=&#39;stack&#39;,
@@ -189,9 +179,9 @@ def plot_histogram(parameters, frequency_band):
             layout=layout,
             )
 
-        divs.append(to_div(fig))
+        figs.append(fig)
 
-    return divs</code></pre>
+    return figs</code></pre>
 </details>
 </dd>
 </dl>

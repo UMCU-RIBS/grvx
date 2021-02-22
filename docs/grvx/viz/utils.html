@@ -25,7 +25,9 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from logging import getLogger
+import collections
 
+from copy import deepcopy
 from plotly.offline import plot, get_plotlyjs
 
 lg = getLogger(__name__)
@@ -95,7 +97,23 @@ def to_png(fig, png_name):
     fig = fig.update_layout(width=1600, height=900)
     png_name.parent.mkdir(exist_ok=True, parents=True)
     with png_name.open(&#39;wb&#39;) as f:
-        f.write(fig.to_image(&#39;png&#39;))</code></pre>
+        f.write(fig.to_image(&#39;png&#39;))
+
+
+def merge(dict1, dict2):
+    &#34;&#34;&#34;Return a new dictionary by merging two dictionaries recursively.
+
+    https://stackoverflow.com/a/43228384
+    &#34;&#34;&#34;
+    result = deepcopy(dict1)
+
+    for key, value in dict2.items():
+        if isinstance(value, collections.Mapping):
+            result[key] = merge(result.get(key, {}), value)
+        else:
+            result[key] = deepcopy(dict2[key])
+
+    return result</code></pre>
 </details>
 </section>
 <section>
@@ -105,6 +123,32 @@ def to_png(fig, png_name):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="grvx.viz.utils.merge"><code class="name flex">
+<span>def <span class="ident">merge</span></span>(<span>dict1, dict2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a new dictionary by merging two dictionaries recursively.</p>
+<p><a href="https://stackoverflow.com/a/43228384">https://stackoverflow.com/a/43228384</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def merge(dict1, dict2):
+    &#34;&#34;&#34;Return a new dictionary by merging two dictionaries recursively.
+
+    https://stackoverflow.com/a/43228384
+    &#34;&#34;&#34;
+    result = deepcopy(dict1)
+
+    for key, value in dict2.items():
+        if isinstance(value, collections.Mapping):
+            result[key] = merge(result.get(key, {}), value)
+        else:
+            result[key] = deepcopy(dict2[key])
+
+    return result</code></pre>
+</details>
+</dd>
 <dt id="grvx.viz.utils.to_div"><code class="name flex">
 <span>def <span class="ident">to_div</span></span>(<span>fig)</span>
 </code></dt>
@@ -246,6 +290,7 @@ on plotly calling an external function to do the actual plotting (orca)</p></div
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="grvx.viz.utils.merge" href="#grvx.viz.utils.merge">merge</a></code></li>
 <li><code><a title="grvx.viz.utils.to_div" href="#grvx.viz.utils.to_div">to_div</a></code></li>
 <li><code><a title="grvx.viz.utils.to_html" href="#grvx.viz.utils.to_html">to_html</a></code></li>
 <li><code><a title="grvx.viz.utils.to_png" href="#grvx.viz.utils.to_png">to_png</a></code></li>

@@ -66,4 +66,4 @@ def plot_scatter(parameters, frequency_band, subject):
         ),
         )
 
-    return to_div(fig)
+    return fig

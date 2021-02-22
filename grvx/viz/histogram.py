@@ -1,13 +1,7 @@
-from bidso.utils import read_tsv
 import plotly.graph_objs as go
-from .utils import to_div
 from .paths import get_path
+from bidso.utils import read_tsv
 
-
-COLOR = {
-    'micromed': 'rgb(0, 0, 255)',
-    'blackrock': 'rgb(255, 0, 0)',
-    }
 
 SHIFT = 'middle'  # middle / whole
 
@@ -20,13 +14,14 @@ def plot_histogram(parameters, frequency_band):
 
     summary = read_tsv(summary_tsv)
 
-    divs = []
+    figs = []
     for value_type in ('r2_at_peak', 'size_at_peak', 'size_at_concave'):
 
         if value_type in ('size_at_peak', 'size_at_concave'):
             bin_size = 1
             dtick = 4
-            max_val = 20
+            max_val = parameters['fmri']['at_elec']['kernel_end']
+
         elif value_type == 'r2_at_peak':
             bin_size = .1
             dtick = 0.2
@@ -46,19 +41,16 @@ def plot_histogram(parameters, frequency_band):
                 size=bin_size,
                 )
 
-        traces = []
-        for acq in set(summary['acquisition']):
-
-            values = summary[summary['acquisition'] == acq][value_type]
-            traces.append(
-                go.Histogram(
-                    x=values,
-                    xbins=xbins,
-                    name=acq,
-                    marker=dict(
-                        color=COLOR[acq],
-                        ),
-                ))
+        values = summary[value_type]
+        traces = [
+            go.Histogram(
+                x=values,
+                xbins=xbins,
+                marker=dict(
+                    color='black',
+                    ),
+                ),
+            ]
 
         layout = go.Layout(
             barmode='stack',
@@ -77,7 +69,6 @@ def plot_histogram(parameters, frequency_band):
             layout=layout,
             )
 
-        divs.append(to_div(fig))
+        figs.append(fig)
 
-    return divs
-
+    return figs

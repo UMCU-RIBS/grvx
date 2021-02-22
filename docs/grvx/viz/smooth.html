@@ -29,7 +29,6 @@ import plotly.graph_objs as go
 
 from bidso.utils import read_tsv
 
-from .utils import to_div
 from .paths import get_path
 
 
@@ -54,7 +53,10 @@ def plot_smooth(parameters, frequency_band, subject):
     layout = go.Layout(
         xaxis=dict(
             dtick=4,
-            range=(0, 20),
+            range=(
+                0,
+                parameters[&#39;fmri&#39;][&#39;at_elec&#39;][&#39;kernel_end&#39;]
+                ),
             ),
         yaxis=dict(
             dtick=0.02,
@@ -66,7 +68,16 @@ def plot_smooth(parameters, frequency_band, subject):
         data=traces,
         layout=layout,
         )
-    divs = [to_div(fig), ]
+    return fig
+
+
+def plot_gradient(parameters, frequency_band, subject):
+
+    corr_file = get_path(parameters, &#39;corr_tsv&#39;, frequency_band=frequency_band, subject=subject)
+    if corr_file is None:
+        return
+
+    results = read_tsv(corr_file)
 
     traces = [
         dict(
@@ -78,20 +89,26 @@ def plot_smooth(parameters, frequency_band, subject):
             ),
         ]
 
-    layout.update(dict(
+    layout = go.Layout(
+        xaxis=dict(
+            dtick=4,
+            range=(
+                0,
+                parameters[&#39;fmri&#39;][&#39;at_elec&#39;][&#39;kernel_end&#39;]
+                ),
+            ),
         yaxis=dict(
             dtick=0.002,
             range=(-0.005, 0.005),
             ),
-        ))
+        )
 
     fig = go.Figure(
         data=traces,
         layout=layout,
         )
 
-    divs.append(to_div(fig))
-    return divs</code></pre>
+    return fig</code></pre>
 </details>
 </section>
 <section>
@@ -101,6 +118,55 @@ def plot_smooth(parameters, frequency_band, subject):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="grvx.viz.smooth.plot_gradient"><code class="name flex">
+<span>def <span class="ident">plot_gradient</span></span>(<span>parameters, frequency_band, subject)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_gradient(parameters, frequency_band, subject):
+
+    corr_file = get_path(parameters, &#39;corr_tsv&#39;, frequency_band=frequency_band, subject=subject)
+    if corr_file is None:
+        return
+
+    results = read_tsv(corr_file)
+
+    traces = [
+        dict(
+            x=results[&#39;Kernel&#39;],
+            y=gradient(gradient(results[&#39;Rsquared&#39;])),
+            marker=dict(
+                color=&#39;black&#39;,
+                ),
+            ),
+        ]
+
+    layout = go.Layout(
+        xaxis=dict(
+            dtick=4,
+            range=(
+                0,
+                parameters[&#39;fmri&#39;][&#39;at_elec&#39;][&#39;kernel_end&#39;]
+                ),
+            ),
+        yaxis=dict(
+            dtick=0.002,
+            range=(-0.005, 0.005),
+            ),
+        )
+
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
+        )
+
+    return fig</code></pre>
+</details>
+</dd>
 <dt id="grvx.viz.smooth.plot_smooth"><code class="name flex">
 <span>def <span class="ident">plot_smooth</span></span>(<span>parameters, frequency_band, subject)</span>
 </code></dt>
@@ -131,7 +197,10 @@ def plot_smooth(parameters, frequency_band, subject):
     layout = go.Layout(
         xaxis=dict(
             dtick=4,
-            range=(0, 20),
+            range=(
+                0,
+                parameters[&#39;fmri&#39;][&#39;at_elec&#39;][&#39;kernel_end&#39;]
+                ),
             ),
         yaxis=dict(
             dtick=0.02,
@@ -143,32 +212,7 @@ def plot_smooth(parameters, frequency_band, subject):
         data=traces,
         layout=layout,
         )
-    divs = [to_div(fig), ]
-
-    traces = [
-        dict(
-            x=results[&#39;Kernel&#39;],
-            y=gradient(gradient(results[&#39;Rsquared&#39;])),
-            marker=dict(
-                color=&#39;black&#39;,
-                ),
-            ),
-        ]
-
-    layout.update(dict(
-        yaxis=dict(
-            dtick=0.002,
-            range=(-0.005, 0.005),
-            ),
-        ))
-
-    fig = go.Figure(
-        data=traces,
-        layout=layout,
-        )
-
-    divs.append(to_div(fig))
-    return divs</code></pre>
+    return fig</code></pre>
 </details>
 </dd>
 </dl>
@@ -189,6 +233,7 @@ def plot_smooth(parameters, frequency_band, subject):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="grvx.viz.smooth.plot_gradient" href="#grvx.viz.smooth.plot_gradient">plot_gradient</a></code></li>
 <li><code><a title="grvx.viz.smooth.plot_smooth" href="#grvx.viz.smooth.plot_smooth">plot_smooth</a></code></li>
 </ul>
 </li>
