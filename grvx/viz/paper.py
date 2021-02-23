@@ -6,6 +6,7 @@ from .smooth import plot_smooth, plot_gradient
 from .histogram import plot_histogram
 from .utils import merge
 from .compare_freq import plot_freq_comparison
+from .revision import revision
 
 LIGHT_COLOR = 'lightGray'
 
@@ -47,6 +48,8 @@ LAYOUT = dict(
 
 
 def plot_results(parameters):
+
+    revision(parameters)
 
     plot_dir = parameters['paths']['output'] / 'paper'
     try:
