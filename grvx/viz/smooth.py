@@ -73,7 +73,7 @@ def plot_gradient(parameters, frequency_band, subject):
             ),
         yaxis=dict(
             dtick=0.002,
-            range=(-0.005, 0.005),
+            range=(-0.006, 0.006),
             ),
         )
 

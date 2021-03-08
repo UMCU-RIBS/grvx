@@ -1,5 +1,13 @@
 from shutil import rmtree
+from wonambi.attr import Freesurfer
+from bidso import Electrodes
+from bidso.utils import read_tsv
+import plotly.graph_objs as go
+from numpy import where, concatenate, mean
+from subprocess import run
 
+from .paths import get_path
+from .surfaces import AXIS, project_mri_to_surf
 from .gaussian import plot_gaussian
 from .scatter import plot_scatter
 from .smooth import plot_smooth, plot_gradient
@@ -66,10 +74,7 @@ def plot_results(parameters):
     fig.update_layout(merge(LAYOUT, layout))
     fig.write_image(str(plot_dir / 'gaussian.svg'))
 
-    freqA = parameters['ieeg']['ecog_compare']['frequency_bands'][parameters['plot']['compare']['freqA']]
-    freqB = parameters['ieeg']['ecog_compare']['frequency_bands'][parameters['plot']['compare']['freqB']]
-
-    for freq in (freqA, freqB):
+    for freq in parameters['ieeg']['ecog_compare']['frequency_bands']:
 
         freq_dir = plot_dir / f"frequency_{freq[0]}_{freq[1]}"
         freq_dir.mkdir(exist_ok=True, parents=True)
@@ -86,6 +91,23 @@ def plot_results(parameters):
         figs = paper_plot_histogram(parameters, freq)
         for fig, value_type in zip(figs, ('r2_at_peak', 'size_at_peak', 'size_at_concave')):
             fig.write_image(str(freq_dir / f'{value_type}.svg'))
+
+    # TODO: this should be specified in parameters.json
+    freq = parameters['ieeg']['ecog_compare']['frequency_bands'][-1]
+    subjects = [x.stem[4:] for x in parameters['paths']['input'].glob('sub-*')]
+    for subject in subjects:
+        fig = plot_smooth(parameters, freq, subject)
+        fig.write_image(str(freq_dir / f'{subject}_smooth.svg'))
+
+        fig = paper_plot_surf_ecog(parameters, freq, subject)
+        fig_name = str(freq_dir / f'{subject}_surface_ecog.png')
+        fig.write_image(fig_name)
+        run(['convert', fig_name, '-trim', fig_name])
+
+        fig = paper_plot_surf_bold(parameters, subject)
+        fig_name = str(freq_dir / f'{subject}_surface_bold.png')
+        fig.write_image(fig_name)
+        run(['convert', fig_name, '-trim', fig_name])
 
     figs = paper_plot_freq_comparison(parameters)
     names = (
@@ -182,6 +204,29 @@ def paper_plot_smooth(parameters, freq):
     return fig
 
 
+def paper_plot_smooth_small(parameters, freq):
+    fig = plot_smooth(parameters, freq, parameters['plot']['subject'])
+
+    layout = dict(
+        width=500,
+        height=200,
+        xaxis=dict(
+            title=dict(
+                text='',
+                ),
+            ),
+        yaxis=dict(
+            title=dict(
+                text='',
+                ),
+            dtick=0.1,
+            ),
+        )
+
+    fig.update_layout(merge(LAYOUT, layout))
+
+    return fig
+
 def paper_plot_gradient(parameters, freq):
     fig = plot_gradient(parameters, freq, parameters['plot']['subject'])
 
@@ -270,3 +315,202 @@ def paper_plot_freq_comparison(parameters):
         ))
 
     return figs
+
+
+def paper_plot_surf_ecog(parameters, frequency_band, subject):
+
+    elec_file = get_path(parameters, 'elec', subject=subject)
+    ieeg_file = get_path(parameters, 'ieeg_tsv', frequency_band=frequency_band, subject=subject)
+    freesurfer_dir = parameters['paths']['freesurfer_subjects_dir'] / f'sub-{subject}'
+
+    compare_ieeg = read_tsv(ieeg_file)
+    fs = Freesurfer(freesurfer_dir)
+    electrodes = Electrodes(elec_file)
+
+    elec = electrodes.electrodes.tsv
+    all_elec = []
+    labels = []
+    for chan in compare_ieeg:
+        i_chan = where(elec['name'] == chan['channel'])[0]
+        all_elec.append(elec[i_chan])
+        labels.append(f"{chan['channel']} = {chan['measure']:0.3f}")
+
+    elec = concatenate(all_elec)
+
+    if mean(elec['x']) > 0:
+        right_or_left = 1
+        hemi = 'rh'
+    else:
+        right_or_left = -1
+        hemi = 'lh'
+
+    fs = Freesurfer(freesurfer_dir)
+    pial = getattr(fs.read_brain(), hemi)
+
+    vert = pial.vert + fs.surface_ras_shift
+
+    colorscale = 'balance'
+
+    traces = [
+        go.Scatter3d(
+            x=elec['x'] + right_or_left,
+            y=elec['y'],
+            z=elec['z'] + 1,
+            text=labels,
+            mode='markers',
+            hoverinfo='text',
+            marker=dict(
+                size=5,
+                color=compare_ieeg['measure'],
+                colorscale=colorscale,
+                showscale=False,
+                cmin=-10,
+                cmax=10,
+                colorbar=dict(
+                    title='electrodes',
+                    titleside="top",
+                    ticks="outside",
+                    ticklabelposition="outside",
+                    x=0,
+                    ),
+            ),
+        ),
+        go.Mesh3d(
+            x=vert[:, 0],
+            y=vert[:, 1],
+            z=vert[:, 2],
+            i=pial.tri[:, 0],
+            j=pial.tri[:, 1],
+            k=pial.tri[:, 2],
+            color='gray',
+            hoverinfo='skip',
+            flatshading=False,
+            lighting=dict(
+                ambient=0.18,
+                diffuse=1,
+                fresnel=0.1,
+                specular=1,
+                roughness=0.1,
+                ),
+            lightposition=dict(
+                x=0,
+                y=0,
+                z=-1,
+                ),
+            ),
+        ]
+
+    fig = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            scene=dict(
+                xaxis=AXIS,
+                yaxis=AXIS,
+                zaxis=AXIS,
+                camera=dict(
+                    eye=dict(
+                        x=right_or_left,
+                        y=0,
+                        z=1,
+                    ),
+                    projection=dict(
+                        type='orthographic',
+                    ),
+                    ),
+                ),
+            ),
+        )
+
+    return fig
+
+
+def paper_plot_surf_bold(parameters, subject):
+
+    elec_file = get_path(parameters, 'elec', subject=subject)
+    fmri_file = get_path(parameters, 'fmri_nii', subject=subject)
+
+    freesurfer_dir = parameters['paths']['freesurfer_subjects_dir'] / f'sub-{subject}'
+
+    fs = Freesurfer(freesurfer_dir)
+    electrodes = Electrodes(elec_file)
+
+    elec = electrodes.electrodes.tsv
+
+    if mean(elec['x']) > 0:
+        right_or_left = 1
+        hemi = 'rh'
+    else:
+        right_or_left = -1
+        hemi = 'lh'
+
+    fs = Freesurfer(freesurfer_dir)
+    pial = getattr(fs.read_brain(), hemi)
+
+    vert = pial.vert + fs.surface_ras_shift
+    fmri_vals = project_mri_to_surf(fmri_file, vert, parameters['plot']['surface']['kernel'])
+
+    colorscale = 'balance'
+
+    traces = [
+        go.Scatter3d(
+            x=elec['x'] + right_or_left,
+            y=elec['y'],
+            z=elec['z'] + 1,
+            mode='markers',
+            hoverinfo='text',
+            marker=dict(
+                size=5,
+                color='black',
+            ),
+        ),
+        go.Mesh3d(
+            x=vert[:, 0],
+            y=vert[:, 1],
+            z=vert[:, 2],
+            i=pial.tri[:, 0],
+            j=pial.tri[:, 1],
+            k=pial.tri[:, 2],
+            intensity=fmri_vals,
+            cmax=4,
+            cmin=-4,
+            colorscale=colorscale,
+            hoverinfo='skip',
+            flatshading=False,
+            showscale=False,
+            lighting=dict(
+                ambient=0.18,
+                diffuse=1,
+                fresnel=0.1,
+                specular=1,
+                roughness=0.1,
+                ),
+            lightposition=dict(
+                x=0,
+                y=0,
+                z=-1,
+                ),
+            ),
+        ]
+
+    fig = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            scene=dict(
+                xaxis=AXIS,
+                yaxis=AXIS,
+                zaxis=AXIS,
+                camera=dict(
+                    eye=dict(
+                        x=right_or_left,
+                        y=0,
+                        z=1,
+                    ),
+                    projection=dict(
+                        type='orthographic',
+                    ),
+                    ),
+                ),
+            ),
+        )
+
+    return fig

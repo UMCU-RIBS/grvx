@@ -11,7 +11,6 @@ from bidso.utils import read_tsv
 from nibabel import load as nload
 
 from .paths import get_path
-from .utils import to_div, to_html
 
 
 THRESH = 10
@@ -28,19 +27,20 @@ def revision(parameters):
     plot_dir.mkdir(exist_ok=True, parents=True)
 
     fig = timeseries_fmri(parameters)
-    to_html([to_div(fig), ], plot_dir / 'timeseries_fmri.html')
+    fig.write_image(str(plot_dir / 'timeseries_fmri.svg'))
 
     fig = timeseries_ieeg(parameters)
-    to_html([to_div(fig), ], plot_dir / 'timeseries_ieeg.html')
+    fig.write_image(str(plot_dir / 'timeseries_ieeg.svg'))
 
     figs = headmotions(parameters)
-    divs = [to_div(fig) for fig in figs]
-    to_html(divs, plot_dir / 'headmotion.html')
+    for name, fig in figs.items():
+        fig.write_image(str(plot_dir / f'{name}.svg'))
 
 
 def timeseries_fmri(parameters):
     fmri_dir = parameters['paths']['output'] / 'workflow' / 'fmri'
     subject = parameters['plot']['subject']
+    subject = 'delft'
     fmri_subj_dir = fmri_dir / f'_subject_{subject}'
 
     regressor_file = next(fmri_subj_dir.rglob('design.mat'))
@@ -190,7 +190,7 @@ def headmotions(parameters):
     summary_tsv = get_path(parameters, 'summary_tsv', frequency_band=freq)
     summary = read_tsv(summary_tsv)
 
-    figs = []
+    figs = {}
     for mc_type in ('prefiltered_func_data_mcf_rel_mean.rms', 'prefiltered_func_data_mcf_abs_mean.rms'):
         mc = []
         for summ in summary:
@@ -211,6 +211,7 @@ def headmotions(parameters):
                     title=dict(
                         text=mc_type + ' ' + value_type,
                     )))
-            figs.append(fig)
+            name = mc_type[:-4] + '_' + value_type
+            figs[name] = fig
 
     return figs

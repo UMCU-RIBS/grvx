@@ -2,7 +2,6 @@ from bidso.utils import read_tsv
 from numpy import argmax
 import plotly.graph_objs as go
 
-from .utils import to_div
 from .paths import get_path
 from ..nodes.corr.corrfmri import select_channels
 

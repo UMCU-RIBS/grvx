@@ -21,7 +21,6 @@ def plot_results(parameters):
     plot_dir.mkdir(exist_ok=True, parents=True)
 
     subjects = [x.stem[4:] for x in parameters['paths']['input'].glob('sub-*')]
-    # subjects = set(subjects) - {'ommen', 'vledder', 'arnhem', 'boxtel'}
 
     fig = plot_gaussian()
     to_html([to_div(fig), ], plot_dir / 'gaussian.html')
@@ -48,7 +47,7 @@ def plot_results(parameters):
 
             fig = plot_scatter(parameters, frequency_band, subject)
             if fig is not None:
-                divs.append(fig)
+                divs.append(to_div(fig))
 
             fig = plot_smooth(parameters, frequency_band, subject)
             if fig is not None:
