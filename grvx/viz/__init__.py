@@ -1,8 +1,7 @@
-from .pipeline import plot_results as plot1
-from .paper import plot_results as plot2
+from .pipeline import plot_results as plot_pipeline
+from .paper import plot_results as plot_paper
 
 
 def plot_results(parameters):
-    plot2(parameters)
-    plot1(parameters)
-
+    plot_paper(parameters)
+    plot_pipeline(parameters)

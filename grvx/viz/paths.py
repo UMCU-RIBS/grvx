@@ -45,6 +45,14 @@ def get_path(parameters, index, **kwargs):
             print(f'Cound not find compare.nii.gz in {x_dir}')
             return
 
+    elif index == 'fmri_zstat':
+        x_dir = out / 'fmri' / subj_dir / 'feat_design'
+        try:
+            x = next(x_dir.rglob('thresh_zstat1.nii.gz'))
+        except StopIteration:
+            print(f'Cound not find compare.nii.gz in {x_dir}')
+            return
+
     elif index == 'corr_tsv':
         x_dir = out / subj_dir / freq_dir / 'corr_fmri_ecog' / 'corr_values'
         try:

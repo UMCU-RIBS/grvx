@@ -210,7 +210,14 @@ def headmotions(parameters):
                 ], layout=go.Layout(
                     title=dict(
                         text=mc_type + ' ' + value_type,
-                    )))
+                        ),
+                    xaxis=dict(
+                        rangemode='tozero',
+                        ),
+                    yaxis=dict(
+                        rangemode='tozero',
+                        ),
+                    ))
             name = mc_type[:-4] + '_' + value_type
             figs[name] = fig
 
