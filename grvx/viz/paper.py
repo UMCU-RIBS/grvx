@@ -12,52 +12,16 @@ from .gaussian import plot_gaussian
 from .scatter import plot_scatter
 from .smooth import plot_smooth, plot_gradient
 from .histogram import plot_histogram
-from .utils import merge
+from .utils import merge, LAYOUT
 from .compare_freq import plot_freq_comparison
 from .revision import revision
-
-LIGHT_COLOR = 'lightGray'
-
-LAYOUT = dict(
-    paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='rgba(0,0,0,0)',
-    margin=dict(
-        l=0,
-        t=0,
-        b=0,
-        r=0,
-        pad=0,
-        ),
-    xaxis=dict(
-        title=dict(
-            font=dict(
-                size=10,
-                ),
-            ),
-        linecolor='black',
-        gridcolor=LIGHT_COLOR,
-        tickfont=dict(
-            size=8,
-            ),
-        ),
-    yaxis=dict(
-        title=dict(
-            font=dict(
-                size=10,
-                ),
-            ),
-        linecolor='black',
-        gridcolor=LIGHT_COLOR,
-        tickfont=dict(
-            size=8,
-            ),
-        ),
-    )
 
 
 def plot_results(parameters):
 
     revision(parameters)
+
+    return
 
     plot_dir = parameters['paths']['output'] / 'paper'
     try:

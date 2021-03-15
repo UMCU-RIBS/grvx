@@ -1,6 +1,6 @@
 from pickle import load
 from shutil import rmtree
-from numpy import arange, genfromtxt
+from numpy import arange, genfromtxt, where
 from numpy import concatenate as concat
 from numpy import argsort, array
 import plotly.graph_objs as go
@@ -11,6 +11,7 @@ from bidso.utils import read_tsv
 from nibabel import load as nload
 
 from .paths import get_path
+from .utils import merge, LAYOUT
 
 
 THRESH = 10
@@ -49,6 +50,7 @@ def timeseries_fmri(parameters):
 
     subj_dir = parameters['paths']['input'] / f'sub-{subject}'
     events_fmri_file = next(subj_dir.glob('ses-*/func/*_events.tsv'))
+    events = read_tsv(events_fmri_file)
 
     thresh = nload(thresh_file).get_fdata()
     i_vox = thresh >= THRESH
@@ -72,15 +74,32 @@ def timeseries_fmri(parameters):
             yaxis='y2',
         ),
         ]
-    fig = go.Figure(
-        data=traces,
-        layout=dict(
+
+    layout = merge(
+        LAYOUT,
+        dict(
+            height=100,
+            width=450,
+            showlegend=False,
+            xaxis=dict(
+                tick0=0,
+                dtick=30,
+                range=(0, 270),
+                ),
+            yaxis=dict(
+                ),
             yaxis2=dict(
                 overlaying='y',
                 side='right',
+                visible=False,
+                ),
+            shapes=event_shapes(events),
             ),
-            shapes=event_shapes(events_fmri_file),
         )
+
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
         )
 
     return fig
@@ -121,24 +140,40 @@ def timeseries_ieeg(parameters):
 
     i_t = argsort(t)
 
+    events = read_tsv(events_ieeg_file)
+    i_start = where(events['trial_type'] == 'rest')[0][0]
+    offset = events['onset'][i_start]
+    events['onset'] -= offset
+
     traces = [
         go.Scatter(
-            x=t[i_t],
+            x=t[i_t] - offset,
             y=x[i_t],
             line=dict(
                 color='black',
             )
         ),
+        ]
 
-    ]
-    fig = go.Figure(
-        data=traces,
-        layout=go.Layout(
-            yaxis=dict(
-                rangemode='tozero',
+    layout = merge(
+        LAYOUT,
+        dict(
+            height=100,
+            width=450,
+            xaxis=dict(
+                tick0=0,
+                dtick=30,
+                range=(0, 330),
                 ),
-            shapes=event_shapes(events_ieeg_file),
-        ))
+            yaxis=dict(
+                dtick=0.1,
+                range=(0, 0.4),
+                ),
+            shapes=event_shapes(events),
+            ),
+        )
+
+    fig = go.Figure(data=traces, layout=layout)
 
     return fig
 
@@ -158,8 +193,7 @@ def compute_quick_spectrogram(ieeg_file, freq):
     return dat0
 
 
-def event_shapes(events_file):
-    events = read_tsv(events_file)
+def event_shapes(events):
     shapes = []
 
     for ev in events:
@@ -191,7 +225,8 @@ def headmotions(parameters):
     summary = read_tsv(summary_tsv)
 
     figs = {}
-    for mc_type in ('prefiltered_func_data_mcf_rel_mean.rms', 'prefiltered_func_data_mcf_abs_mean.rms'):
+    for mc_name in ('abs', 'rel'):
+        mc_type = f'prefiltered_func_data_mcf_{mc_name}_mean.rms'
         mc = []
         for summ in summary:
             fmri_subj_dir = fmri_dir / f'_subject_{summ["subject"]}'
@@ -200,24 +235,49 @@ def headmotions(parameters):
         mc = array(mc)
 
         for value_type in ('r2_at_peak', 'size_at_peak'):
-            fig = go.Figure(data=[
+
+            traces = [
                 go.Scatter(
                     x=mc,
                     y=summary[value_type],
-                    text=summary["subject"],
                     mode='markers',
-                )
-                ], layout=go.Layout(
+                    marker=dict(
+                        color='black',
+                        ),
+                    )
+                ]
+
+            layout = merge(
+                LAYOUT,
+                dict(
+                    margin=dict(
+                        t=30,
+                        ),
+                    height=230,
+                    width=200,
+                    showlegend=False,
                     title=dict(
-                        text=mc_type + ' ' + value_type,
+                        text=mc_name + ' motion / ' + value_type.split('_')[0],
                         ),
                     xaxis=dict(
                         rangemode='tozero',
+                        title=dict(
+                            text='head motions (mm)',
+                            ),
                         ),
                     yaxis=dict(
                         rangemode='tozero',
+                        title=dict(
+                            text=value_type.split('_')[0],
+                            ),
                         ),
-                    ))
+                    ),
+                )
+
+            fig = go.Figure(
+                data=traces,
+                layout=layout,
+                )
             name = mc_type[:-4] + '_' + value_type
             figs[name] = fig
 

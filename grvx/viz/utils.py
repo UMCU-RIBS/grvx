@@ -7,6 +7,50 @@ from plotly.offline import plot, get_plotlyjs
 lg = getLogger(__name__)
 
 
+LIGHT_COLOR = 'lightGray'
+
+LAYOUT = dict(
+    paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
+    margin=dict(
+        l=0,
+        t=0,
+        b=0,
+        r=0,
+        pad=0,
+        ),
+    title=dict(
+        font=dict(
+            size=12,
+            ),
+        ),
+    xaxis=dict(
+        title=dict(
+            font=dict(
+                size=12,
+                ),
+            ),
+        linecolor='black',
+        gridcolor=LIGHT_COLOR,
+        tickfont=dict(
+            size=10,
+            ),
+        ),
+    yaxis=dict(
+        title=dict(
+            font=dict(
+                size=12,
+                ),
+            ),
+        linecolor='black',
+        gridcolor=LIGHT_COLOR,
+        tickfont=dict(
+            size=10,
+            ),
+        ),
+    )
+
+
 def to_div(fig):
     """Convert plotly FIG into an HTML div
 
