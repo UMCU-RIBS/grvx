@@ -19,18 +19,15 @@ from .revision import revision
 
 def plot_results(parameters):
 
-    # revision(parameters)
+    revision(parameters)
 
     plot_dir = parameters['paths']['output'] / 'paper'
-    """
     try:
         rmtree(plot_dir)
     except OSError:
         pass
-    """
     plot_dir.mkdir(exist_ok=True, parents=True)
 
-    """
     fig = plot_gaussian()
     layout = dict(
         width=250,
@@ -56,7 +53,6 @@ def plot_results(parameters):
         figs = paper_plot_histogram(parameters, freq)
         for fig, value_type in zip(figs, ('r2_at_peak', 'size_at_peak', 'size_at_concave')):
             fig.write_image(str(freq_dir / f'{value_type}.svg'))
-    """
 
     # TODO: this should be specified in parameters.json
     freq = parameters['ieeg']['ecog_compare']['frequency_bands'][-1]
@@ -66,7 +62,6 @@ def plot_results(parameters):
         fig = paper_miniplot_smooth(parameters, freq, subject)
         fig.write_image(str(freq_dir / f'{subject}_smooth.svg'))
 
-        """
         fig = paper_plot_surf_ecog(parameters, freq, subject)
         fig_name = str(freq_dir / f'{subject}_surface_ecog.png')
         fig.write_image(fig_name)
@@ -76,7 +71,6 @@ def plot_results(parameters):
         fig_name = str(freq_dir / f'{subject}_surface_bold.png')
         fig.write_image(fig_name)
         run(['convert', fig_name, '-trim', fig_name])
-        """
 
     figs = paper_plot_freq_comparison(parameters)
     names = (
