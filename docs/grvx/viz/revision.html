@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>grvx.viz.revision API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>grvx.viz.revision</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from pickle import load
+from shutil import rmtree
+from numpy import arange, genfromtxt, where
+from numpy import concatenate as concat
+from numpy import argsort, array
+import plotly.graph_objs as go
+from wonambi.trans import montage, timefrequency
+from wonambi.trans import concatenate, select, math
+from bidso.utils import read_tsv
+
+from nibabel import load as nload
+
+from .paths import get_path
+from .utils import merge, LAYOUT
+
+
+THRESH = 10
+TR = 0.608
+
+
+def revision(parameters):
+
+    plot_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;revision&#39;
+    try:
+        rmtree(plot_dir)
+    except OSError:
+        pass
+    plot_dir.mkdir(exist_ok=True, parents=True)
+
+    fig = timeseries_fmri(parameters)
+    fig.write_image(str(plot_dir / &#39;timeseries_fmri.svg&#39;))
+
+    fig = timeseries_ieeg(parameters)
+    fig.write_image(str(plot_dir / &#39;timeseries_ieeg.svg&#39;))
+
+    figs = headmotions(parameters)
+    for name, fig in figs.items():
+        fig.write_image(str(plot_dir / f&#39;{name}.svg&#39;))
+
+
+def timeseries_fmri(parameters):
+    fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39; / &#39;fmri&#39;
+    subject = parameters[&#39;plot&#39;][&#39;subject&#39;]
+    subject = &#39;delft&#39;
+    fmri_subj_dir = fmri_dir / f&#39;_subject_{subject}&#39;
+
+    regressor_file = next(fmri_subj_dir.rglob(&#39;design.mat&#39;))
+    thresh_file = next(fmri_subj_dir.rglob(&#39;thresh_zstat1.nii.gz&#39;))
+    timeseries_file = next(fmri_subj_dir.rglob(&#39;filtered_func_data.nii.gz&#39;))
+
+    subj_dir = parameters[&#39;paths&#39;][&#39;input&#39;] / f&#39;sub-{subject}&#39;
+    events_fmri_file = next(subj_dir.glob(&#39;ses-*/func/*_events.tsv&#39;))
+    events = read_tsv(events_fmri_file)
+
+    thresh = nload(thresh_file).get_fdata()
+    i_vox = thresh &gt;= THRESH
+    timeseries = nload(timeseries_file).get_fdata()
+    fmri = timeseries[i_vox]
+    t_fmri = arange(timeseries.shape[3]) * TR
+
+    regressor = genfromtxt(regressor_file, skip_header=5)
+
+    traces = [
+        go.Scatter(
+            x=t_fmri,
+            y=fmri.mean(axis=0),
+            line=dict(
+                color=&#39;black&#39;,
+                ),
+        ),
+        go.Scatter(
+            x=t_fmri,
+            y=regressor,
+            yaxis=&#39;y2&#39;,
+        ),
+        ]
+
+    layout = merge(
+        LAYOUT,
+        dict(
+            height=100,
+            width=450,
+            showlegend=False,
+            xaxis=dict(
+                tick0=0,
+                dtick=30,
+                range=(0, 270),
+                ),
+            yaxis=dict(
+                ),
+            yaxis2=dict(
+                overlaying=&#39;y&#39;,
+                side=&#39;right&#39;,
+                visible=False,
+                ),
+            shapes=event_shapes(events),
+            ),
+        )
+
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
+        )
+
+    return fig
+
+
+def timeseries_ieeg(parameters):
+
+    ieeg_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39; / &#39;ieeg&#39;
+    subject = parameters[&#39;plot&#39;][&#39;subject&#39;]
+    freq = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;][-1]
+
+    ieeg_subj_dir = ieeg_dir / f&#39;_subject_{subject}&#39;
+
+    ieeg_compare_file = next(ieeg_subj_dir.glob(f&#39;_frequency_{freq[0]}.{freq[1]}/ecog_compare/sub-*_compare.tsv&#39;))
+    ieeg0_file = next(ieeg_subj_dir.rglob(&#39;*_task-motoractive_*_ieeg.pkl&#39;))
+    ieeg1_file = next(ieeg_subj_dir.rglob(&#39;*_task-motorbaseline_*_ieeg.pkl&#39;))
+
+    subj_dir = parameters[&#39;paths&#39;][&#39;input&#39;] / f&#39;sub-{subject}&#39;
+    events_ieeg_file = next(subj_dir.glob(&#39;ses-*/ieeg/*_events.tsv&#39;))
+
+    dat0 = compute_quick_spectrogram(ieeg0_file, freq)
+    dat1 = compute_quick_spectrogram(ieeg1_file, freq)
+
+    dat = dat0._copy()
+    dat.data = concat([dat0.data, dat1.data])
+    dat.axis[&#39;time&#39;] = concat([dat0.time, dat1.time])
+    dat.axis[&#39;chan&#39;] = concat([dat0.chan, dat1.chan])
+
+    dat = concatenate(dat, axis=&#39;time&#39;)
+
+    ieeg_compare = read_tsv(ieeg_compare_file)
+
+    chans = ieeg_compare[&#39;channel&#39;][ieeg_compare[&#39;measure&#39;] &gt; 10]
+    x0 = math(select(dat, chan=chans), operator_name=&#39;mean&#39;, axis=&#39;chan&#39;)
+
+    t = dat.time[0]
+    x = x0(trial=0)
+
+    i_t = argsort(t)
+
+    events = read_tsv(events_ieeg_file)
+    i_start = where(events[&#39;trial_type&#39;] == &#39;rest&#39;)[0][0]
+    offset = events[&#39;onset&#39;][i_start]
+    events[&#39;onset&#39;] -= offset
+
+    traces = [
+        go.Scatter(
+            x=t[i_t] - offset,
+            y=x[i_t],
+            line=dict(
+                color=&#39;black&#39;,
+            )
+        ),
+        ]
+
+    layout = merge(
+        LAYOUT,
+        dict(
+            height=100,
+            width=450,
+            xaxis=dict(
+                tick0=0,
+                dtick=30,
+                range=(0, 330),
+                ),
+            yaxis=dict(
+                dtick=0.1,
+                range=(0, 0.4),
+                ),
+            shapes=event_shapes(events),
+            ),
+        )
+
+    fig = go.Figure(data=traces, layout=layout)
+
+    return fig
+
+
+def compute_quick_spectrogram(ieeg_file, freq):
+    with ieeg_file.open(&#39;rb&#39;) as f:
+        data = load(f)
+
+    # TODO: from parameters
+    reref = &#39;average&#39;
+    method = &#39;spectrogram&#39;
+    duration = 2
+    data = montage(data, ref_to_avg=True, method=reref)
+    tf = timefrequency(data, method=method, duration=duration)
+
+    dat0 = math(select(tf, freq=freq), operator_name=&#39;mean&#39;, axis=&#39;freq&#39;)
+    return dat0
+
+
+def event_shapes(events):
+    shapes = []
+
+    for ev in events:
+        if ev[&#39;trial_type&#39;] == &#39;move&#39;:
+            shapes.append(
+                dict(
+                    type=&#39;rect&#39;,
+                    layer=&#39;below&#39;,
+                    x0=ev[&#39;onset&#39;],
+                    x1=ev[&#39;onset&#39;] + ev[&#39;duration&#39;],
+                    y0=0,
+                    y1=1,
+                    yref=&#39;paper&#39;,
+                    fillcolor=&#39;gray&#39;,
+                    line=dict(
+                        width=0,
+                    )
+                )
+                )
+    return shapes
+
+
+def headmotions(parameters):
+
+    fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39; / &#39;fmri&#39;
+
+    freq = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;][-1]
+    summary_tsv = get_path(parameters, &#39;summary_tsv&#39;, frequency_band=freq)
+    summary = read_tsv(summary_tsv)
+
+    figs = {}
+    for mc_name in (&#39;abs&#39;, &#39;rel&#39;):
+        mc_type = f&#39;prefiltered_func_data_mcf_{mc_name}_mean.rms&#39;
+        mc = []
+        for summ in summary:
+            fmri_subj_dir = fmri_dir / f&#39;_subject_{summ[&#34;subject&#34;]}&#39;
+            mc_file = next(fmri_subj_dir.rglob(mc_type))
+            mc.append(genfromtxt(mc_file))
+        mc = array(mc)
+
+        for value_type in (&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;):
+
+            traces = [
+                go.Scatter(
+                    x=mc,
+                    y=summary[value_type],
+                    mode=&#39;markers&#39;,
+                    marker=dict(
+                        color=&#39;black&#39;,
+                        ),
+                    )
+                ]
+
+            layout = merge(
+                LAYOUT,
+                dict(
+                    margin=dict(
+                        t=30,
+                        ),
+                    height=230,
+                    width=200,
+                    showlegend=False,
+                    title=dict(
+                        text=mc_name + &#39; motion / &#39; + value_type.split(&#39;_&#39;)[0],
+                        ),
+                    xaxis=dict(
+                        rangemode=&#39;tozero&#39;,
+                        title=dict(
+                            text=&#39;head motions (mm)&#39;,
+                            ),
+                        ),
+                    yaxis=dict(
+                        rangemode=&#39;tozero&#39;,
+                        title=dict(
+                            text=value_type.split(&#39;_&#39;)[0],
+                            ),
+                        ),
+                    ),
+                )
+
+            fig = go.Figure(
+                data=traces,
+                layout=layout,
+                )
+            name = mc_type[:-4] + &#39;_&#39; + value_type
+            figs[name] = fig
+
+    return figs</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="grvx.viz.revision.compute_quick_spectrogram"><code class="name flex">
+<span>def <span class="ident">compute_quick_spectrogram</span></span>(<span>ieeg_file, freq)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_quick_spectrogram(ieeg_file, freq):
+    with ieeg_file.open(&#39;rb&#39;) as f:
+        data = load(f)
+
+    # TODO: from parameters
+    reref = &#39;average&#39;
+    method = &#39;spectrogram&#39;
+    duration = 2
+    data = montage(data, ref_to_avg=True, method=reref)
+    tf = timefrequency(data, method=method, duration=duration)
+
+    dat0 = math(select(tf, freq=freq), operator_name=&#39;mean&#39;, axis=&#39;freq&#39;)
+    return dat0</code></pre>
+</details>
+</dd>
+<dt id="grvx.viz.revision.event_shapes"><code class="name flex">
+<span>def <span class="ident">event_shapes</span></span>(<span>events)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def event_shapes(events):
+    shapes = []
+
+    for ev in events:
+        if ev[&#39;trial_type&#39;] == &#39;move&#39;:
+            shapes.append(
+                dict(
+                    type=&#39;rect&#39;,
+                    layer=&#39;below&#39;,
+                    x0=ev[&#39;onset&#39;],
+                    x1=ev[&#39;onset&#39;] + ev[&#39;duration&#39;],
+                    y0=0,
+                    y1=1,
+                    yref=&#39;paper&#39;,
+                    fillcolor=&#39;gray&#39;,
+                    line=dict(
+                        width=0,
+                    )
+                )
+                )
+    return shapes</code></pre>
+</details>
+</dd>
+<dt id="grvx.viz.revision.headmotions"><code class="name flex">
+<span>def <span class="ident">headmotions</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def headmotions(parameters):
+
+    fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39; / &#39;fmri&#39;
+
+    freq = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;][-1]
+    summary_tsv = get_path(parameters, &#39;summary_tsv&#39;, frequency_band=freq)
+    summary = read_tsv(summary_tsv)
+
+    figs = {}
+    for mc_name in (&#39;abs&#39;, &#39;rel&#39;):
+        mc_type = f&#39;prefiltered_func_data_mcf_{mc_name}_mean.rms&#39;
+        mc = []
+        for summ in summary:
+            fmri_subj_dir = fmri_dir / f&#39;_subject_{summ[&#34;subject&#34;]}&#39;
+            mc_file = next(fmri_subj_dir.rglob(mc_type))
+            mc.append(genfromtxt(mc_file))
+        mc = array(mc)
+
+        for value_type in (&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;):
+
+            traces = [
+                go.Scatter(
+                    x=mc,
+                    y=summary[value_type],
+                    mode=&#39;markers&#39;,
+                    marker=dict(
+                        color=&#39;black&#39;,
+                        ),
+                    )
+                ]
+
+            layout = merge(
+                LAYOUT,
+                dict(
+                    margin=dict(
+                        t=30,
+                        ),
+                    height=230,
+                    width=200,
+                    showlegend=False,
+                    title=dict(
+                        text=mc_name + &#39; motion / &#39; + value_type.split(&#39;_&#39;)[0],
+                        ),
+                    xaxis=dict(
+                        rangemode=&#39;tozero&#39;,
+                        title=dict(
+                            text=&#39;head motions (mm)&#39;,
+                            ),
+                        ),
+                    yaxis=dict(
+                        rangemode=&#39;tozero&#39;,
+                        title=dict(
+                            text=value_type.split(&#39;_&#39;)[0],
+                            ),
+                        ),
+                    ),
+                )
+
+            fig = go.Figure(
+                data=traces,
+                layout=layout,
+                )
+            name = mc_type[:-4] + &#39;_&#39; + value_type
+            figs[name] = fig
+
+    return figs</code></pre>
+</details>
+</dd>
+<dt id="grvx.viz.revision.revision"><code class="name flex">
+<span>def <span class="ident">revision</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def revision(parameters):
+
+    plot_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;revision&#39;
+    try:
+        rmtree(plot_dir)
+    except OSError:
+        pass
+    plot_dir.mkdir(exist_ok=True, parents=True)
+
+    fig = timeseries_fmri(parameters)
+    fig.write_image(str(plot_dir / &#39;timeseries_fmri.svg&#39;))
+
+    fig = timeseries_ieeg(parameters)
+    fig.write_image(str(plot_dir / &#39;timeseries_ieeg.svg&#39;))
+
+    figs = headmotions(parameters)
+    for name, fig in figs.items():
+        fig.write_image(str(plot_dir / f&#39;{name}.svg&#39;))</code></pre>
+</details>
+</dd>
+<dt id="grvx.viz.revision.timeseries_fmri"><code class="name flex">
+<span>def <span class="ident">timeseries_fmri</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def timeseries_fmri(parameters):
+    fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39; / &#39;fmri&#39;
+    subject = parameters[&#39;plot&#39;][&#39;subject&#39;]
+    subject = &#39;delft&#39;
+    fmri_subj_dir = fmri_dir / f&#39;_subject_{subject}&#39;
+
+    regressor_file = next(fmri_subj_dir.rglob(&#39;design.mat&#39;))
+    thresh_file = next(fmri_subj_dir.rglob(&#39;thresh_zstat1.nii.gz&#39;))
+    timeseries_file = next(fmri_subj_dir.rglob(&#39;filtered_func_data.nii.gz&#39;))
+
+    subj_dir = parameters[&#39;paths&#39;][&#39;input&#39;] / f&#39;sub-{subject}&#39;
+    events_fmri_file = next(subj_dir.glob(&#39;ses-*/func/*_events.tsv&#39;))
+    events = read_tsv(events_fmri_file)
+
+    thresh = nload(thresh_file).get_fdata()
+    i_vox = thresh &gt;= THRESH
+    timeseries = nload(timeseries_file).get_fdata()
+    fmri = timeseries[i_vox]
+    t_fmri = arange(timeseries.shape[3]) * TR
+
+    regressor = genfromtxt(regressor_file, skip_header=5)
+
+    traces = [
+        go.Scatter(
+            x=t_fmri,
+            y=fmri.mean(axis=0),
+            line=dict(
+                color=&#39;black&#39;,
+                ),
+        ),
+        go.Scatter(
+            x=t_fmri,
+            y=regressor,
+            yaxis=&#39;y2&#39;,
+        ),
+        ]
+
+    layout = merge(
+        LAYOUT,
+        dict(
+            height=100,
+            width=450,
+            showlegend=False,
+            xaxis=dict(
+                tick0=0,
+                dtick=30,
+                range=(0, 270),
+                ),
+            yaxis=dict(
+                ),
+            yaxis2=dict(
+                overlaying=&#39;y&#39;,
+                side=&#39;right&#39;,
+                visible=False,
+                ),
+            shapes=event_shapes(events),
+            ),
+        )
+
+    fig = go.Figure(
+        data=traces,
+        layout=layout,
+        )
+
+    return fig</code></pre>
+</details>
+</dd>
+<dt id="grvx.viz.revision.timeseries_ieeg"><code class="name flex">
+<span>def <span class="ident">timeseries_ieeg</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def timeseries_ieeg(parameters):
+
+    ieeg_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39; / &#39;ieeg&#39;
+    subject = parameters[&#39;plot&#39;][&#39;subject&#39;]
+    freq = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;][-1]
+
+    ieeg_subj_dir = ieeg_dir / f&#39;_subject_{subject}&#39;
+
+    ieeg_compare_file = next(ieeg_subj_dir.glob(f&#39;_frequency_{freq[0]}.{freq[1]}/ecog_compare/sub-*_compare.tsv&#39;))
+    ieeg0_file = next(ieeg_subj_dir.rglob(&#39;*_task-motoractive_*_ieeg.pkl&#39;))
+    ieeg1_file = next(ieeg_subj_dir.rglob(&#39;*_task-motorbaseline_*_ieeg.pkl&#39;))
+
+    subj_dir = parameters[&#39;paths&#39;][&#39;input&#39;] / f&#39;sub-{subject}&#39;
+    events_ieeg_file = next(subj_dir.glob(&#39;ses-*/ieeg/*_events.tsv&#39;))
+
+    dat0 = compute_quick_spectrogram(ieeg0_file, freq)
+    dat1 = compute_quick_spectrogram(ieeg1_file, freq)
+
+    dat = dat0._copy()
+    dat.data = concat([dat0.data, dat1.data])
+    dat.axis[&#39;time&#39;] = concat([dat0.time, dat1.time])
+    dat.axis[&#39;chan&#39;] = concat([dat0.chan, dat1.chan])
+
+    dat = concatenate(dat, axis=&#39;time&#39;)
+
+    ieeg_compare = read_tsv(ieeg_compare_file)
+
+    chans = ieeg_compare[&#39;channel&#39;][ieeg_compare[&#39;measure&#39;] &gt; 10]
+    x0 = math(select(dat, chan=chans), operator_name=&#39;mean&#39;, axis=&#39;chan&#39;)
+
+    t = dat.time[0]
+    x = x0(trial=0)
+
+    i_t = argsort(t)
+
+    events = read_tsv(events_ieeg_file)
+    i_start = where(events[&#39;trial_type&#39;] == &#39;rest&#39;)[0][0]
+    offset = events[&#39;onset&#39;][i_start]
+    events[&#39;onset&#39;] -= offset
+
+    traces = [
+        go.Scatter(
+            x=t[i_t] - offset,
+            y=x[i_t],
+            line=dict(
+                color=&#39;black&#39;,
+            )
+        ),
+        ]
+
+    layout = merge(
+        LAYOUT,
+        dict(
+            height=100,
+            width=450,
+            xaxis=dict(
+                tick0=0,
+                dtick=30,
+                range=(0, 330),
+                ),
+            yaxis=dict(
+                dtick=0.1,
+                range=(0, 0.4),
+                ),
+            shapes=event_shapes(events),
+            ),
+        )
+
+    fig = go.Figure(data=traces, layout=layout)
+
+    return fig</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="grvx.viz" href="index.html">grvx.viz</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="grvx.viz.revision.compute_quick_spectrogram" href="#grvx.viz.revision.compute_quick_spectrogram">compute_quick_spectrogram</a></code></li>
+<li><code><a title="grvx.viz.revision.event_shapes" href="#grvx.viz.revision.event_shapes">event_shapes</a></code></li>
+<li><code><a title="grvx.viz.revision.headmotions" href="#grvx.viz.revision.headmotions">headmotions</a></code></li>
+<li><code><a title="grvx.viz.revision.revision" href="#grvx.viz.revision.revision">revision</a></code></li>
+<li><code><a title="grvx.viz.revision.timeseries_fmri" href="#grvx.viz.revision.timeseries_fmri">timeseries_fmri</a></code></li>
+<li><code><a title="grvx.viz.revision.timeseries_ieeg" href="#grvx.viz.revision.timeseries_ieeg">timeseries_ieeg</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

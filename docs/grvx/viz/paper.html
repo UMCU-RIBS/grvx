@@ -25,61 +25,38 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from shutil import rmtree
+from wonambi.attr import Freesurfer
+from bidso import Electrodes
+from bidso.utils import read_tsv
+import plotly.graph_objs as go
+from numpy import where, concatenate, mean
+from subprocess import run
 
+from .paths import get_path
+from .surfaces import AXIS, project_mri_to_surf
 from .gaussian import plot_gaussian
 from .scatter import plot_scatter
 from .smooth import plot_smooth, plot_gradient
 from .histogram import plot_histogram
-from .utils import merge
-
-LIGHT_COLOR = &#39;lightGray&#39;
-
-LAYOUT = dict(
-    paper_bgcolor=&#39;rgba(0,0,0,0)&#39;,
-    plot_bgcolor=&#39;rgba(0,0,0,0)&#39;,
-    margin=dict(
-        l=0,
-        t=0,
-        b=0,
-        r=0,
-        pad=0,
-        ),
-    xaxis=dict(
-        title=dict(
-            font=dict(
-                size=10,
-                ),
-            ),
-        linecolor=&#39;black&#39;,
-        gridcolor=LIGHT_COLOR,
-        tickfont=dict(
-            size=8,
-            ),
-        ),
-    yaxis=dict(
-        title=dict(
-            font=dict(
-                size=10,
-                ),
-            ),
-        linecolor=&#39;black&#39;,
-        gridcolor=LIGHT_COLOR,
-        tickfont=dict(
-            size=8,
-            ),
-        ),
-    )
+from .utils import merge, LAYOUT
+from .compare_freq import plot_freq_comparison
+from .revision import revision
 
 
 def plot_results(parameters):
 
+    # revision(parameters)
+
     plot_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;paper&#39;
+    &#34;&#34;&#34;
     try:
         rmtree(plot_dir)
     except OSError:
         pass
+    &#34;&#34;&#34;
     plot_dir.mkdir(exist_ok=True, parents=True)
 
+    &#34;&#34;&#34;
     fig = plot_gaussian()
     layout = dict(
         width=250,
@@ -88,72 +65,80 @@ def plot_results(parameters):
     fig.update_layout(merge(LAYOUT, layout))
     fig.write_image(str(plot_dir / &#39;gaussian.svg&#39;))
 
-    fig = paper_plot_scatter(parameters)
-    fig.write_image(str(plot_dir / &#39;scatter.svg&#39;))
+    for freq in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
 
-    fig = paper_plot_smooth(parameters)
-    fig.write_image(str(plot_dir / &#39;smooth.svg&#39;))
+        freq_dir = plot_dir / f&#34;frequency_{freq[0]}_{freq[1]}&#34;
+        freq_dir.mkdir(exist_ok=True, parents=True)
 
-    fig = paper_plot_gradient(parameters)
-    fig.write_image(str(plot_dir / &#39;gradient.svg&#39;))
+        fig = paper_plot_scatter(parameters, freq)
+        fig.write_image(str(freq_dir / &#39;scatter.svg&#39;))
 
-    figs = paper_plot_histogram(parameters)
-    for i, value_type in enumerate((&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;, &#39;size_at_concave&#39;)):
-        figs[i].write_image(str(plot_dir / f&#39;{value_type}.svg&#39;))
+        fig = paper_plot_smooth(parameters, freq)
+        fig.write_image(str(freq_dir / &#39;smooth.svg&#39;))
+
+        fig = paper_plot_gradient(parameters, freq)
+        fig.write_image(str(freq_dir / &#39;gradient.svg&#39;))
+
+        figs = paper_plot_histogram(parameters, freq)
+        for fig, value_type in zip(figs, (&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;, &#39;size_at_concave&#39;)):
+            fig.write_image(str(freq_dir / f&#39;{value_type}.svg&#39;))
+    &#34;&#34;&#34;
+
+    # TODO: this should be specified in parameters.json
+    freq = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;][-1]
+    freq_dir = plot_dir / f&#34;frequency_{freq[0]}_{freq[1]}&#34;
+    subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+    for subject in subjects:
+        fig = paper_miniplot_smooth(parameters, freq, subject)
+        fig.write_image(str(freq_dir / f&#39;{subject}_smooth.svg&#39;))
+
+        &#34;&#34;&#34;
+        fig = paper_plot_surf_ecog(parameters, freq, subject)
+        fig_name = str(freq_dir / f&#39;{subject}_surface_ecog.png&#39;)
+        fig.write_image(fig_name)
+        run([&#39;convert&#39;, fig_name, &#39;-trim&#39;, fig_name])
+
+        fig = paper_plot_surf_bold(parameters, subject)
+        fig_name = str(freq_dir / f&#39;{subject}_surface_bold.png&#39;)
+        fig.write_image(fig_name)
+        run([&#39;convert&#39;, fig_name, &#39;-trim&#39;, fig_name])
+        &#34;&#34;&#34;
+
+    figs = paper_plot_freq_comparison(parameters)
+    names = (
+        &#39;comparefreq_r2_at_peak&#39;,
+        &#39;comparefreq_size_at_peak&#39;,
+        &#39;comparefreq_size_at_concave&#39;,
+        )
+    for fig, name in zip(figs, names):
+        fig.write_image(str(plot_dir / f&#39;{name}.svg&#39;))
 
 
-def paper_plot_scatter(parameters):
+def paper_plot_scatter(parameters, freq):
 
-    fig = plot_scatter(parameters, [65, 95], parameters[&#39;plot&#39;][&#39;subject&#39;])
+    fig = plot_scatter(parameters, freq, parameters[&#39;plot&#39;][&#39;subject&#39;])
 
     layout = dict(
         width=500,
         height=200,
         xaxis=dict(
-            showline=False,
             showgrid=False,
+            showline=False,
+            zerolinewidth=0.5,
             title=dict(
                 text=&#39;ECoG (&lt;i&gt;z&lt;/i&gt;-statistics)&#39;,
                 standoff=4,
                 ),
             ),
         yaxis=dict(
-            showline=False,
             showgrid=False,
+            showline=False,
+            zerolinewidth=0.5,
             title=dict(
                 text=&#39;fMRI (&lt;i&gt;z&lt;/i&gt;-statistics)&#39;,
                 standoff=8,
                 ),
             ),
-        shapes=[
-            dict(
-                type=&#39;line&#39;,
-                x0=0,
-                x1=1,
-                xref=&#39;paper&#39;,
-                y0=0,
-                y1=0,
-                layer=&#39;below&#39;,
-                line=dict(
-                    width=2,
-                    color=&#39;gray&#39;,
-                ),
-            ),
-            dict(
-                type=&#39;line&#39;,
-                x0=0,
-                x1=0,
-                y0=0,
-                y1=1,
-                yref=&#39;paper&#39;,
-                layer=&#39;below&#39;,
-                line=dict(
-                    width=2,
-                    color=&#39;gray&#39;,
-                ),
-            )
-
-        ]
     )
 
     fig.update_layout(merge(LAYOUT, layout))
@@ -161,8 +146,46 @@ def paper_plot_scatter(parameters):
     return fig
 
 
-def paper_plot_smooth(parameters):
-    fig = plot_smooth(parameters, [65, 95], parameters[&#39;plot&#39;][&#39;subject&#39;])
+def paper_miniplot_smooth(parameters, freq, subject):
+    fig = plot_smooth(parameters, freq, subject)
+
+    layout = dict(
+        width=180,
+        height=150,
+        xaxis=dict(
+            showgrid=True,
+            showline=False,
+            zerolinewidth=0.5,
+            zeroline=True,
+            showticklabels=False,
+            title=dict(
+                text=&#39;&#39;,
+                standoff=0,
+                ),
+            ),
+        yaxis=dict(
+            showgrid=True,
+            showline=False,
+            zerolinewidth=0.5,
+            showticklabels=False,
+            zeroline=True,
+            range=(0, 0.7),
+            dtick=0.1,
+            tick0=0,
+            title=dict(
+                text=&#39;&#39;,
+                standoff=0,
+                ),
+            ),
+    )
+
+    fig.update_layout(merge(LAYOUT, layout))
+
+    return fig
+
+
+def paper_plot_smooth(parameters, freq):
+    fig = plot_smooth(parameters, freq, parameters[&#39;plot&#39;][&#39;subject&#39;])
 
     layout = dict(
         width=500,
@@ -187,8 +210,31 @@ def paper_plot_smooth(parameters):
     return fig
 
 
-def paper_plot_gradient(parameters):
-    fig = plot_gradient(parameters, [65, 95], parameters[&#39;plot&#39;][&#39;subject&#39;])
+def paper_plot_smooth_small(parameters, freq):
+    fig = plot_smooth(parameters, freq, parameters[&#39;plot&#39;][&#39;subject&#39;])
+
+    layout = dict(
+        width=500,
+        height=200,
+        xaxis=dict(
+            title=dict(
+                text=&#39;&#39;,
+                ),
+            ),
+        yaxis=dict(
+            title=dict(
+                text=&#39;&#39;,
+                ),
+            dtick=0.1,
+            ),
+        )
+
+    fig.update_layout(merge(LAYOUT, layout))
+
+    return fig
+
+def paper_plot_gradient(parameters, freq):
+    fig = plot_gradient(parameters, freq, parameters[&#39;plot&#39;][&#39;subject&#39;])
 
     layout = dict(
         width=500,
@@ -211,8 +257,8 @@ def paper_plot_gradient(parameters):
     return fig
 
 
-def paper_plot_histogram(parameters):
-    figs = plot_histogram(parameters, [65, 95])
+def paper_plot_histogram(parameters, freq):
+    figs = plot_histogram(parameters, freq)
 
     layout = dict(
         width=500,
@@ -247,7 +293,233 @@ def paper_plot_histogram(parameters):
         xaxis_title = dict(xaxis=dict(title=dict(text=xaxis)))
         figs[i] = figs[i].update_layout(merge(layout, xaxis_title))
 
-    return figs</code></pre>
+    return figs
+
+
+def paper_plot_freq_comparison(parameters):
+    figs = plot_freq_comparison(parameters)
+
+    layout = dict(
+        title=dict(
+            text=&#39;&#39;,
+            ),
+        width=300,
+        height=300,
+        )
+
+    layout = merge(LAYOUT, layout)
+    figs = [fig.update_layout(layout) for fig in figs]
+
+    figs[3] = figs[3].update_layout(
+        dict(
+            xaxis=dict(
+                showgrid=False,
+            ),
+            yaxis=dict(
+                showgrid=False,
+            ),
+        ))
+
+    return figs
+
+
+def paper_plot_surf_ecog(parameters, frequency_band, subject):
+
+    elec_file = get_path(parameters, &#39;elec&#39;, subject=subject)
+    ieeg_file = get_path(parameters, &#39;ieeg_tsv&#39;, frequency_band=frequency_band, subject=subject)
+    freesurfer_dir = parameters[&#39;paths&#39;][&#39;freesurfer_subjects_dir&#39;] / f&#39;sub-{subject}&#39;
+
+    compare_ieeg = read_tsv(ieeg_file)
+    fs = Freesurfer(freesurfer_dir)
+    electrodes = Electrodes(elec_file)
+
+    elec = electrodes.electrodes.tsv
+    all_elec = []
+    labels = []
+    for chan in compare_ieeg:
+        i_chan = where(elec[&#39;name&#39;] == chan[&#39;channel&#39;])[0]
+        all_elec.append(elec[i_chan])
+        labels.append(f&#34;{chan[&#39;channel&#39;]} = {chan[&#39;measure&#39;]:0.3f}&#34;)
+
+    elec = concatenate(all_elec)
+
+    if mean(elec[&#39;x&#39;]) &gt; 0:
+        right_or_left = 1
+        hemi = &#39;rh&#39;
+    else:
+        right_or_left = -1
+        hemi = &#39;lh&#39;
+
+    fs = Freesurfer(freesurfer_dir)
+    pial = getattr(fs.read_brain(), hemi)
+
+    vert = pial.vert + fs.surface_ras_shift
+
+    colorscale = &#39;balance&#39;
+
+    traces = [
+        go.Scatter3d(
+            x=elec[&#39;x&#39;] + right_or_left,
+            y=elec[&#39;y&#39;],
+            z=elec[&#39;z&#39;] + 1,
+            text=labels,
+            mode=&#39;markers&#39;,
+            hoverinfo=&#39;text&#39;,
+            marker=dict(
+                size=5,
+                color=compare_ieeg[&#39;measure&#39;],
+                colorscale=colorscale,
+                showscale=False,
+                cmin=-10,
+                cmax=10,
+                colorbar=dict(
+                    title=&#39;electrodes&#39;,
+                    titleside=&#34;top&#34;,
+                    ticks=&#34;outside&#34;,
+                    ticklabelposition=&#34;outside&#34;,
+                    x=0,
+                    ),
+            ),
+        ),
+        go.Mesh3d(
+            x=vert[:, 0],
+            y=vert[:, 1],
+            z=vert[:, 2],
+            i=pial.tri[:, 0],
+            j=pial.tri[:, 1],
+            k=pial.tri[:, 2],
+            color=&#39;gray&#39;,
+            hoverinfo=&#39;skip&#39;,
+            flatshading=False,
+            lighting=dict(
+                ambient=0.18,
+                diffuse=1,
+                fresnel=0.1,
+                specular=1,
+                roughness=0.1,
+                ),
+            lightposition=dict(
+                x=0,
+                y=0,
+                z=-1,
+                ),
+            ),
+        ]
+
+    fig = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            scene=dict(
+                xaxis=AXIS,
+                yaxis=AXIS,
+                zaxis=AXIS,
+                camera=dict(
+                    eye=dict(
+                        x=right_or_left,
+                        y=0,
+                        z=1,
+                    ),
+                    projection=dict(
+                        type=&#39;orthographic&#39;,
+                    ),
+                    ),
+                ),
+            ),
+        )
+
+    return fig
+
+
+def paper_plot_surf_bold(parameters, subject):
+
+    elec_file = get_path(parameters, &#39;elec&#39;, subject=subject)
+    fmri_file = get_path(parameters, &#39;fmri_nii&#39;, subject=subject)
+
+    freesurfer_dir = parameters[&#39;paths&#39;][&#39;freesurfer_subjects_dir&#39;] / f&#39;sub-{subject}&#39;
+
+    fs = Freesurfer(freesurfer_dir)
+    electrodes = Electrodes(elec_file)
+
+    elec = electrodes.electrodes.tsv
+
+    if mean(elec[&#39;x&#39;]) &gt; 0:
+        right_or_left = 1
+        hemi = &#39;rh&#39;
+    else:
+        right_or_left = -1
+        hemi = &#39;lh&#39;
+
+    fs = Freesurfer(freesurfer_dir)
+    pial = getattr(fs.read_brain(), hemi)
+
+    vert = pial.vert + fs.surface_ras_shift
+    fmri_vals = project_mri_to_surf(fmri_file, vert, parameters[&#39;plot&#39;][&#39;surface&#39;][&#39;kernel&#39;])
+
+    colorscale = &#39;balance&#39;
+
+    traces = [
+        go.Scatter3d(
+            x=elec[&#39;x&#39;] + right_or_left,
+            y=elec[&#39;y&#39;],
+            z=elec[&#39;z&#39;] + 1,
+            mode=&#39;markers&#39;,
+            hoverinfo=&#39;text&#39;,
+            marker=dict(
+                size=5,
+                color=&#39;black&#39;,
+            ),
+        ),
+        go.Mesh3d(
+            x=vert[:, 0],
+            y=vert[:, 1],
+            z=vert[:, 2],
+            i=pial.tri[:, 0],
+            j=pial.tri[:, 1],
+            k=pial.tri[:, 2],
+            intensity=fmri_vals,
+            cmax=4,
+            cmin=-4,
+            colorscale=colorscale,
+            hoverinfo=&#39;skip&#39;,
+            flatshading=False,
+            showscale=False,
+            lighting=dict(
+                ambient=0.18,
+                diffuse=1,
+                fresnel=0.1,
+                specular=1,
+                roughness=0.1,
+                ),
+            lightposition=dict(
+                x=0,
+                y=0,
+                z=-1,
+                ),
+            ),
+        ]
+
+    fig = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            scene=dict(
+                xaxis=AXIS,
+                yaxis=AXIS,
+                zaxis=AXIS,
+                camera=dict(
+                    eye=dict(
+                        x=right_or_left,
+                        y=0,
+                        z=1,
+                    ),
+                    projection=dict(
+                        type=&#39;orthographic&#39;,
+                    ),
+                    ),
+                ),
+            ),
+        )
+
+    return fig</code></pre>
 </details>
 </section>
 <section>
@@ -257,8 +529,8 @@ def paper_plot_histogram(parameters):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="grvx.viz.paper.paper_plot_gradient"><code class="name flex">
-<span>def <span class="ident">paper_plot_gradient</span></span>(<span>parameters)</span>
+<dt id="grvx.viz.paper.paper_miniplot_smooth"><code class="name flex">
+<span>def <span class="ident">paper_miniplot_smooth</span></span>(<span>parameters, freq, subject)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -266,8 +538,91 @@ def paper_plot_histogram(parameters):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def paper_plot_gradient(parameters):
-    fig = plot_gradient(parameters, [65, 95], parameters[&#39;plot&#39;][&#39;subject&#39;])
+<pre><code class="python">def paper_miniplot_smooth(parameters, freq, subject):
+    fig = plot_smooth(parameters, freq, subject)
+
+    layout = dict(
+        width=180,
+        height=150,
+        xaxis=dict(
+            showgrid=True,
+            showline=False,
+            zerolinewidth=0.5,
+            zeroline=True,
+            showticklabels=False,
+            title=dict(
+                text=&#39;&#39;,
+                standoff=0,
+                ),
+            ),
+        yaxis=dict(
+            showgrid=True,
+            showline=False,
+            zerolinewidth=0.5,
+            showticklabels=False,
+            zeroline=True,
+            range=(0, 0.7),
+            dtick=0.1,
+            tick0=0,
+            title=dict(
+                text=&#39;&#39;,
+                standoff=0,
+                ),
+            ),
+    )
+
+    fig.update_layout(merge(LAYOUT, layout))
+
+    return fig</code></pre>
+</details>
+</dd>
+<dt id="grvx.viz.paper.paper_plot_freq_comparison"><code class="name flex">
+<span>def <span class="ident">paper_plot_freq_comparison</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def paper_plot_freq_comparison(parameters):
+    figs = plot_freq_comparison(parameters)
+
+    layout = dict(
+        title=dict(
+            text=&#39;&#39;,
+            ),
+        width=300,
+        height=300,
+        )
+
+    layout = merge(LAYOUT, layout)
+    figs = [fig.update_layout(layout) for fig in figs]
+
+    figs[3] = figs[3].update_layout(
+        dict(
+            xaxis=dict(
+                showgrid=False,
+            ),
+            yaxis=dict(
+                showgrid=False,
+            ),
+        ))
+
+    return figs</code></pre>
+</details>
+</dd>
+<dt id="grvx.viz.paper.paper_plot_gradient"><code class="name flex">
+<span>def <span class="ident">paper_plot_gradient</span></span>(<span>parameters, freq)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def paper_plot_gradient(parameters, freq):
+    fig = plot_gradient(parameters, freq, parameters[&#39;plot&#39;][&#39;subject&#39;])
 
     layout = dict(
         width=500,
@@ -291,7 +646,7 @@ def paper_plot_histogram(parameters):
 </details>
 </dd>
 <dt id="grvx.viz.paper.paper_plot_histogram"><code class="name flex">
-<span>def <span class="ident">paper_plot_histogram</span></span>(<span>parameters)</span>
+<span>def <span class="ident">paper_plot_histogram</span></span>(<span>parameters, freq)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -299,8 +654,8 @@ def paper_plot_histogram(parameters):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def paper_plot_histogram(parameters):
-    figs = plot_histogram(parameters, [65, 95])
+<pre><code class="python">def paper_plot_histogram(parameters, freq):
+    figs = plot_histogram(parameters, freq)
 
     layout = dict(
         width=500,
@@ -339,7 +694,7 @@ def paper_plot_histogram(parameters):
 </details>
 </dd>
 <dt id="grvx.viz.paper.paper_plot_scatter"><code class="name flex">
-<span>def <span class="ident">paper_plot_scatter</span></span>(<span>parameters)</span>
+<span>def <span class="ident">paper_plot_scatter</span></span>(<span>parameters, freq)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -347,58 +702,31 @@ def paper_plot_histogram(parameters):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def paper_plot_scatter(parameters):
+<pre><code class="python">def paper_plot_scatter(parameters, freq):
 
-    fig = plot_scatter(parameters, [65, 95], parameters[&#39;plot&#39;][&#39;subject&#39;])
+    fig = plot_scatter(parameters, freq, parameters[&#39;plot&#39;][&#39;subject&#39;])
 
     layout = dict(
         width=500,
         height=200,
         xaxis=dict(
-            showline=False,
             showgrid=False,
+            showline=False,
+            zerolinewidth=0.5,
             title=dict(
                 text=&#39;ECoG (&lt;i&gt;z&lt;/i&gt;-statistics)&#39;,
                 standoff=4,
                 ),
             ),
         yaxis=dict(
-            showline=False,
             showgrid=False,
+            showline=False,
+            zerolinewidth=0.5,
             title=dict(
                 text=&#39;fMRI (&lt;i&gt;z&lt;/i&gt;-statistics)&#39;,
                 standoff=8,
                 ),
             ),
-        shapes=[
-            dict(
-                type=&#39;line&#39;,
-                x0=0,
-                x1=1,
-                xref=&#39;paper&#39;,
-                y0=0,
-                y1=0,
-                layer=&#39;below&#39;,
-                line=dict(
-                    width=2,
-                    color=&#39;gray&#39;,
-                ),
-            ),
-            dict(
-                type=&#39;line&#39;,
-                x0=0,
-                x1=0,
-                y0=0,
-                y1=1,
-                yref=&#39;paper&#39;,
-                layer=&#39;below&#39;,
-                line=dict(
-                    width=2,
-                    color=&#39;gray&#39;,
-                ),
-            )
-
-        ]
     )
 
     fig.update_layout(merge(LAYOUT, layout))
@@ -407,7 +735,7 @@ def paper_plot_histogram(parameters):
 </details>
 </dd>
 <dt id="grvx.viz.paper.paper_plot_smooth"><code class="name flex">
-<span>def <span class="ident">paper_plot_smooth</span></span>(<span>parameters)</span>
+<span>def <span class="ident">paper_plot_smooth</span></span>(<span>parameters, freq)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -415,8 +743,8 @@ def paper_plot_histogram(parameters):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def paper_plot_smooth(parameters):
-    fig = plot_smooth(parameters, [65, 95], parameters[&#39;plot&#39;][&#39;subject&#39;])
+<pre><code class="python">def paper_plot_smooth(parameters, freq):
+    fig = plot_smooth(parameters, freq, parameters[&#39;plot&#39;][&#39;subject&#39;])
 
     layout = dict(
         width=500,
@@ -441,6 +769,256 @@ def paper_plot_histogram(parameters):
     return fig</code></pre>
 </details>
 </dd>
+<dt id="grvx.viz.paper.paper_plot_smooth_small"><code class="name flex">
+<span>def <span class="ident">paper_plot_smooth_small</span></span>(<span>parameters, freq)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def paper_plot_smooth_small(parameters, freq):
+    fig = plot_smooth(parameters, freq, parameters[&#39;plot&#39;][&#39;subject&#39;])
+
+    layout = dict(
+        width=500,
+        height=200,
+        xaxis=dict(
+            title=dict(
+                text=&#39;&#39;,
+                ),
+            ),
+        yaxis=dict(
+            title=dict(
+                text=&#39;&#39;,
+                ),
+            dtick=0.1,
+            ),
+        )
+
+    fig.update_layout(merge(LAYOUT, layout))
+
+    return fig</code></pre>
+</details>
+</dd>
+<dt id="grvx.viz.paper.paper_plot_surf_bold"><code class="name flex">
+<span>def <span class="ident">paper_plot_surf_bold</span></span>(<span>parameters, subject)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def paper_plot_surf_bold(parameters, subject):
+
+    elec_file = get_path(parameters, &#39;elec&#39;, subject=subject)
+    fmri_file = get_path(parameters, &#39;fmri_nii&#39;, subject=subject)
+
+    freesurfer_dir = parameters[&#39;paths&#39;][&#39;freesurfer_subjects_dir&#39;] / f&#39;sub-{subject}&#39;
+
+    fs = Freesurfer(freesurfer_dir)
+    electrodes = Electrodes(elec_file)
+
+    elec = electrodes.electrodes.tsv
+
+    if mean(elec[&#39;x&#39;]) &gt; 0:
+        right_or_left = 1
+        hemi = &#39;rh&#39;
+    else:
+        right_or_left = -1
+        hemi = &#39;lh&#39;
+
+    fs = Freesurfer(freesurfer_dir)
+    pial = getattr(fs.read_brain(), hemi)
+
+    vert = pial.vert + fs.surface_ras_shift
+    fmri_vals = project_mri_to_surf(fmri_file, vert, parameters[&#39;plot&#39;][&#39;surface&#39;][&#39;kernel&#39;])
+
+    colorscale = &#39;balance&#39;
+
+    traces = [
+        go.Scatter3d(
+            x=elec[&#39;x&#39;] + right_or_left,
+            y=elec[&#39;y&#39;],
+            z=elec[&#39;z&#39;] + 1,
+            mode=&#39;markers&#39;,
+            hoverinfo=&#39;text&#39;,
+            marker=dict(
+                size=5,
+                color=&#39;black&#39;,
+            ),
+        ),
+        go.Mesh3d(
+            x=vert[:, 0],
+            y=vert[:, 1],
+            z=vert[:, 2],
+            i=pial.tri[:, 0],
+            j=pial.tri[:, 1],
+            k=pial.tri[:, 2],
+            intensity=fmri_vals,
+            cmax=4,
+            cmin=-4,
+            colorscale=colorscale,
+            hoverinfo=&#39;skip&#39;,
+            flatshading=False,
+            showscale=False,
+            lighting=dict(
+                ambient=0.18,
+                diffuse=1,
+                fresnel=0.1,
+                specular=1,
+                roughness=0.1,
+                ),
+            lightposition=dict(
+                x=0,
+                y=0,
+                z=-1,
+                ),
+            ),
+        ]
+
+    fig = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            scene=dict(
+                xaxis=AXIS,
+                yaxis=AXIS,
+                zaxis=AXIS,
+                camera=dict(
+                    eye=dict(
+                        x=right_or_left,
+                        y=0,
+                        z=1,
+                    ),
+                    projection=dict(
+                        type=&#39;orthographic&#39;,
+                    ),
+                    ),
+                ),
+            ),
+        )
+
+    return fig</code></pre>
+</details>
+</dd>
+<dt id="grvx.viz.paper.paper_plot_surf_ecog"><code class="name flex">
+<span>def <span class="ident">paper_plot_surf_ecog</span></span>(<span>parameters, frequency_band, subject)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def paper_plot_surf_ecog(parameters, frequency_band, subject):
+
+    elec_file = get_path(parameters, &#39;elec&#39;, subject=subject)
+    ieeg_file = get_path(parameters, &#39;ieeg_tsv&#39;, frequency_band=frequency_band, subject=subject)
+    freesurfer_dir = parameters[&#39;paths&#39;][&#39;freesurfer_subjects_dir&#39;] / f&#39;sub-{subject}&#39;
+
+    compare_ieeg = read_tsv(ieeg_file)
+    fs = Freesurfer(freesurfer_dir)
+    electrodes = Electrodes(elec_file)
+
+    elec = electrodes.electrodes.tsv
+    all_elec = []
+    labels = []
+    for chan in compare_ieeg:
+        i_chan = where(elec[&#39;name&#39;] == chan[&#39;channel&#39;])[0]
+        all_elec.append(elec[i_chan])
+        labels.append(f&#34;{chan[&#39;channel&#39;]} = {chan[&#39;measure&#39;]:0.3f}&#34;)
+
+    elec = concatenate(all_elec)
+
+    if mean(elec[&#39;x&#39;]) &gt; 0:
+        right_or_left = 1
+        hemi = &#39;rh&#39;
+    else:
+        right_or_left = -1
+        hemi = &#39;lh&#39;
+
+    fs = Freesurfer(freesurfer_dir)
+    pial = getattr(fs.read_brain(), hemi)
+
+    vert = pial.vert + fs.surface_ras_shift
+
+    colorscale = &#39;balance&#39;
+
+    traces = [
+        go.Scatter3d(
+            x=elec[&#39;x&#39;] + right_or_left,
+            y=elec[&#39;y&#39;],
+            z=elec[&#39;z&#39;] + 1,
+            text=labels,
+            mode=&#39;markers&#39;,
+            hoverinfo=&#39;text&#39;,
+            marker=dict(
+                size=5,
+                color=compare_ieeg[&#39;measure&#39;],
+                colorscale=colorscale,
+                showscale=False,
+                cmin=-10,
+                cmax=10,
+                colorbar=dict(
+                    title=&#39;electrodes&#39;,
+                    titleside=&#34;top&#34;,
+                    ticks=&#34;outside&#34;,
+                    ticklabelposition=&#34;outside&#34;,
+                    x=0,
+                    ),
+            ),
+        ),
+        go.Mesh3d(
+            x=vert[:, 0],
+            y=vert[:, 1],
+            z=vert[:, 2],
+            i=pial.tri[:, 0],
+            j=pial.tri[:, 1],
+            k=pial.tri[:, 2],
+            color=&#39;gray&#39;,
+            hoverinfo=&#39;skip&#39;,
+            flatshading=False,
+            lighting=dict(
+                ambient=0.18,
+                diffuse=1,
+                fresnel=0.1,
+                specular=1,
+                roughness=0.1,
+                ),
+            lightposition=dict(
+                x=0,
+                y=0,
+                z=-1,
+                ),
+            ),
+        ]
+
+    fig = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            scene=dict(
+                xaxis=AXIS,
+                yaxis=AXIS,
+                zaxis=AXIS,
+                camera=dict(
+                    eye=dict(
+                        x=right_or_left,
+                        y=0,
+                        z=1,
+                    ),
+                    projection=dict(
+                        type=&#39;orthographic&#39;,
+                    ),
+                    ),
+                ),
+            ),
+        )
+
+    return fig</code></pre>
+</details>
+</dd>
 <dt id="grvx.viz.paper.plot_results"><code class="name flex">
 <span>def <span class="ident">plot_results</span></span>(<span>parameters)</span>
 </code></dt>
@@ -452,13 +1030,18 @@ def paper_plot_histogram(parameters):
 </summary>
 <pre><code class="python">def plot_results(parameters):
 
+    # revision(parameters)
+
     plot_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;paper&#39;
+    &#34;&#34;&#34;
     try:
         rmtree(plot_dir)
     except OSError:
         pass
+    &#34;&#34;&#34;
     plot_dir.mkdir(exist_ok=True, parents=True)
 
+    &#34;&#34;&#34;
     fig = plot_gaussian()
     layout = dict(
         width=250,
@@ -467,18 +1050,53 @@ def paper_plot_histogram(parameters):
     fig.update_layout(merge(LAYOUT, layout))
     fig.write_image(str(plot_dir / &#39;gaussian.svg&#39;))
 
-    fig = paper_plot_scatter(parameters)
-    fig.write_image(str(plot_dir / &#39;scatter.svg&#39;))
+    for freq in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
 
-    fig = paper_plot_smooth(parameters)
-    fig.write_image(str(plot_dir / &#39;smooth.svg&#39;))
+        freq_dir = plot_dir / f&#34;frequency_{freq[0]}_{freq[1]}&#34;
+        freq_dir.mkdir(exist_ok=True, parents=True)
 
-    fig = paper_plot_gradient(parameters)
-    fig.write_image(str(plot_dir / &#39;gradient.svg&#39;))
+        fig = paper_plot_scatter(parameters, freq)
+        fig.write_image(str(freq_dir / &#39;scatter.svg&#39;))
 
-    figs = paper_plot_histogram(parameters)
-    for i, value_type in enumerate((&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;, &#39;size_at_concave&#39;)):
-        figs[i].write_image(str(plot_dir / f&#39;{value_type}.svg&#39;))</code></pre>
+        fig = paper_plot_smooth(parameters, freq)
+        fig.write_image(str(freq_dir / &#39;smooth.svg&#39;))
+
+        fig = paper_plot_gradient(parameters, freq)
+        fig.write_image(str(freq_dir / &#39;gradient.svg&#39;))
+
+        figs = paper_plot_histogram(parameters, freq)
+        for fig, value_type in zip(figs, (&#39;r2_at_peak&#39;, &#39;size_at_peak&#39;, &#39;size_at_concave&#39;)):
+            fig.write_image(str(freq_dir / f&#39;{value_type}.svg&#39;))
+    &#34;&#34;&#34;
+
+    # TODO: this should be specified in parameters.json
+    freq = parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;][-1]
+    freq_dir = plot_dir / f&#34;frequency_{freq[0]}_{freq[1]}&#34;
+    subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
+    for subject in subjects:
+        fig = paper_miniplot_smooth(parameters, freq, subject)
+        fig.write_image(str(freq_dir / f&#39;{subject}_smooth.svg&#39;))
+
+        &#34;&#34;&#34;
+        fig = paper_plot_surf_ecog(parameters, freq, subject)
+        fig_name = str(freq_dir / f&#39;{subject}_surface_ecog.png&#39;)
+        fig.write_image(fig_name)
+        run([&#39;convert&#39;, fig_name, &#39;-trim&#39;, fig_name])
+
+        fig = paper_plot_surf_bold(parameters, subject)
+        fig_name = str(freq_dir / f&#39;{subject}_surface_bold.png&#39;)
+        fig.write_image(fig_name)
+        run([&#39;convert&#39;, fig_name, &#39;-trim&#39;, fig_name])
+        &#34;&#34;&#34;
+
+    figs = paper_plot_freq_comparison(parameters)
+    names = (
+        &#39;comparefreq_r2_at_peak&#39;,
+        &#39;comparefreq_size_at_peak&#39;,
+        &#39;comparefreq_size_at_concave&#39;,
+        )
+    for fig, name in zip(figs, names):
+        fig.write_image(str(plot_dir / f&#39;{name}.svg&#39;))</code></pre>
 </details>
 </dd>
 </dl>
@@ -499,10 +1117,15 @@ def paper_plot_histogram(parameters):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="grvx.viz.paper.paper_miniplot_smooth" href="#grvx.viz.paper.paper_miniplot_smooth">paper_miniplot_smooth</a></code></li>
+<li><code><a title="grvx.viz.paper.paper_plot_freq_comparison" href="#grvx.viz.paper.paper_plot_freq_comparison">paper_plot_freq_comparison</a></code></li>
 <li><code><a title="grvx.viz.paper.paper_plot_gradient" href="#grvx.viz.paper.paper_plot_gradient">paper_plot_gradient</a></code></li>
 <li><code><a title="grvx.viz.paper.paper_plot_histogram" href="#grvx.viz.paper.paper_plot_histogram">paper_plot_histogram</a></code></li>
 <li><code><a title="grvx.viz.paper.paper_plot_scatter" href="#grvx.viz.paper.paper_plot_scatter">paper_plot_scatter</a></code></li>
 <li><code><a title="grvx.viz.paper.paper_plot_smooth" href="#grvx.viz.paper.paper_plot_smooth">paper_plot_smooth</a></code></li>
+<li><code><a title="grvx.viz.paper.paper_plot_smooth_small" href="#grvx.viz.paper.paper_plot_smooth_small">paper_plot_smooth_small</a></code></li>
+<li><code><a title="grvx.viz.paper.paper_plot_surf_bold" href="#grvx.viz.paper.paper_plot_surf_bold">paper_plot_surf_bold</a></code></li>
+<li><code><a title="grvx.viz.paper.paper_plot_surf_ecog" href="#grvx.viz.paper.paper_plot_surf_ecog">paper_plot_surf_ecog</a></code></li>
 <li><code><a title="grvx.viz.paper.plot_results" href="#grvx.viz.paper.plot_results">plot_results</a></code></li>
 </ul>
 </li>

@@ -24,8 +24,13 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># from .pipeline import plot_results
-from .paper import plot_results</code></pre>
+<pre><code class="python">from .pipeline import plot_results as plot_pipeline
+from .paper import plot_results as plot_paper
+
+
+def plot_results(parameters):
+    plot_paper(parameters)
+    # plot_pipeline(parameters)</code></pre>
 </details>
 </section>
 <section>
@@ -63,6 +68,10 @@ from .paper import plot_results</code></pre>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="grvx.viz.revision" href="revision.html">grvx.viz.revision</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="grvx.viz.scatter" href="scatter.html">grvx.viz.scatter</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -84,6 +93,22 @@ from .paper import plot_results</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="grvx.viz.plot_results"><code class="name flex">
+<span>def <span class="ident">plot_results</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_results(parameters):
+    plot_paper(parameters)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -109,10 +134,16 @@ from .paper import plot_results</code></pre>
 <li><code><a title="grvx.viz.paper" href="paper.html">grvx.viz.paper</a></code></li>
 <li><code><a title="grvx.viz.paths" href="paths.html">grvx.viz.paths</a></code></li>
 <li><code><a title="grvx.viz.pipeline" href="pipeline.html">grvx.viz.pipeline</a></code></li>
+<li><code><a title="grvx.viz.revision" href="revision.html">grvx.viz.revision</a></code></li>
 <li><code><a title="grvx.viz.scatter" href="scatter.html">grvx.viz.scatter</a></code></li>
 <li><code><a title="grvx.viz.smooth" href="smooth.html">grvx.viz.smooth</a></code></li>
 <li><code><a title="grvx.viz.surfaces" href="surfaces.html">grvx.viz.surfaces</a></code></li>
 <li><code><a title="grvx.viz.utils" href="utils.html">grvx.viz.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="grvx.viz.plot_results" href="#grvx.viz.plot_results">plot_results</a></code></li>
 </ul>
 </li>
 </ul>

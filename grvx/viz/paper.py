@@ -19,17 +19,18 @@ from .revision import revision
 
 def plot_results(parameters):
 
-    revision(parameters)
-
-    return
+    # revision(parameters)
 
     plot_dir = parameters['paths']['output'] / 'paper'
+    """
     try:
         rmtree(plot_dir)
     except OSError:
         pass
+    """
     plot_dir.mkdir(exist_ok=True, parents=True)
 
+    """
     fig = plot_gaussian()
     layout = dict(
         width=250,
@@ -55,14 +56,17 @@ def plot_results(parameters):
         figs = paper_plot_histogram(parameters, freq)
         for fig, value_type in zip(figs, ('r2_at_peak', 'size_at_peak', 'size_at_concave')):
             fig.write_image(str(freq_dir / f'{value_type}.svg'))
+    """
 
     # TODO: this should be specified in parameters.json
     freq = parameters['ieeg']['ecog_compare']['frequency_bands'][-1]
+    freq_dir = plot_dir / f"frequency_{freq[0]}_{freq[1]}"
     subjects = [x.stem[4:] for x in parameters['paths']['input'].glob('sub-*')]
     for subject in subjects:
-        fig = plot_smooth(parameters, freq, subject)
+        fig = paper_miniplot_smooth(parameters, freq, subject)
         fig.write_image(str(freq_dir / f'{subject}_smooth.svg'))
 
+        """
         fig = paper_plot_surf_ecog(parameters, freq, subject)
         fig_name = str(freq_dir / f'{subject}_surface_ecog.png')
         fig.write_image(fig_name)
@@ -72,6 +76,7 @@ def plot_results(parameters):
         fig_name = str(freq_dir / f'{subject}_surface_bold.png')
         fig.write_image(fig_name)
         run(['convert', fig_name, '-trim', fig_name])
+        """
 
     figs = paper_plot_freq_comparison(parameters)
     names = (
@@ -91,50 +96,61 @@ def paper_plot_scatter(parameters, freq):
         width=500,
         height=200,
         xaxis=dict(
-            showline=False,
             showgrid=False,
+            showline=False,
+            zerolinewidth=0.5,
             title=dict(
                 text='ECoG (<i>z</i>-statistics)',
                 standoff=4,
                 ),
             ),
         yaxis=dict(
-            showline=False,
             showgrid=False,
+            showline=False,
+            zerolinewidth=0.5,
             title=dict(
                 text='fMRI (<i>z</i>-statistics)',
                 standoff=8,
                 ),
             ),
-        shapes=[
-            dict(
-                type='line',
-                x0=0,
-                x1=1,
-                xref='paper',
-                y0=0,
-                y1=0,
-                layer='below',
-                line=dict(
-                    width=2,
-                    color='gray',
+    )
+
+    fig.update_layout(merge(LAYOUT, layout))
+
+    return fig
+
+
+def paper_miniplot_smooth(parameters, freq, subject):
+    fig = plot_smooth(parameters, freq, subject)
+
+    layout = dict(
+        width=180,
+        height=150,
+        xaxis=dict(
+            showgrid=True,
+            showline=False,
+            zerolinewidth=0.5,
+            zeroline=True,
+            showticklabels=False,
+            title=dict(
+                text='',
+                standoff=0,
                 ),
             ),
-            dict(
-                type='line',
-                x0=0,
-                x1=0,
-                y0=0,
-                y1=1,
-                yref='paper',
-                layer='below',
-                line=dict(
-                    width=2,
-                    color='gray',
+        yaxis=dict(
+            showgrid=True,
+            showline=False,
+            zerolinewidth=0.5,
+            showticklabels=False,
+            zeroline=True,
+            range=(0, 0.7),
+            dtick=0.1,
+            tick0=0,
+            title=dict(
+                text='',
+                standoff=0,
                 ),
-            )
-
-        ]
+            ),
     )
 
     fig.update_layout(merge(LAYOUT, layout))

@@ -47,12 +47,12 @@ def plot_results(parameters):
     plot_dir.mkdir(exist_ok=True, parents=True)
 
     subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
-    # subjects = set(subjects) - {&#39;ommen&#39;, &#39;vledder&#39;, &#39;arnhem&#39;, &#39;boxtel&#39;}
 
     fig = plot_gaussian()
     to_html([to_div(fig), ], plot_dir / &#39;gaussian.html&#39;)
 
-    divs = plot_freq_comparison(parameters)
+    figs = plot_freq_comparison(parameters)
+    divs = [to_div(fig) for fig in figs]
     to_html(divs, plot_dir / &#39;compare_frequencies.html&#39;)
 
     for subject in subjects:
@@ -73,7 +73,7 @@ def plot_results(parameters):
 
             fig = plot_scatter(parameters, frequency_band, subject)
             if fig is not None:
-                divs.append(fig)
+                divs.append(to_div(fig))
 
             fig = plot_smooth(parameters, frequency_band, subject)
             if fig is not None:
@@ -120,12 +120,12 @@ def plot_results(parameters):
     plot_dir.mkdir(exist_ok=True, parents=True)
 
     subjects = [x.stem[4:] for x in parameters[&#39;paths&#39;][&#39;input&#39;].glob(&#39;sub-*&#39;)]
-    # subjects = set(subjects) - {&#39;ommen&#39;, &#39;vledder&#39;, &#39;arnhem&#39;, &#39;boxtel&#39;}
 
     fig = plot_gaussian()
     to_html([to_div(fig), ], plot_dir / &#39;gaussian.html&#39;)
 
-    divs = plot_freq_comparison(parameters)
+    figs = plot_freq_comparison(parameters)
+    divs = [to_div(fig) for fig in figs]
     to_html(divs, plot_dir / &#39;compare_frequencies.html&#39;)
 
     for subject in subjects:
@@ -146,7 +146,7 @@ def plot_results(parameters):
 
             fig = plot_scatter(parameters, frequency_band, subject)
             if fig is not None:
-                divs.append(fig)
+                divs.append(to_div(fig))
 
             fig = plot_smooth(parameters, frequency_band, subject)
             if fig is not None:

@@ -21,31 +21,33 @@ LAYOUT = dict(
         ),
     title=dict(
         font=dict(
-            size=12,
+            size=14,
             ),
         ),
     xaxis=dict(
         title=dict(
             font=dict(
-                size=12,
+                size=14,
                 ),
             ),
+        zerolinecolor='black',
         linecolor='black',
         gridcolor=LIGHT_COLOR,
         tickfont=dict(
-            size=10,
+            size=11,
             ),
         ),
     yaxis=dict(
         title=dict(
             font=dict(
-                size=12,
+                size=14,
                 ),
             ),
+        zerolinecolor='black',
         linecolor='black',
         gridcolor=LIGHT_COLOR,
         tickfont=dict(
-            size=10,
+            size=11,
             ),
         ),
     )

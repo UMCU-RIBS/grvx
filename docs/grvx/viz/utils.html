@@ -33,6 +33,52 @@ from plotly.offline import plot, get_plotlyjs
 lg = getLogger(__name__)
 
 
+LIGHT_COLOR = &#39;lightGray&#39;
+
+LAYOUT = dict(
+    paper_bgcolor=&#39;rgba(0,0,0,0)&#39;,
+    plot_bgcolor=&#39;rgba(0,0,0,0)&#39;,
+    margin=dict(
+        l=0,
+        t=0,
+        b=0,
+        r=0,
+        pad=0,
+        ),
+    title=dict(
+        font=dict(
+            size=14,
+            ),
+        ),
+    xaxis=dict(
+        title=dict(
+            font=dict(
+                size=14,
+                ),
+            ),
+        zerolinecolor=&#39;black&#39;,
+        linecolor=&#39;black&#39;,
+        gridcolor=LIGHT_COLOR,
+        tickfont=dict(
+            size=11,
+            ),
+        ),
+    yaxis=dict(
+        title=dict(
+            font=dict(
+                size=14,
+                ),
+            ),
+        zerolinecolor=&#39;black&#39;,
+        linecolor=&#39;black&#39;,
+        gridcolor=LIGHT_COLOR,
+        tickfont=dict(
+            size=11,
+            ),
+        ),
+    )
+
+
 def to_div(fig):
     &#34;&#34;&#34;Convert plotly FIG into an HTML div
 

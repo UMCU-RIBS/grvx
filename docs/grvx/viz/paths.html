@@ -70,6 +70,14 @@
             print(f&#39;Cound not find compare.nii.gz in {x_dir}&#39;)
             return
 
+    elif index == &#39;fmri_zstat&#39;:
+        x_dir = out / &#39;fmri&#39; / subj_dir / &#39;feat_design&#39;
+        try:
+            x = next(x_dir.rglob(&#39;thresh_zstat1.nii.gz&#39;))
+        except StopIteration:
+            print(f&#39;Cound not find compare.nii.gz in {x_dir}&#39;)
+            return
+
     elif index == &#39;corr_tsv&#39;:
         x_dir = out / subj_dir / freq_dir / &#39;corr_fmri_ecog&#39; / &#39;corr_values&#39;
         try:
@@ -147,6 +155,14 @@
         x_dir = out / &#39;fmri&#39; / subj_dir / &#39;fmri_compare&#39;
         try:
             x = next(x_dir.glob(f&#39;sub-{subj}_*_bold_compare.nii.gz&#39;))
+        except StopIteration:
+            print(f&#39;Cound not find compare.nii.gz in {x_dir}&#39;)
+            return
+
+    elif index == &#39;fmri_zstat&#39;:
+        x_dir = out / &#39;fmri&#39; / subj_dir / &#39;feat_design&#39;
+        try:
+            x = next(x_dir.rglob(&#39;thresh_zstat1.nii.gz&#39;))
         except StopIteration:
             print(f&#39;Cound not find compare.nii.gz in {x_dir}&#39;)
             return
