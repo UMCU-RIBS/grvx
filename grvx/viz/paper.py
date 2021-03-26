@@ -54,8 +54,8 @@ def plot_results(parameters):
         for fig, value_type in zip(figs, ('r2_at_peak', 'size_at_peak', 'size_at_concave')):
             fig.write_image(str(freq_dir / f'{value_type}.svg'))
 
-    # TODO: this should be specified in parameters.json
-    freq = parameters['ieeg']['ecog_compare']['frequency_bands'][-1]
+    i_freq = parameters['plot']['freq_to_plot']
+    freq = parameters['ieeg']['ecog_compare']['frequency_bands'][i_freq]
     freq_dir = plot_dir / f"frequency_{freq[0]}_{freq[1]}"
     subjects = [x.stem[4:] for x in parameters['paths']['input'].glob('sub-*')]
     for subject in subjects:

@@ -14,10 +14,6 @@ from .paths import get_path
 from .utils import merge, LAYOUT
 
 
-THRESH = 10
-TR = 0.608
-
-
 def revision(parameters):
 
     plot_dir = parameters['paths']['output'] / 'revision'
@@ -40,8 +36,8 @@ def revision(parameters):
 
 def timeseries_fmri(parameters):
     fmri_dir = parameters['paths']['output'] / 'workflow' / 'fmri'
-    subject = parameters['plot']['subject']
-    subject = 'delft'
+    subject = parameters['plot']['timecourse']['subject']
+    TR = parameters['plot']['timecourse']['TR']
     fmri_subj_dir = fmri_dir / f'_subject_{subject}'
 
     regressor_file = next(fmri_subj_dir.rglob('design.mat'))
@@ -53,7 +49,7 @@ def timeseries_fmri(parameters):
     events = read_tsv(events_fmri_file)
 
     thresh = nload(thresh_file).get_fdata()
-    i_vox = thresh >= THRESH
+    i_vox = thresh >= parameters['plot']['timecourse']['threshold']
     timeseries = nload(timeseries_file).get_fdata()
     fmri = timeseries[i_vox]
     t_fmri = arange(timeseries.shape[3]) * TR

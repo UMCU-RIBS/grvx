@@ -4,6 +4,6 @@ from .summary import summary_info
 
 
 def plot_results(parameters):
-    summary_info(parameters)
     plot_pipeline(parameters)
     plot_paper(parameters)
+    summary_info(parameters)
