@@ -26,11 +26,13 @@
 </summary>
 <pre><code class="python">from .pipeline import plot_results as plot_pipeline
 from .paper import plot_results as plot_paper
+from .summary import summary_info
 
 
 def plot_results(parameters):
+    plot_pipeline(parameters)
     plot_paper(parameters)
-    # plot_pipeline(parameters)</code></pre>
+    summary_info(parameters)</code></pre>
 </details>
 </section>
 <section>
@@ -80,6 +82,10 @@ def plot_results(parameters):
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="grvx.viz.summary" href="summary.html">grvx.viz.summary</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="grvx.viz.surfaces" href="surfaces.html">grvx.viz.surfaces</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -105,7 +111,9 @@ def plot_results(parameters):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_results(parameters):
-    plot_paper(parameters)</code></pre>
+    plot_pipeline(parameters)
+    plot_paper(parameters)
+    summary_info(parameters)</code></pre>
 </details>
 </dd>
 </dl>
@@ -137,6 +145,7 @@ def plot_results(parameters):
 <li><code><a title="grvx.viz.revision" href="revision.html">grvx.viz.revision</a></code></li>
 <li><code><a title="grvx.viz.scatter" href="scatter.html">grvx.viz.scatter</a></code></li>
 <li><code><a title="grvx.viz.smooth" href="smooth.html">grvx.viz.smooth</a></code></li>
+<li><code><a title="grvx.viz.summary" href="summary.html">grvx.viz.summary</a></code></li>
 <li><code><a title="grvx.viz.surfaces" href="surfaces.html">grvx.viz.surfaces</a></code></li>
 <li><code><a title="grvx.viz.utils" href="utils.html">grvx.viz.utils</a></code></li>
 </ul>

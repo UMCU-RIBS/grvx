@@ -40,10 +40,6 @@ from .paths import get_path
 from .utils import merge, LAYOUT
 
 
-THRESH = 10
-TR = 0.608
-
-
 def revision(parameters):
 
     plot_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;revision&#39;
@@ -66,8 +62,8 @@ def revision(parameters):
 
 def timeseries_fmri(parameters):
     fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39; / &#39;fmri&#39;
-    subject = parameters[&#39;plot&#39;][&#39;subject&#39;]
-    subject = &#39;delft&#39;
+    subject = parameters[&#39;plot&#39;][&#39;timecourse&#39;][&#39;subject&#39;]
+    TR = parameters[&#39;plot&#39;][&#39;timecourse&#39;][&#39;TR&#39;]
     fmri_subj_dir = fmri_dir / f&#39;_subject_{subject}&#39;
 
     regressor_file = next(fmri_subj_dir.rglob(&#39;design.mat&#39;))
@@ -79,7 +75,7 @@ def timeseries_fmri(parameters):
     events = read_tsv(events_fmri_file)
 
     thresh = nload(thresh_file).get_fdata()
-    i_vox = thresh &gt;= THRESH
+    i_vox = thresh &gt;= parameters[&#39;plot&#39;][&#39;timecourse&#39;][&#39;threshold&#39;]
     timeseries = nload(timeseries_file).get_fdata()
     fmri = timeseries[i_vox]
     t_fmri = arange(timeseries.shape[3]) * TR
@@ -490,8 +486,8 @@ def headmotions(parameters):
 </summary>
 <pre><code class="python">def timeseries_fmri(parameters):
     fmri_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39; / &#39;fmri&#39;
-    subject = parameters[&#39;plot&#39;][&#39;subject&#39;]
-    subject = &#39;delft&#39;
+    subject = parameters[&#39;plot&#39;][&#39;timecourse&#39;][&#39;subject&#39;]
+    TR = parameters[&#39;plot&#39;][&#39;timecourse&#39;][&#39;TR&#39;]
     fmri_subj_dir = fmri_dir / f&#39;_subject_{subject}&#39;
 
     regressor_file = next(fmri_subj_dir.rglob(&#39;design.mat&#39;))
@@ -503,7 +499,7 @@ def headmotions(parameters):
     events = read_tsv(events_fmri_file)
 
     thresh = nload(thresh_file).get_fdata()
-    i_vox = thresh &gt;= THRESH
+    i_vox = thresh &gt;= parameters[&#39;plot&#39;][&#39;timecourse&#39;][&#39;threshold&#39;]
     timeseries = nload(timeseries_file).get_fdata()
     fmri = timeseries[i_vox]
     t_fmri = arange(timeseries.shape[3]) * TR

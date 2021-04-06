@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>grvx.viz.summary API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>grvx.viz.summary</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from bidso.utils import read_tsv
+from numpy import min, max, std, mean, genfromtxt, array
+from nibabel import load
+
+from .paths import get_path
+
+
+def summary_info(parameters):
+
+    participants_tsv = parameters[&#39;paths&#39;][&#39;input&#39;] / &#39;participants.tsv&#39;
+    participants = read_tsv(participants_tsv)
+    print(&#39;making sure that all the patients are included&#39;)
+
+    print(f&#39;# participants: {len(participants)}&#39;)
+    print(f&#34;# female participants: {(participants[&#39;sex&#39;] == &#39;Female&#39;).sum()}&#34;)
+    print(f&#34;# underage participants: {(participants[&#39;age&#39;] &lt; 18).sum()}&#34;)
+    print(f&#34;age: mean {mean(participants[&#39;age&#39;]): 8.3f}, s.d. {std(participants[&#39;age&#39;]): 8.2f}, [ {min(participants[&#39;age&#39;]): 8.3f} - {max(participants[&#39;age&#39;]): 8.3f}]&#34;)
+
+    subjects = [subj[4:] for subj in participants[&#39;participant_id&#39;]]
+
+    revision_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;revision&#39;
+    revision_dir.mkdir(exist_ok=True)
+
+    for freq in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
+
+        df = {
+            &#39;n_elec&#39;: [],
+            &#39;perc_elec&#39;: [],
+            &#39;max&#39;: [],
+            &#39;min&#39;: [],
+            }
+
+        freq_name = f&#39;{freq[0]}_{freq[1]}&#39;
+        with (revision_dir / f&#39;table_{freq_name}.txt&#39;).open(&#39;w&#39;) as f:
+            f.write(r&#39;^ participant ^ # electrodes ^ \% significant electrodes ^ maximum z-score ^ minimum z-score ^\n&#39;)
+            for subj in subjects:
+                ieeg_tsv = get_path(parameters, &#39;ieeg_tsv&#39;, frequency_band=freq, subject=subj)
+                ieeg = read_tsv(ieeg_tsv)
+
+                n_elec = len(ieeg)
+                n_sign = (ieeg[&#34;pvalue&#34;] &lt;= 0.05).sum()
+
+                df[&#39;n_elec&#39;].append(n_elec)
+                df[&#39;perc_elec&#39;].append(float(n_sign) / n_elec * 100)
+
+                df[&#39;max&#39;].append(ieeg[&#34;measure&#34;].max())
+                df[&#39;min&#39;].append(ieeg[&#34;measure&#34;].min())
+                f.write(rf&#39;| {subj} | {df[&#34;n_elec&#34;][-1]} | {df[&#34;perc_elec&#34;][-1]:.2f}\% | {df[&#34;max&#34;][-1]:.3f} | {df[&#34;min&#34;][-1]:.3f} |\n&#39;)
+
+            f.write(&#39;\n&#39;)
+            f.write(r&#39;^ measure ^ # electrodes ^ \% significant electrodes ^ maximum z-score ^ minimum z-score ^\n&#39;)
+            f.write(rf&#39;| mean | {mean(df[&#34;n_elec&#34;]): 8.3f} | {mean(df[&#34;perc_elec&#34;]): 8.2f}\% | {mean(df[&#34;max&#34;]): 8.3f} | {mean(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+            f.write(rf&#39;| s.d. | {std(df[&#34;n_elec&#34;]): 8.3f} | {std(df[&#34;perc_elec&#34;]): 8.2f}\% | {std(df[&#34;max&#34;]): 8.3f} | {std(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+            f.write(rf&#39;| min  | {max(df[&#34;n_elec&#34;]): 8.3f} | {max(df[&#34;perc_elec&#34;]): 8.2f}\% | {min(df[&#34;max&#34;]): 8.3f} | {min(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+            f.write(rf&#39;| max  | {min(df[&#34;n_elec&#34;]): 8.3f} | {min(df[&#34;perc_elec&#34;]): 8.2f}\% | {max(df[&#34;max&#34;]): 8.3f} | {max(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+
+    df = {
+        &#39;n_vox&#39;: [],
+        &#39;perc_vox&#39;: [],
+        &#39;max&#39;: [],
+        &#39;min&#39;: [],
+        }
+
+    ZTHRESH = 3.291
+
+    with (revision_dir / &#39;table_bold.txt&#39;).open(&#39;w&#39;) as f:
+        f.write(r&#39;^ participant ^ # included voxels ^ \% significant voxels ^ maximum z-score ^ minimum z-score ^\n&#39;)
+        for subj in subjects:
+
+            fmri_tsv = get_path(parameters, &#39;fmri_nii&#39;, subject=subj)
+            fmri = load(fmri_tsv)
+            dat = fmri.get_fdata()
+
+            n_vox = (dat &gt; 0.001).sum() + (dat &lt; -0.001).sum()
+            n_sign = (dat &gt; ZTHRESH).sum() + (dat &lt; -ZTHRESH).sum()
+            perc_vox = n_sign / n_vox * 100
+
+            df[&#39;n_vox&#39;].append(n_vox)
+            df[&#39;perc_vox&#39;].append(perc_vox)
+            df[&#39;max&#39;].append(dat.max())
+            df[&#39;min&#39;].append(dat.min())
+            f.write(rf&#39;| {subj} | {df[&#34;n_vox&#34;][-1]} | {df[&#34;perc_vox&#34;][-1]:.2f}\% | {df[&#34;max&#34;][-1]:.3f} | {df[&#34;min&#34;][-1]:.3f} |\n&#39;)
+
+        f.write(&#39;\n&#39;)
+        f.write(r&#39;^ participant ^ # included voxels ^ \% significant voxels ^ maximum z-score ^ minimum z-score ^\n&#39;)
+        f.write(rf&#39;| mean | {mean(df[&#34;n_vox&#34;]): 8.3f} | {mean(df[&#34;perc_vox&#34;]): 8.2f}\% | {mean(df[&#34;max&#34;]): 8.3f} | {mean(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+        f.write(rf&#39;| s.d. | {std(df[&#34;n_vox&#34;]): 8.3f} | {std(df[&#34;perc_vox&#34;]): 8.2f}\% | {std(df[&#34;max&#34;]): 8.3f} | {std(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+        f.write(rf&#39;| min  | {max(df[&#34;n_vox&#34;]): 8.3f} | {max(df[&#34;perc_vox&#34;]): 8.2f}\% | {min(df[&#34;max&#34;]): 8.3f} | {min(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+        f.write(rf&#39;| max  | {min(df[&#34;n_vox&#34;]): 8.3f} | {min(df[&#34;perc_vox&#34;]): 8.2f}\% | {max(df[&#34;max&#34;]): 8.3f} | {max(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+
+    with (revision_dir / &#39;table_summary.txt&#39;).open(&#39;w&#39;) as f:
+        for val in (&#39;size_at_peak&#39;, &#39;slope_at_peak&#39;, &#39;r2_at_peak&#39;, &#39;size_at_concave&#39;, &#39;r2_at_concave&#39;):
+
+            f.write(f&#39;\n{val}\n&#39;)
+            f.write(&#39;^ freq ^ mean ^ s.d. ^ min ^ max^\n&#39;)
+            for freq in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
+                summ_tsv = get_path(parameters, &#39;summary_tsv&#39;, frequency_band=freq)
+                summ = read_tsv(summ_tsv)
+                x = summ[val]
+                if val.startswith(&#39;r2_&#39;):
+                    x *= 100
+                f.write(f&#39;| {freq[0]}-{freq[1]} | {mean(x): 8.3f} | {std(x): 8.3f} | {min(x): 8.3f} | {max(x): 8.3f} |\n&#39;)
+
+    w_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39;
+    with (revision_dir / &#39;table_headmotion.txt&#39;).open(&#39;w&#39;) as f:
+        f.write(&#39;^ head motion ^ mean ^ s.d. ^ min ^ max ^\n&#39;)
+        for val in (&#39;rel&#39;, &#39;abs&#39;):
+            x = array([genfromtxt(x) for x in w_dir.rglob(f&#39;prefiltered_func_data_mcf_{val}_mean.rms&#39;)])
+            f.write(f&#39;| {val} | {mean(x): 8.3f} | {std(x): 8.3f} | {min(x): 8.3f} | {max(x): 8.3f} |\n&#39;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="grvx.viz.summary.summary_info"><code class="name flex">
+<span>def <span class="ident">summary_info</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def summary_info(parameters):
+
+    participants_tsv = parameters[&#39;paths&#39;][&#39;input&#39;] / &#39;participants.tsv&#39;
+    participants = read_tsv(participants_tsv)
+    print(&#39;making sure that all the patients are included&#39;)
+
+    print(f&#39;# participants: {len(participants)}&#39;)
+    print(f&#34;# female participants: {(participants[&#39;sex&#39;] == &#39;Female&#39;).sum()}&#34;)
+    print(f&#34;# underage participants: {(participants[&#39;age&#39;] &lt; 18).sum()}&#34;)
+    print(f&#34;age: mean {mean(participants[&#39;age&#39;]): 8.3f}, s.d. {std(participants[&#39;age&#39;]): 8.2f}, [ {min(participants[&#39;age&#39;]): 8.3f} - {max(participants[&#39;age&#39;]): 8.3f}]&#34;)
+
+    subjects = [subj[4:] for subj in participants[&#39;participant_id&#39;]]
+
+    revision_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;revision&#39;
+    revision_dir.mkdir(exist_ok=True)
+
+    for freq in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
+
+        df = {
+            &#39;n_elec&#39;: [],
+            &#39;perc_elec&#39;: [],
+            &#39;max&#39;: [],
+            &#39;min&#39;: [],
+            }
+
+        freq_name = f&#39;{freq[0]}_{freq[1]}&#39;
+        with (revision_dir / f&#39;table_{freq_name}.txt&#39;).open(&#39;w&#39;) as f:
+            f.write(r&#39;^ participant ^ # electrodes ^ \% significant electrodes ^ maximum z-score ^ minimum z-score ^\n&#39;)
+            for subj in subjects:
+                ieeg_tsv = get_path(parameters, &#39;ieeg_tsv&#39;, frequency_band=freq, subject=subj)
+                ieeg = read_tsv(ieeg_tsv)
+
+                n_elec = len(ieeg)
+                n_sign = (ieeg[&#34;pvalue&#34;] &lt;= 0.05).sum()
+
+                df[&#39;n_elec&#39;].append(n_elec)
+                df[&#39;perc_elec&#39;].append(float(n_sign) / n_elec * 100)
+
+                df[&#39;max&#39;].append(ieeg[&#34;measure&#34;].max())
+                df[&#39;min&#39;].append(ieeg[&#34;measure&#34;].min())
+                f.write(rf&#39;| {subj} | {df[&#34;n_elec&#34;][-1]} | {df[&#34;perc_elec&#34;][-1]:.2f}\% | {df[&#34;max&#34;][-1]:.3f} | {df[&#34;min&#34;][-1]:.3f} |\n&#39;)
+
+            f.write(&#39;\n&#39;)
+            f.write(r&#39;^ measure ^ # electrodes ^ \% significant electrodes ^ maximum z-score ^ minimum z-score ^\n&#39;)
+            f.write(rf&#39;| mean | {mean(df[&#34;n_elec&#34;]): 8.3f} | {mean(df[&#34;perc_elec&#34;]): 8.2f}\% | {mean(df[&#34;max&#34;]): 8.3f} | {mean(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+            f.write(rf&#39;| s.d. | {std(df[&#34;n_elec&#34;]): 8.3f} | {std(df[&#34;perc_elec&#34;]): 8.2f}\% | {std(df[&#34;max&#34;]): 8.3f} | {std(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+            f.write(rf&#39;| min  | {max(df[&#34;n_elec&#34;]): 8.3f} | {max(df[&#34;perc_elec&#34;]): 8.2f}\% | {min(df[&#34;max&#34;]): 8.3f} | {min(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+            f.write(rf&#39;| max  | {min(df[&#34;n_elec&#34;]): 8.3f} | {min(df[&#34;perc_elec&#34;]): 8.2f}\% | {max(df[&#34;max&#34;]): 8.3f} | {max(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+
+    df = {
+        &#39;n_vox&#39;: [],
+        &#39;perc_vox&#39;: [],
+        &#39;max&#39;: [],
+        &#39;min&#39;: [],
+        }
+
+    ZTHRESH = 3.291
+
+    with (revision_dir / &#39;table_bold.txt&#39;).open(&#39;w&#39;) as f:
+        f.write(r&#39;^ participant ^ # included voxels ^ \% significant voxels ^ maximum z-score ^ minimum z-score ^\n&#39;)
+        for subj in subjects:
+
+            fmri_tsv = get_path(parameters, &#39;fmri_nii&#39;, subject=subj)
+            fmri = load(fmri_tsv)
+            dat = fmri.get_fdata()
+
+            n_vox = (dat &gt; 0.001).sum() + (dat &lt; -0.001).sum()
+            n_sign = (dat &gt; ZTHRESH).sum() + (dat &lt; -ZTHRESH).sum()
+            perc_vox = n_sign / n_vox * 100
+
+            df[&#39;n_vox&#39;].append(n_vox)
+            df[&#39;perc_vox&#39;].append(perc_vox)
+            df[&#39;max&#39;].append(dat.max())
+            df[&#39;min&#39;].append(dat.min())
+            f.write(rf&#39;| {subj} | {df[&#34;n_vox&#34;][-1]} | {df[&#34;perc_vox&#34;][-1]:.2f}\% | {df[&#34;max&#34;][-1]:.3f} | {df[&#34;min&#34;][-1]:.3f} |\n&#39;)
+
+        f.write(&#39;\n&#39;)
+        f.write(r&#39;^ participant ^ # included voxels ^ \% significant voxels ^ maximum z-score ^ minimum z-score ^\n&#39;)
+        f.write(rf&#39;| mean | {mean(df[&#34;n_vox&#34;]): 8.3f} | {mean(df[&#34;perc_vox&#34;]): 8.2f}\% | {mean(df[&#34;max&#34;]): 8.3f} | {mean(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+        f.write(rf&#39;| s.d. | {std(df[&#34;n_vox&#34;]): 8.3f} | {std(df[&#34;perc_vox&#34;]): 8.2f}\% | {std(df[&#34;max&#34;]): 8.3f} | {std(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+        f.write(rf&#39;| min  | {max(df[&#34;n_vox&#34;]): 8.3f} | {max(df[&#34;perc_vox&#34;]): 8.2f}\% | {min(df[&#34;max&#34;]): 8.3f} | {min(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+        f.write(rf&#39;| max  | {min(df[&#34;n_vox&#34;]): 8.3f} | {min(df[&#34;perc_vox&#34;]): 8.2f}\% | {max(df[&#34;max&#34;]): 8.3f} | {max(df[&#34;min&#34;]): 8.3f} |\n&#39;)
+
+    with (revision_dir / &#39;table_summary.txt&#39;).open(&#39;w&#39;) as f:
+        for val in (&#39;size_at_peak&#39;, &#39;slope_at_peak&#39;, &#39;r2_at_peak&#39;, &#39;size_at_concave&#39;, &#39;r2_at_concave&#39;):
+
+            f.write(f&#39;\n{val}\n&#39;)
+            f.write(&#39;^ freq ^ mean ^ s.d. ^ min ^ max^\n&#39;)
+            for freq in parameters[&#39;ieeg&#39;][&#39;ecog_compare&#39;][&#39;frequency_bands&#39;]:
+                summ_tsv = get_path(parameters, &#39;summary_tsv&#39;, frequency_band=freq)
+                summ = read_tsv(summ_tsv)
+                x = summ[val]
+                if val.startswith(&#39;r2_&#39;):
+                    x *= 100
+                f.write(f&#39;| {freq[0]}-{freq[1]} | {mean(x): 8.3f} | {std(x): 8.3f} | {min(x): 8.3f} | {max(x): 8.3f} |\n&#39;)
+
+    w_dir = parameters[&#39;paths&#39;][&#39;output&#39;] / &#39;workflow&#39;
+    with (revision_dir / &#39;table_headmotion.txt&#39;).open(&#39;w&#39;) as f:
+        f.write(&#39;^ head motion ^ mean ^ s.d. ^ min ^ max ^\n&#39;)
+        for val in (&#39;rel&#39;, &#39;abs&#39;):
+            x = array([genfromtxt(x) for x in w_dir.rglob(f&#39;prefiltered_func_data_mcf_{val}_mean.rms&#39;)])
+            f.write(f&#39;| {val} | {mean(x): 8.3f} | {std(x): 8.3f} | {min(x): 8.3f} | {max(x): 8.3f} |\n&#39;)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="grvx.viz" href="index.html">grvx.viz</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="grvx.viz.summary.summary_info" href="#grvx.viz.summary.summary_info">summary_info</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
