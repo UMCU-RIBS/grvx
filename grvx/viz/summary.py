@@ -16,7 +16,7 @@ def summary_info(parameters):
     print(f"# underage participants: {(participants['age'] < 18).sum()}")
     print(f"age: mean {mean(participants['age']): 8.3f}, s.d. {std(participants['age']): 8.2f}, [ {min(participants['age']): 8.3f} - {max(participants['age']): 8.3f}]")
 
-    subjects = participants['participant_id']
+    subjects = [subj[4:] for subj in participants['participant_id']]
 
     revision_dir = parameters['paths']['output'] / 'revision'
     revision_dir.mkdir(exist_ok=True)
